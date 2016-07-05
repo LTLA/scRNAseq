@@ -1,0 +1,108 @@
+---
+title: "Overview of the scRNAseq dataset collection"
+author: "Davide Risso"
+date: "Created: May 25, 2016; Compiled: `r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{scRNAseq}
+  %\VignetteEngine{knitr::rmarkdown}
+bibliography: biblio.bib
+---
+
+```{r style, echo=FALSE, results='asis'}
+BiocStyle::markdown()
+```
+
+# Raw data availability and accession codes
+
+This package contains a collection of three publicly available single-cell RNA-seq datasets. The data were downloaded from NCBI's SRA or from EBI's ArrayExpress (see below for Accession numbers)
+
+The dataset `fluidigm` contains 65 cells from [@pollen2014low], each sequenced at high and low coverage (SRA: SRP041736).
+
+The dataset `th2` contains 96 T helper cells from [@mahata2014single] (ArrayExpress: E-MTAB-2512).
+
+The dataset `allen` contains 379 cells from the mouse visual cortex. This is a subset of the data published in [@tasic2016adult] (SRA: SRP061902).
+
+# Pre-processing and summary
+
+SRA files were downloaded from the Sequence Read Archive and the SRA Toolkit was used to transform them to FASTQ. FASTQ files were downloaded from EMBL-EBI ArrayExpress.
+
+Reads were aligned with TopHat (v. 2.0.11) [@trapnell2009tophat] to the appropriate reference genome (GRCh38 for human samples, GRCm38 for mouse). RefSeq mouse gene annotation (GCF_000001635.23_GRCm38.p3) was downloaded from NCBI on Dec. 28, 2014. RefSeq human gene annotation (GCF_000001405.28) was downloaded from NCBI on Jun. 22, 2015.
+
+featureCounts (v. 1.4.6-p3) [@liao2013featurecounts] was used to compute gene-level read counts and Cufflinks (v. 2.2.0) [@trapnell2010transcript] was used to compute gene-leve FPKM's.
+
+In parallel, reads were mapped to the transcriptome using RSEM (v. xx) [@li2011rsem] to compute read counts and TPM's.
+
+FastQC (v. 0.10.1) (http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and Picard (v. 1.128) (http://broadinstitute.github.io/picard) were used to compute sample quality control (QC) metrics. (Picard's scripts `CollectRnaSeqMetrics`, `CollectAlignmentSummaryMetrics` and `CollectInsertSizeMetrics`).
+
+Note that all the samples available in GEO and/or ArrayExpressed were included in the data object, including the samples that were excluded in the original publication because they did not pass QC.
+
+# Data format and metadata
+
+The package contains each dataset in the form of `SummarizedExperiment` objects. To illustrate the format of each dataset, we will use the `fluidigm` data.
+
+```{r, message=FALSE}
+library(scRNAseq)
+data(fluidigm)
+fluidigm
+```
+
+We can retrieve the gene expression measures by using the `assay` contstruct.
+
+```{r}
+head(assay(fluidigm)[,1:3])
+```
+
+`assay` will return the gene-level read counts. If we want to access the FPKM values, we need the following
+
+```{r}
+head(assay(fluidigm, 2)[,1:3])
+```
+
+Alternatively, we can use the `assays` accessor to get a list with both matrices.
+
+```{r}
+names(assays(fluidigm))
+head(assays(fluidigm)$fpkm[,1:3])
+```
+
+Note that the all the protein-coding genes are included in the expression matrix, even if they are not expressed in these samples, hence filtering of the non-expressed genes should be performed before any statistical analysis.
+
+```{r}
+dim(fluidigm)
+table(rowSums(assay(fluidigm))>0)
+```
+
+In addition to the gene expression levels, the object contains some useful QC information, as well as the available annotation of the samples. This information can be accessed through the `colData` accessor.
+
+```{r}
+colData(fluidigm)
+```
+
+The first columns are related to sample quality, while other fields include information on the samples, provided by the original authors in their GEO/SRA submission and/or as Supplementary files in the pubblication.
+
+Finally, the object contains a list of `metadata` that provide additional information on the experiment.
+
+```{r}
+names(metadata(fluidigm))
+metadata(fluidigm)$which_qc
+```
+
+In particular, in all datasets, the metadata list includes an element called `which_qc` that contains the names of the `colData` columns that relate to sample QC.
+
+# ERCC spike-ins
+
+The `th2` and `allen` datasets contain the expression of the ERCC spike-ins. Note that these are **included in the same matrices** as the endogenous genes, hence users must use caution to avoid when using the data, to avoid mistreat external spike-ins as endogenous genes. One may wish to split the datasets in two, e.g.:
+
+```{r}
+data(th2)
+ercc_idx <- grep("^ERCC-", rownames(th2))
+th2_endogenous <- th2[-ercc_idx,]
+th2_ercc <- th2[ercc_idx,]
+
+head(assay(th2_ercc)[,1:4])
+```
+
+# References

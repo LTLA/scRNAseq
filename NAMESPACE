@@ -1,0 +1,2 @@
+import(SummarizedExperiment)
+exportPattern("^[[:alpha:]]+")
