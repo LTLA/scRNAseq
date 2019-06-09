@@ -77,6 +77,7 @@ which provides some robustness against changes to the class structure.
 saver <- function(sce, target) {
     dir.create(target, recursive=TRUE, showWarnings=FALSE)
     saveRDS(colData(sce), file=file.path(target, "coldata.rds"))
+    saveRDS(metadata(sce), file=file.path(target, "metadata.rds"))
     for (x in assayNames(sce)) {
         saveRDS(assay(sce, x), file=file.path(target, paste0(x, ".rds")))
     }

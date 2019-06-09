@@ -1,10 +1,10 @@
 CREATOR <- function(desc, path, genome, src, species, taxid, append=TRUE) {
     write.table(file="../extdata/metadata-legacy.csv",
         data.frame(
-            Title = sprintf("%s %s", desc, c("counts", "colData")),
+            Title = sprintf("%s %s", desc, c("counts", "colData", "metadata")),
             Description = sprintf("%s for the %s single-cell RNA-seq dataset", 
-                c("Count matrix", "Per-cell metadata"), desc),
-            RDataPath = file.path("scRNAseq", path, c("counts.rds", "coldata.rds")),
+                c("Count matrix", "Per-cell metadata", "Experiment metadata"), desc),
+            RDataPath = file.path("scRNAseq", path, c("counts.rds", "coldata.rds", "metadata.rds")),
             BiocVersion="3.10",
             Genome=genome,
             SourceType="TXT",
