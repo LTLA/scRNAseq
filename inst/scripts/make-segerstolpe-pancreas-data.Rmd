@@ -21,7 +21,7 @@ It contains a diversity of cell types ranging from alpha and beta cells, for bot
 Single-cell RNA-seq libraries were prepared using the Smart-seq2 protocol [@picelli2014full].
 After sequencing, expression was quantified by counting the number of reads mapped to each gene.
 
-# Downloading the data
+# Downloading the count data
 
 A count matrix is provided in the ArrayExpress entry for this project.
 We download it using `r Biocpkg("BiocFileCache")` to cache the results:
@@ -67,16 +67,15 @@ colnames(emtab.df) <- col.names
 dim(emtab.df)
 ```
 
-# Saving the components
-
-We assemble the results into a `SingleCellExperiment` object.
+Some coercion is performed to yield a count matrix and a row-level `DataFrame`. 
 
 ```{r}
-library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=as.matrix(emtab.df)),
-    rowData=DataFrame(symbol=gene.info[,1], refseq=gene.info[,2]))
-sce
+library(S4Vectors)
+counts <- as.matrix(emtab.df)
+rowdata <- DataFrame(symbol=gene.info[,1], refseq=gene.info[,2])
 ```
+
+# Preparing the column metadata
 
 We retrieve the column metadata fields from ArrayExpress using the same accession number.
 
@@ -87,7 +86,7 @@ emtab.sdrf <- read.delim(meta.fname, stringsAsFactors=FALSE, check.names=FALSE)
 
 # Making sure they match.
 stopifnot(identical(sort(emtab.sdrf[["Source Name"]]), sort(colnames(emtab.df))))
-emtab.sdrf <- emtab.sdrf[match(colnames(emtab.df), emtab.sdrf[["Source Name"]]),]
+emtab.sdrf <- emtab.sdrf[match(colnames(counts), emtab.sdrf[["Source Name"]]),]
 ```
 
 We only keep the `Characteristics` fields.
@@ -101,21 +100,23 @@ colnames(emtab.sdrf) <- sub("Characteristics\\[(.*)\\]", "\\1",
 head(emtab.sdrf)
 ```
 
-We add this information to the column metadata of our `SingleCellExperiment` object. 
+We coerce this into a column-level `DataFrame`.
 
 ```{r}
-colData(sce) <- as(emtab.sdrf, "DataFrame")
-sce
+coldata <- as(emtab.sdrf, "DataFrame")
 ```
 
-We now save all of the relevant components of `sce` to file for upload to `r Biocpkg("ExperimentHub")`.
+# Saving to file
+
+We now save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
 
 ```{r}
 path <- file.path("scRNAseq", "segerstolpe-pancreas", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(counts(sce), file=file.path(path, "counts.rds"))
-saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
-saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(rowdata, file=file.path(path, "rowdata.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
 ```
 
 # Session information
