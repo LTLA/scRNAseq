@@ -1,0 +1,25 @@
+write.csv(file="../extdata/metadata-segerstolpe-pancreas.csv",
+    data.frame(
+        Title = sprintf("Segerstolpe pancreas %s", c("counts", "rowData", "colData")),
+        Description = sprintf("%s for the Segerstolpe pancreas single-cell RNA-seq dataset", 
+            c("Count matrix", "Per-gene metadata", "Per-cell metadata")),
+        RDataPath = file.path("scRNAseq", "segerstolpe-pancreas", "2.0.0", 
+            c("counts.rds", "rowdata.rds", "coldata.rds")),
+        BiocVersion="3.10",
+        Genome="hg19",
+        SourceType="TXT",
+        SourceUrl="https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-5061/",
+        SourceVersion=c(
+            "E-MTAB-5061.processed.1.zip",
+            "E-MTAB-5061.processed.1.zip",
+            "E-MTAB-5061.sdrf.txt"),
+        Species="Homo sapiens",
+        TaxonomyId="9606",
+        Coordinate_1_based=TRUE,
+        DataProvider="ArrayExpress",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass="character",
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)

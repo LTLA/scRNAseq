@@ -1,0 +1,132 @@
+---
+title: Processing the Zeisel brain dataset
+author: Aaron Lun
+date: 18 May 2019
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview
+
+The @zeisel2015brain study provides a single-cell RNA seq dataset involving the mouse brain. 
+This contains approximately 3000 cells of varying types such as oligodendrocytes, microglia and neurons.
+Individual cells were isolated using the Fluidigm C1 microfluidics system [@pollen2014lowcoverage] and library preparation was performed on each cell using a UMI-based protocol.
+After sequencing, expression was quantified by counting the number of UMIs mapped to each gene.
+
+# Downloading the data
+
+Counts for endogenous genes, mitochondrial genes, repeats and spike-in transcripts are available from http://linnarssonlab.org/cortex.
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("https://storage.googleapis.com",
+    "linnarsson-lab-www-blobs/blobs/cortex")
+mRNA.path <- bfcrpath(bfc, file.path(base.url, 
+    "expression_mRNA_17-Aug-2014.txt"))
+rep.path <- bfcrpath(bfc, file.path(base.url, 
+    "expression_rep_17-Aug-2014.txt"))
+mito.path <- bfcrpath(bfc, file.path(base.url, 
+    "expression_mito_17-Aug-2014.txt"))
+spike.path <- bfcrpath(bfc, file.path(base.url, 
+    "expression_spikes_17-Aug-2014.txt"))
+```
+
+We define a simple utility function for loading data in from each file. 
+Each file contains some metadata, so we create a `SingleCellExperiment` object to accommodate both the counts and the metadata.
+
+```{r}
+library(SingleCellExperiment)
+readFormat <- function(infile) { 
+    # First column is empty.
+    metadata <- read.delim(infile, stringsAsFactors=FALSE, header=FALSE, nrow=10)[,-1]
+    rownames(metadata) <- metadata[,1]
+    metadata <- metadata[,-1]
+    metadata <- DataFrame(t(metadata), check.names=FALSE)
+
+    # Cleaning up aspects of coercion to a DataFrame.
+    to.coerce <- c("group #", "total mRNA mol", "well", "sex", "age", "diameter")
+    for (x in colnames(metadata)) {
+        if (x %in% to.coerce) {
+            FUN <- as.numeric
+        } else {
+            FUN <- as.character
+        }
+        metadata[[x]] <- FUN(metadata[[x]])
+    }
+    rownames(metadata) <- NULL
+
+    # First column after row names is some useless filler.
+    counts <- read.delim(infile, stringsAsFactors=FALSE, 
+        header=FALSE, row.names=1, skip=11)[,-1] 
+    counts <- as.matrix(counts)
+    colnames(counts) <- metadata$cell_id
+
+    SingleCellExperiment(list(counts=counts), colData=metadata)
+}
+```
+
+Using this function, we read in the counts for the endogenous genes, ERCC spike-in transcripts and mitochondrial genes.
+
+```{r}
+endo.data <- readFormat(mRNA.path)
+endo.data
+rep.data <- readFormat(rep.path)
+rep.data
+spike.data <- readFormat(spike.path)
+spike.data
+mito.data <- readFormat(mito.path)
+mito.data
+```
+
+# Saving objects
+
+We need to rearrange the columns for the mitochondrial data, as the order is not consistent with the other files.
+
+```{r}
+m <- match(endo.data$cell_id, mito.data$cell_id)
+mito.data <- mito.data[,m]
+```
+
+```{r, echo=FALSE}
+# Should all be the same.
+stopifnot(identical(colData(endo.data), colData(spike.data))) 
+stopifnot(identical(colData(endo.data), colData(rep.data)))
+stopifnot(identical(colData(endo.data), colData(mito.data)))
+```
+
+We combine all components into a single `SingleCellExperiment` object.
+
+```{r}
+sce <- rbind(endo.data, mito.data, spike.data, rep.data)
+rowData(sce)$featureType <- rep(c("endogenous", "mito", "ERCC", "repeat"),
+    c(nrow(endo.data), nrow(mito.data), nrow(spike.data), nrow(rep.data)))
+sce
+```
+
+We now save all of the relevant components of `sce` to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "zeisel-brain", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts(sce), file=file.path(path, "counts.rds"))
+saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References

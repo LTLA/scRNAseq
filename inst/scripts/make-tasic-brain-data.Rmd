@@ -1,0 +1,110 @@
+---
+title: Processing the Tasic brain dataset
+author: Aaron Lun
+date: "June 8, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview
+
+The @tasic2016adult study provides a single-cell RNA seq dataset involving the mouse brain. 
+This contains approximately 1800 cells of varying types such as oligodendrocytes, microglia and neurons.
+Individual cells were isolated by FACS and library preparation was performed on each cell using the SMARTer kit.
+After sequencing, expression was quantified by counting the number of reads mapped to each gene.
+
+# Downloading the data
+
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE71585](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71585).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+    "GSE71nnn/GSE71585/suppl")
+count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSE71585_RefSeq_counts.csv.gz"))
+spike.file <- bfcrpath(bfc, file.path(base.url,
+    "GSE71585_ERCC_and_tdTomato_counts.csv.gz"))
+```
+
+We load them into memory.
+
+```{r}
+count.mat <- read.csv(count.file, row.names=1, header=TRUE, check.names=FALSE)
+count.mat <- as.matrix(count.mat)
+dim(count.mat)
+spike.mat <- read.csv(spike.file, row.names=1, header=TRUE, check.names=FALSE)
+spike.mat <- as.matrix(spike.mat)
+dim(spike.mat)
+```
+
+We also download a file containing the metadata for each cell.
+
+```{r}
+meta.file <- bfcrpath(bfc, file.path(base.url,
+    "GSE71585_Clustering_Results.csv.gz"))
+metadata <- read.csv(meta.file, stringsAsFactors=FALSE)
+nrow(metadata)
+head(metadata)
+```
+
+Some clean-up is necessary to replace `"N/A"` with actual `NA_character_` entries, 
+which are more appropriate for conveying missingness.
+
+```{r}
+for (i in colnames(metadata)) {
+    current <- metadata[,i]
+    to.rename <- current %in% c("N/A")
+    current[to.rename] <- NA
+    metadata[,i] <- current
+}
+```
+
+# Saving objects
+
+We check that all objects are in the same order, and coerce them if not.
+
+```{r}
+stopifnot(identical(colnames(count.mat), colnames(spike.mat)))
+m <- match(colnames(count.mat), metadata$sample_title)
+stopifnot(all(!is.na(m)))
+metadata <- metadata[m,]
+```
+
+We combine all components into a single `SingleCellExperiment` object.
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=rbind(count.mat, spike.mat)),
+    colData=metadata)
+sce
+```
+
+We now save all of the relevant components of `sce` to file for upload to `r Biocpkg("ExperimentHub")`.
+(Except for the `rowData`, as there are no special fields here.)
+
+```{r}
+path <- file.path("scRNAseq", "tasic-brain", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts(sce), file=file.path(path, "counts.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References

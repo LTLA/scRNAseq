@@ -1,0 +1,127 @@
+---
+title: Processing the Segerstolpe pancreas dataset
+author: Aaron Lun
+date: 18 May 2019
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview
+
+The @segerstolpe2016single study provides a single-cell RNA sequencing dataset of the human pancreatic islets.
+It contains a diversity of cell types ranging from alpha and beta cells, for both healthy controls and type II diabetes patients.
+Single-cell RNA-seq libraries were prepared using the Smart-seq2 protocol [@picelli2014full].
+After sequencing, expression was quantified by counting the number of reads mapped to each gene.
+
+# Downloading the data
+
+A count matrix is provided in the ArrayExpress entry for this project.
+We download it using `r Biocpkg("BiocFileCache")` to cache the results:
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask=FALSE)    
+emat <- bfcrpath(bfc, file.path("https://www.ebi.ac.uk/arrayexpress",
+    "experiments/E-MTAB-5061/files/E-MTAB-5061.processed.1.zip"))
+unzip(emat, list=TRUE)
+```
+
+The file itself is quite complex:
+
+- The first 2 columns contain the gene symbol and NCBI GenBank transcript identifiers for each row.
+- The next `X` columns are the RPKMs, for `X` cells.
+- The remaining `X` columns are the counts.
+
+This requires some additional work to extract the useful data.
+The first line contains the names of the cells, 
+so we can use this to determine the number and indices of the columns with per-cell counts.
+
+```{r}
+count.file <- "pancreas_refseq_rpkms_counts_3514sc.txt"
+col.names <- read.table(unz(emat, count.file), header=FALSE, sep="\t", 
+    stringsAsFactors=FALSE, comment.char="", nrows = 1)[,-1]
+ncells <- length(col.names)
+
+what <- vector("list", ncells*2 + 2)
+what[[1]] <- "character"
+what[[2]] <- "character"
+what[seq_len(ncells) + ncells + 2] <- "integer"
+```
+
+We then read in the gene symbols and the counts.
+
+```{r}
+emtab.df <- read.table(unz(emat, count.file), header=FALSE, sep="\t", 
+    stringsAsFactors=FALSE, colClasses=what, skip=1)
+gene.info <- emtab.df[,1:2]
+emtab.df <- emtab.df[,-(1:2)]
+colnames(emtab.df) <- col.names
+dim(emtab.df)
+```
+
+# Saving the components
+
+We assemble the results into a `SingleCellExperiment` object.
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=as.matrix(emtab.df)),
+    rowData=DataFrame(symbol=gene.info[,1], refseq=gene.info[,2]))
+sce
+```
+
+We retrieve the column metadata fields from ArrayExpress using the same accession number.
+
+```{r}
+meta.fname <- bfcrpath(bfc, file.path("https://www.ebi.ac.uk/arrayexpress",
+    "files/E-MTAB-5061/E-MTAB-5061.sdrf.txt"))
+emtab.sdrf <- read.delim(meta.fname, stringsAsFactors=FALSE, check.names=FALSE)
+
+# Making sure they match.
+stopifnot(identical(sort(emtab.sdrf[["Source Name"]]), sort(colnames(emtab.df))))
+emtab.sdrf <- emtab.sdrf[match(colnames(emtab.df), emtab.sdrf[["Source Name"]]),]
+```
+
+We only keep the `Characteristics` fields.
+The other fields describe relationships to other files/identifiers within ArrayExpress and are not of (primary) interest.
+
+```{r}
+keep <- grep("Characteristics", colnames(emtab.sdrf))
+emtab.sdrf <- emtab.sdrf[,keep]
+colnames(emtab.sdrf) <- sub("Characteristics\\[(.*)\\]", "\\1", 
+    colnames(emtab.sdrf))
+head(emtab.sdrf)
+```
+
+We add this information to the column metadata of our `SingleCellExperiment` object. 
+
+```{r}
+colData(sce) <- as(emtab.sdrf, "DataFrame")
+sce
+```
+
+We now save all of the relevant components of `sce` to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "segerstolpe-pancreas", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts(sce), file=file.path(path, "counts.rds"))
+saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
