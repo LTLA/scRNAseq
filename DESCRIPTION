@@ -1,18 +1,33 @@
 Package: scRNAseq
-Title: A Collection of Public Single-Cell RNA-Seq Datasets
-Version: 1.11.0
-Date: 2016-05-25
-Authors@R: c(person("Davide", "Risso", email =
-        "risso.davide@gmail.com", role = c("aut", "cre", "cph")),
-        person("Michael", "Cole", role="aut"))
+Title: Collection of Public Single-Cell RNA-Seq Datasets
+Version: 1.11.1
+Date: 2019-06-09
+Authors@R: c(
+    person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cre", "cph")),
+    person("Michael", "Cole", role="aut"),
+    person("Aaron", "Lun", role="ctb", email="infinite.monkeys.with.keyboards@gmail.com"))
 Author: Davide Risso [aut, cre, cph], Michael Cole [aut]
 Maintainer: Davide Risso <risso.davide@gmail.com>
-Description: Gene-level read counts of three public scRNA-seq datasets.
-        See vignette for details.
+Description: Gene-level counts for a collection of public scRNA-seq datasets,
+    provided as SingleCellExperiment objects with cell- and gene-level metadata.
 License: CC0
 NeedsCompilation: no
-Depends: R (>= 3.3), SummarizedExperiment
-Suggests: BiocStyle, knitr, rmarkdown
+Depends: 
+    R (>= 3.3), 
+    SingleCellExperiment
+Imports:
+    SummarizedExperiment,
+    S4Vectors,
+    ExperimentHub
+Suggests: 
+    BiocStyle, 
+    knitr, 
+    rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8
-biocViews: ExperimentData, ExpressionData, SequencingData, RNASeqData
+biocViews: 
+    ExperimentData, 
+    ExpressionData, 
+    SequencingData, 
+    RNASeqData
+RoxygenNote: 6.1.1
