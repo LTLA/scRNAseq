@@ -1,0 +1,98 @@
+---
+title: Processing legacy datasets
+author: Aaron Lun
+date: June 9, 2019
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview
+
+Here, we re-process datasets that were previously stored inside `r Biocpkg("scRNAseq")` itself,
+in preparation for relocating them into `r Biocpkg("ExperimentHub")`.
+This aims to reduce the size of the package and improve consistency with the other ExperimentHub-hosted datasets.
+
+# Downloading the data
+
+We download and cache an old version of the `r Biocpkg("scRNAseq")` package using the `r Biocpkg("BiocFileCache")` package.
+We choose the latest version that still contains the serialized `SingleCellExperiment` objects.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+tarpath <- bfcrpath(bfc, file.path("http://bioconductor.org/packages",
+    "3.9/data/experiment/src/contrib/scRNAseq_1.10.0.tar.gz"))
+```
+
+We unpack this in preparation for extraction of the serialized objects.
+
+```{r}
+tmploc <- tempfile()
+dir.create(tmploc, showWarnings=FALSE)
+untar(tarpath, exdir=tmploc)
+path <- file.path(tmploc, "scRNAseq", "data")
+list.files(path)
+```
+
+# Extracting objects
+
+We set up a function to extract the `SingleCellExperiment` object from each Rdata file.
+
+```{r}
+library(SingleCellExperiment)
+extractor <- function(fname) {
+    env <- new.env()
+    load(fname, envir=env)
+    env[[ls(env)[1]]]
+}
+```
+
+Using this function, we read in the counts for the endogenous genes, ERCC spike-in transcripts and mitochondrial genes.
+
+```{r}
+allen <- extractor(file.path(path, "allen.rda"))
+allen
+th2 <- extractor(file.path(path, "th2.rda"))
+th2
+fluidigm <- extractor(file.path(path, "fluidigm.rda"))
+fluidigm
+```
+
+# Saving objects
+
+We set up another function that peels apart the `SingleCellExperiment` object and saves its components.
+Components are used to reconstruct a `SingleCellExperiment` object on the client side,
+which provides some robustness against changes to the class structure.
+
+```{r}
+# No rowData for any of these objects.
+saver <- function(sce, target) {
+    dir.create(target, recursive=TRUE, showWarnings=FALSE)
+    saveRDS(colData(sce), file=file.path(target, "coldata.rds"))
+    for (x in assayNames(sce)) {
+        saveRDS(assay(sce, x), file=file.path(target, paste0(x, ".rds")))
+    }
+}
+```
+
+We then apply this function to all of the objects.
+
+```{r}
+saver(allen, file.path("scRNAseq", "legacy-allen", "1.10.0"))
+saver(th2, file.path("scRNAseq", "legacy-th2", "1.10.0"))
+saver(fluidigm, file.path("scRNAseq", "legacy-fluidigm", "1.10.0"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
