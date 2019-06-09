@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-zeisel-brain-metadata.csv", 
+write.csv(file="../extdata/metadata-zeisel-brain.csv", 
     data.frame(
         Title = sprintf("Zeisel brain %s", c("counts", "rowData", "colData")),
         Description = sprintf("%s for the Zeisel brain single-cell RNA-seq dataset", 
