@@ -19,6 +19,12 @@
 #' \code{LegacyAllenData} return a dataset of 379 cells from Tasic et al. (2016).
 #' This is a re-processed subset of the data from \code{\link{TasicBrainData}},
 #' It also contains spike-in information labelled with \code{\link{isSpike}}.
+#'
+#' In each dataset, the first columns of the \code{colData} are sample quality metrics from FastQC and Picard.
+#' The remaining fields were obtained from the original study in their GEO/SRA submission
+#' and/or as Supplementary files in the associated publication.
+#' These two categories of \code{colData} are distinguished by a \code{which_qc} element in the \code{\link{metadata}},
+#' which contains the names of the quality-related columns in each object.
 #' 
 #' @section Pre-processing details:
 #' FASTQ files were either obtained directly from ArrayExpress, 
@@ -53,7 +59,7 @@
 #' @importFrom SingleCellExperiment isSpike
 LegacyAllenData <- function() {
     version <- "1.10.0"
-    sce <- .create_sce(file.path("legacy-allen", version), has.rowdata=FALSE)
+    sce <- .create_sce_legacy(file.path("legacy-allen", version))
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
     sce
 }
@@ -63,7 +69,7 @@ LegacyAllenData <- function() {
 #' @importFrom SingleCellExperiment isSpike
 LegacyTh2Data <- function() {
     version <- "1.10.0"
-    sce <- .create_sce(file.path("legacy-th2", version), has.rowdata=FALSE)
+    sce <- .create_sce_legacy(file.path("legacy-th2", version))
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
     sce
 }
@@ -73,5 +79,5 @@ LegacyTh2Data <- function() {
 #' @importFrom SingleCellExperiment isSpike
 LegacyFluidigmData <- function() {
     version <- "1.10.0"
-    .create_sce(file.path("legacy-fluidigm", version), has.rowdata=FALSE)
+    .create_sce_legacy(file.path("legacy-fluidigm", version))
 }
