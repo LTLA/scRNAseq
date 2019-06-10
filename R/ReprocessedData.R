@@ -1,6 +1,6 @@
 #' Reprocessed single-cell data sets
 #'
-#' Obtain the reprocessed count matrices for three publicly available single-cell RNA-seq datasets.
+#' Obtain the legacy count matrices for three publicly available single-cell RNA-seq datasets.
 #' Raw sequencing data were downloaded from NCBI's SRA or from EBI's ArrayExpress,
 #' aligned to the relevant genome build and used to quantify gene expression.
 #'
@@ -9,14 +9,14 @@
 #' column metadata and (possibly) spike-in information.
 #' 
 #' @details
-#' \code{LegacyFluidigmData} returns a dataset of 65 cells from Pollen et al. (2014), 
+#' \code{ReprocessedFluidigmData} returns a dataset of 65 cells from Pollen et al. (2014), 
 #' each sequenced at high and low coverage (SRA accession SRP041736).
 #' 
-#' \code{LegacyTh2Data} returns a dataset of 96 T helper cells from Mahata et al. (2014),
+#' \code{ReprocessedTh2Data} returns a dataset of 96 T helper cells from Mahata et al. (2014),
 #' obtained from ArrayExpress accession E-MTAB-2512.
 #' This will contain spike-in information labelled with \code{\link{isSpike}}.
 #'
-#' \code{LegacyAllenData} return a dataset of 379 cells from Tasic et al. (2016).
+#' \code{ReprocessedAllenData} return a dataset of 379 cells from Tasic et al. (2016).
 #' This is a re-processed subset of the data from \code{\link{TasicBrainData}},
 #' It also contains spike-in information labelled with \code{\link{isSpike}}.
 #'
@@ -55,9 +55,9 @@
 #' \emph{Nat. Neurosci.} 19(2), 335-46.
 #'
 #' @export
-#' @rdname LegacyData
+#' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
-LegacyAllenData <- function() {
+ReprocessedAllenData <- function() {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-allen", version))
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
@@ -65,9 +65,9 @@ LegacyAllenData <- function() {
 }
 
 #' @export
-#' @rdname LegacyData
+#' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
-LegacyTh2Data <- function() {
+ReprocessedTh2Data <- function() {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-th2", version))
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
@@ -75,9 +75,9 @@ LegacyTh2Data <- function() {
 }
 
 #' @export
-#' @rdname LegacyData
+#' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
-LegacyFluidigmData <- function() {
+ReprocessedFluidigmData <- function() {
     version <- "1.10.0"
     .create_sce_legacy(file.path("legacy-fluidigm", version))
 }
