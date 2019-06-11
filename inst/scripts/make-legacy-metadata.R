@@ -1,10 +1,15 @@
+base <- c("Tophat count", "Cufflinks FPKM", "RSEM count", "RSEM TPM")
+file.titles <- paste0(base, "s")
+file.descs <- paste(base, "matrix")
+file.paths <- paste0(c("tophat_counts", "cufflinks_fpkm", "rsem_counts", "rsem_tpm"), ".rds")
+
 CREATOR <- function(desc, path, genome, src, species, taxid, append=TRUE) {
     write.table(file="../extdata/metadata-legacy.csv",
         data.frame(
-            Title = sprintf("%s %s", desc, c("counts", "colData", "metadata")),
+            Title = sprintf("%s %s", desc, c(file.titles, "colData", "metadata")),
             Description = sprintf("%s for the %s single-cell RNA-seq dataset", 
-                c("Count matrix", "Per-cell metadata", "Experiment metadata"), desc),
-            RDataPath = file.path("scRNAseq", path, c("counts.rds", "coldata.rds", "metadata.rds")),
+                c(file.descs, "Per-cell metadata", "Experiment metadata"), desc),
+            RDataPath = file.path("scRNAseq", path, c(file.paths, "coldata.rds", "metadata.rds")),
             BiocVersion="3.10",
             Genome=genome,
             SourceType="TXT",
