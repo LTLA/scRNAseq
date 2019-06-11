@@ -27,5 +27,5 @@
 
     coldata <- hub[hub$rdatapath==file.path(host, "coldata.rds")][[1]]
     metadata <- hub[hub$rdatapath==file.path(host, "metadata.rds")][[1]]
-    SingleCellExperiment(all.assays, rowData=rowdata, colData=coldata, metadata=metadata)
+    SingleCellExperiment(all.assays, colData=coldata, metadata=metadata)
 }
