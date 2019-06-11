@@ -6,8 +6,6 @@ Authors@R: c(
     person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cre", "cph")),
     person("Michael", "Cole", role="aut"),
     person("Aaron", "Lun", role="ctb", email="infinite.monkeys.with.keyboards@gmail.com"))
-Author: Davide Risso [aut, cre, cph], Michael Cole [aut]
-Maintainer: Davide Risso <risso.davide@gmail.com>
 Description: Gene-level counts for a collection of public scRNA-seq datasets,
     provided as SingleCellExperiment objects with cell- and gene-level metadata.
 License: CC0
