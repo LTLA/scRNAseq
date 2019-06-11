@@ -56,7 +56,21 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 Please contact us if you have a data set that you would like to see added to this package.
 The only requirement is that your data set has publicly available expression values (ideally counts) and sample annotation.
 The more difficult/custom the format, the better, 
-as its inclusion in this package will provide more value for downstream users.
+as its inclusion in this package will provide more value for other users in the R/Bioconductor community.
+
+If you have already written code that processes your desired data set in a `SingleCellExperiment`-like form,
+we would welcome a pull request [here](https://github.com/LTLA/scRNAseq).
+The process can be expedited by ensuring that you have the following files:
+
+- `inst/scripts/make-X-Y-data.Rmd`, a Rmarkdown report that creates all components of a `SingleCellExperiment`.
+`X` should be the last name of the first author of the relevant study while `Y` should be the name of the biological system.
+- `inst/scripts/make-X-Y-metadata.R`, an R script that creates a metadata CSV file at `inst/extdata/metadata-X-Y.csv`.
+Metadata files should follow the format described in the `r Biocpkg("ExperimentHub")` documentation.
+- `R/XYData.R`, an R source file that defines a function `XYData()` to download the components from ExperimentHub
+and creates a `SingleCellExperiment` object.
+
+Potential contributors are recommended to examine some of the existing scripts in the package to pick up the coding conventions.
+Remember, we're more likely to accept a contribution if it's indistinguishable from something we might have written ourselves!
 
 As a general rule, 10X Genomics data sets are not suitable for inclusion in this package.
 They are either easy to load (e.g., with functions from the `r Biocpkg("DropletUtils")` package),
