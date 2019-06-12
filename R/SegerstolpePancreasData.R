@@ -23,7 +23,7 @@
 #' \emph{Cell Metab.} 24(4), 593-607.
 #'
 #' @examples
-#' \dontrun{sce <- SegerstolpePancreasData()}
+#' sce <- SegerstolpePancreasData()
 #' 
 #' @export
 #' @importFrom SingleCellExperiment isSpike<-

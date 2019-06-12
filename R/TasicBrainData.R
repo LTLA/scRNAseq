@@ -25,7 +25,7 @@
 #' \emph{Nat. Neurosci.} 19(2), 335-46.
 #'
 #' @examples
-#' \dontrun{sce <- TasicBrainData()}
+#' sce <- TasicBrainData()
 #' 
 #' @export
 #' @importFrom SingleCellExperiment isSpike<-

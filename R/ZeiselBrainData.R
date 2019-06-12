@@ -24,7 +24,7 @@
 #' \emph{Science} 347(6226), 1138-42.
 #'
 #' @examples
-#' \dontrun{sce <- ZeiselBrainData()}
+#' sce <- ZeiselBrainData()
 #' 
 #' @export
 #' @importFrom SingleCellExperiment isSpike<-

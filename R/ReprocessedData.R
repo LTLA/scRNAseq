@@ -54,6 +54,9 @@
 #' Adult mouse cortical cell taxonomy revealed by single cell transcriptomics.
 #' \emph{Nat. Neurosci.} 19(2), 335-46.
 #'
+#' @examples
+#' sce <- ReprocessedAllenData()
+#'
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
