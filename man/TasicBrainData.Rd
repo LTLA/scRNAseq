@@ -26,7 +26,7 @@ Note that some of the spike-in rows have \code{NA} observations for some (but no
 The last 9 columns (containing \code{_CTX_} in their names) correspond to no-cell control libraries.
 }
 \examples{
-\dontrun{sce <- TasicBrainData()}
+sce <- TasicBrainData()
 
 }
 \references{

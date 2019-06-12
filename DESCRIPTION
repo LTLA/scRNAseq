@@ -1,7 +1,7 @@
 Package: scRNAseq
 Title: Collection of Public Single-Cell RNA-Seq Datasets
-Version: 1.11.1
-Date: 2019-06-09
+Version: 1.11.2
+Date: 2019-06-11
 Authors@R: c(
     person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cre", "cph")),
     person("Michael", "Cole", role="aut"),
@@ -24,6 +24,7 @@ Suggests:
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 
+    ExperimentHub,
     ExperimentData, 
     ExpressionData, 
     SequencingData, 

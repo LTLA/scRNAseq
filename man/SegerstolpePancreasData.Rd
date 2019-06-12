@@ -24,7 +24,7 @@ Column metadata were extracted from the \code{Characteristcs} fields of the SDRF
 This contains information such as the cell type labels and patient status.
 }
 \examples{
-\dontrun{sce <- SegerstolpePancreasData()}
+sce <- SegerstolpePancreasData()
 
 }
 \references{

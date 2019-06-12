@@ -25,7 +25,7 @@ Column metadata is provided in the same form as supplied in \url{http://linnarss
 This contains information such as the cell diameter and the published cell type annotations.
 }
 \examples{
-\dontrun{sce <- ZeiselBrainData()}
+sce <- ZeiselBrainData()
 
 }
 \references{

@@ -56,6 +56,10 @@ FastQC (v. 0.10.1) and Picard (v. 1.128) were used to compute sample quality con
 However, no filtering on the QC metrics has been performed for any dataset.
 }
 
+\examples{
+sce <- ReprocessedAllenData()
+
+}
 \references{
 Pollen AA et al. (2014). 
 Low-coverage single-cell mRNA sequencing reveals cellular heterogeneity and activated signaling pathways in developing cerebral cortex. 
