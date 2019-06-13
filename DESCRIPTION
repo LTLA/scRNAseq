@@ -11,7 +11,6 @@ Description: Gene-level counts for a collection of public scRNA-seq datasets,
 License: CC0
 NeedsCompilation: no
 Depends: 
-    R (>= 3.3), 
     SingleCellExperiment
 Imports:
     SummarizedExperiment,
@@ -29,4 +28,5 @@ biocViews:
     ExpressionData, 
     SequencingData, 
     RNASeqData
+BuildResaveData: no
 RoxygenNote: 6.1.1

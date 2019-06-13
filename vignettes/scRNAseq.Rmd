@@ -25,6 +25,7 @@ Instead, we do the necessary data munging so that users only need to call a sing
 For example:
 
 ```{r}
+library(scRNAseq)
 fluidigm <- ReprocessedFluidigmData()
 fluidigm
 ```
