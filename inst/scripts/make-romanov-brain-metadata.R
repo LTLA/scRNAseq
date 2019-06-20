@@ -1,0 +1,22 @@
+write.csv(file="../extdata/metadata-romanov-brain.csv", 
+    data.frame(
+        Title = sprintf("Romanov brain %s", c("counts", "colData")),
+        Description = sprintf("%s for the Romanov brain single-cell RNA-seq dataset", 
+            c("Count matrix", "Per-cell metadata")),
+        RDataPath = file.path("scRNAseq", "tasic-brain", "2.0.0", 
+            c("counts.rds", "coldata.rds")),
+        BiocVersion="3.10",
+        Genome="mm10",
+        SourceType="TXT",
+        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE74672",
+        SourceVersion="GSE74672_expressed_mols_with_classes.xlsx.gz",
+        Species="Mus musculus",
+        TaxonomyId="10090",
+        Coordinate_1_based=TRUE,
+        DataProvider="Sten Linnarsson",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass="character",
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)
