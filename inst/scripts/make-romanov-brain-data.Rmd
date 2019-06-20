@@ -1,0 +1,90 @@
+---
+title: Processing the Romanov brain dataset
+author: Aaron Lun
+date: "June 8, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview
+
+The @romanov2017molecular provides a single-cell RNA seq dataset involving the mouse brain. 
+This contains approximately 2900 cells of varying types such as oligodendrocytes, microglia and neurons.
+Individual cells were separated and libraries generated using the Fluidigm C1 system.
+After sequencing, expression was quantified by counting the number of UMIs assigned to each gene.
+
+# Downloading the count data
+
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE74672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE74672).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+    "GSE74nnn/GSE74672/suppl")
+count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSE74672_expressed_mols_with_classes.xlsx.gz"))
+```
+
+We load them into memory.
+
+```{r}
+library(R.utils)
+tmp.file <- tempfile(fileext=".xlsx")
+gunzip(count.file, destname=tmp.file, remove=FALSE)
+
+# WARNING: this requires >20 GB of memory!
+library(readxl)
+all.data <- read_xlsx(tmp.file, n_max=1, col_names=FALSE)
+dim(all.data)
+```
+
+# Extracting the metadata
+
+The first 11 rows correspond to metadata and need to be extracted.
+
+```{r}
+coldata <- all.data[1:11,]
+coldata <- coldata[,-1]
+head(coldata)
+```
+
+We convert the remaining counts into a sparse matrix.
+
+```{r}
+counts <- all.data[-(1:11),]
+rownames(counts) <- counts[,1]
+counts <- as.countsrix(counts[,-1])
+counts <- as(counts, "dgCMatrix")
+dim(counts)
+```
+
+# Saving to file 
+
+We now save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
+
+```{r}
+path <- file.path("scRNAseq", "romanov-brain", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
