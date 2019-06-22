@@ -45,27 +45,44 @@ gunzip(count.file, destname=tmp.file, remove=FALSE)
 
 # WARNING: this requires >20 GB of memory!
 library(readxl)
-all.data <- read_xlsx(tmp.file, n_max=1, col_names=FALSE)
+all.data <- read_xlsx(tmp.file, col_names=FALSE)
 dim(all.data)
 ```
 
 # Extracting the metadata
 
-The first 11 rows correspond to metadata and need to be extracted.
+The first 9 rows correspond to metadata and need to be extracted.
 
 ```{r}
-coldata <- all.data[1:11,]
+coldata <- all.data[1:9,]
+colfields <- coldata[,1,drop=TRUE]
 coldata <- coldata[,-1]
-head(coldata)
+
+coldata <- t(coldata)
+coldata <- data.frame(coldata, stringsAsFactors=FALSE)
+rownames(coldata) <- NULL
+
+library(S4Vectors)
+coldata <- DataFrame(coldata)
+colnames(coldata) <- colfields
+
+for (i in 4:9) {
+    coldata[,i] <- as.numeric(coldata[,i])
+}
+coldata
 ```
 
+The next three rows are empty, so we just skip them.
 We convert the remaining counts into a sparse matrix.
 
 ```{r}
-counts <- all.data[-(1:11),]
-rownames(counts) <- counts[,1]
-counts <- as.countsrix(counts[,-1])
+raw.counts <- all.data[-(1:12),]
+counts <- as.matrix(raw.counts[,-1])
+
+library(Matrix)
 counts <- as(counts, "dgCMatrix")
+rownames(counts) <- raw.counts[,1,drop=TRUE]
+colnames(counts) <- NULL
 dim(counts)
 ```
 
