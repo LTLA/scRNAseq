@@ -23,7 +23,7 @@ After sequencing, expression was quantified by counting the number of reads mapp
 
 # Downloading the count data
 
-Counts for endogenous genes and repeat regions are available as Supplementary Table 2 at http://linnarssonlab.org/drg/.
+Counts for endogenous genes and repeat regions are available as External Resource Table 1 at http://linnarssonlab.org/drg/.
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
@@ -32,15 +32,14 @@ bfc <- BiocFileCache("raw_data", ask = FALSE)
 base.url <- file.path("https://storage.googleapis.com",
     "linnarsson-lab-www-blobs/blobs/drg")
 count.file <- bfcrpath(bfc, file.path(base.url,
-    "Usoskin%20et%20al.%20External%20resources%20Table%202.xlsm"))
+    "Usoskin%20et%20al.%20External%20resources%20Table%201.xlsx"))
 ```
 
 We load them into memory.
 
 ```{r}
 library(readxl)
-all.raw <- read_xlsx(count.file, sheet=6)
-all.raw <- all.raw[,1:706] # last two columns are empty!
+all.raw <- read_xlsx(count.file, sheet=2, col_names=FALSE)
 ```
 
 # Unpacking the format
@@ -48,39 +47,37 @@ all.raw <- all.raw[,1:706] # last two columns are empty!
 We need to unpack the column data:
 
 ```{r}
-meta.raw <- head(all.raw, 9)
-coldata <- data.frame(t(meta.raw[,-(1:10)]), stringsAsFactors=FALSE)
-colnames(coldata) <- meta.raw[,10,drop=TRUE]
-head(coldata)
+meta.raw <- head(all.raw, 10)
+coldata <- data.frame(t(meta.raw[,-(1:9)]), stringsAsFactors=FALSE)
+
+library(S4Vectors)
+coldata <- DataFrame(coldata)
+colnames(coldata) <- meta.raw[,9,drop=TRUE]
+rownames(coldata) <- NULL
+
+coldata[,5] <- as.numeric(coldata[,5])
+coldata
 ```
 
 And then the rowdata:
 
 ```{r}
-gene.info <- tail(all.raw, -12)
-rowdata <- as.data.frame(gene.info[,1:10])
-rowdata.names <- all.raw[11,1:10,drop=TRUE]
+gene.info <- tail(all.raw, -11)
+rowdata <- as.data.frame(gene.info[,1:8])
+rowdata.names <- all.raw[11,1:8,drop=TRUE]
 rowdata.names <- sub("^[0-9]\\. ", "", rowdata.names)
+rowdata <- DataFrame(rowdata)
 colnames(rowdata) <- rowdata.names
-dim(rowdata)
-colnames(rowdata)
+rowdata
 ```
 
 And finally, the RPMs (since no raw counts have been provided):
 
 ```{r}
-rpms <- as.matrix(gene.info[,-(1:10)])
+rpms <- as.matrix(gene.info[,-(1:9)])
 storage.mode(rpms) <- "numeric"
+colnames(rpms) <- NULL
 dim(rpms)
-```
-
-We move gene and sample IDs into the row and column names.
-
-```{r}
-rownames(rpms) <- rowdata[,1]
-colnames(rpms) <- coldata[,1]
-rowdata <- rowdata[,-1]
-coldata <- coldata[,-1]
 ```
 
 # Saving to file 
