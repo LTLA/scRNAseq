@@ -9,6 +9,9 @@
 #'
 #' Column metadata is provided in the same form as supplied in External Table 2 of \url{http://linnarssonlab.org/drg/}.
 #' This contains information such as the library of origin and the cell type.
+#'
+#' The count matrix contains information for repeats, marked with \code{r_} prefixes in the row names;
+#' as well as mitochondrial transcripts, marked with \code{mt-} prefixes.
 #' 
 #' @return A \linkS4class{SingleCellExperiment} object.
 #'
@@ -23,10 +26,8 @@
 #' sce <- UsoskinBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
 UsoskinBrainData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("tasic-brain", version), assays="rpms", has.rowdata=FALSE)
-    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
     sce
 }
