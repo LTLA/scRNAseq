@@ -14,15 +14,9 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Overview
-
-The @romanov2017molecular provides a single-cell RNA seq dataset involving the mouse brain. 
-This contains approximately 2900 cells of varying types such as oligodendrocytes, microglia and neurons.
-Individual cells were separated and libraries generated using the Fluidigm C1 system.
-After sequencing, expression was quantified by counting the number of UMIs assigned to each gene.
-
 # Downloading the count data
 
+We obtain a single-cell RNA sequencing dataset of the mouse hypothalamus from @romanov2017molecular.
 Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
 using the accession number [GSE74672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE74672).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.

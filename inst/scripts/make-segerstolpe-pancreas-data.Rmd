@@ -14,15 +14,9 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Overview
-
-The @segerstolpe2016single study provides a single-cell RNA sequencing dataset of the human pancreatic islets.
-It contains a diversity of cell types ranging from alpha and beta cells, for both healthy controls and type II diabetes patients.
-Single-cell RNA-seq libraries were prepared using the Smart-seq2 protocol [@picelli2014full].
-After sequencing, expression was quantified by counting the number of reads mapped to each gene.
-
 # Downloading the count data
 
+We obtain a single-cell RNA sequencing dataset of human pancreas from @segerstolpe2016single. 
 A count matrix is provided in the ArrayExpress entry for this project.
 We download it using `r Biocpkg("BiocFileCache")` to cache the results:
 

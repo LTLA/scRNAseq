@@ -14,15 +14,9 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Overview
-
-The @usoskin2015unbiased study provides a single-cell RNA seq dataset involving the mouse brain. 
-This contains approximately 700 cells of varying types such as oligodendrocytes, microglia and neurons.
-Libraries were prepared from individual cells using the STRT-Seq protocol.
-After sequencing, expression was quantified by counting the number of reads mapped to each gene.
-
 # Downloading the count data
 
+We obtain a single-cell RNA sequencing dataset of the mouse brain from @usoskin2015unbiased.
 Counts for endogenous genes and repeat regions are available as External Resource Table 1 at http://linnarssonlab.org/drg/.
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 

@@ -14,15 +14,9 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Overview
-
-The @tasic2016adult study provides a single-cell RNA seq dataset involving the mouse brain. 
-This contains approximately 1800 cells of varying types such as oligodendrocytes, microglia and neurons.
-Individual cells were isolated by FACS and library preparation was performed on each cell using the SMARTer kit.
-After sequencing, expression was quantified by counting the number of reads mapped to each gene.
-
 # Downloading the count data
 
+We obtain a single-cell RNA sequencing dataset of the mouse brain from @tasic2016adult. 
 Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
 using the accession number [GSE71585](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71585).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
