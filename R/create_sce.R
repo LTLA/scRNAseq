@@ -1,17 +1,22 @@
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom S4Vectors DataFrame
-.create_sce <- function(dataset, hub=ExperimentHub(), assay="counts", has.rowdata=TRUE) {
+.create_sce <- function(dataset, hub=ExperimentHub(), assay="counts", has.rowdata=TRUE, suffix=NULL) {
     host <- file.path("scRNAseq", dataset)
+    if (is.null(suffix)) {
+        suffix <- ""
+    } else {
+        suffix <- paste0("-", suffix)
+    }
 
     all.assays <- list()
     for (a in assays) {
-        all.assays[[a]] <- hub[hub$rdatapath==file.path(host, sprintf("%s.rds", a))][[1]]
+        all.assays[[a]] <- hub[hub$rdatapath==file.path(host, sprintf("%s%s.rds", a, suffix))][[1]]
     }
 
-    coldata <- hub[hub$rdatapath==file.path(host, "coldata.rds")][[1]]
+    coldata <- hub[hub$rdatapath==file.path(host, sprintf("coldata%s.rds", suffix))][[1]]
     if (has.rowdata) {
-        rowdata <- hub[hub$rdatapath==file.path(host, "rowdata.rds")][[1]]
+        rowdata <- hub[hub$rdatapath==file.path(host, sprintf("rowdata.rds", suffix))][[1]]
     } else {
         rowdata <- DataFrame(row.names=rownames(counts))
     }
