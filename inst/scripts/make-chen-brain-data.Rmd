@@ -1,0 +1,79 @@
+---
+title: Processing the Chen brain dataset
+author: Aaron Lun
+date: "June 24, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse brain from @chen2017singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE87544](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE87544).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+    "GSE87nnn/GSE87544/suppl")
+count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSE87544_Merged_17samples_14437cells_count.txt.gz"))
+```
+
+Reading them in as a sparse matrix.
+
+```{r}
+library(scater)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Downloading the metadata
+
+We also download the cluster identities.
+
+```{r}
+cluster.file <- bfcrpath(bfc, file.path(base.url,
+    "GSE87544_1443737Cells.SVM.cluster.identity.renamed.csv.gz"))
+coldata <- read.csv(cluster.file, stringsAsFactors=FALSE, row.names=1)
+coldata <- as(coldata, "DataFrame")
+coldata
+```
+
+We check that the columns are in the same order.
+
+```{r}
+m <- match(colnames(counts), rownames(coldata))
+coldata <- coldata[m,]
+stopifnot(identical(colnames(counts), rownames(coldata)))
+```
+
+# Saving to file 
+
+We now save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
+
+```{r}
+path <- file.path("scRNAseq", "chen-brain", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
