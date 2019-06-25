@@ -17,7 +17,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the count data
 
 We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from @romanov2017molecular.
-Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE75330](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 
@@ -43,19 +43,31 @@ We extract the metadata for this study using the `r Biocpkg("GEOquery")` package
 ```{r}
 library(GEOquery)
 coldata <- pData(getGEO("GSE75330")[[1]])
+```
+
+Unfortunately, some of the cells are named differently in the `coldata` compared to the `counts`, which needs correction.
+
+```{r}
+coldata[,1] <- sub("T[0-9]-", "-", coldata[,1])
+coldata <- coldata[match(colnames(counts), coldata[,1]),]
+stopifnot(identical(colnames(counts), coldata[,1]))
+```
+
 coldata <- coldata[match(colnames(counts), coldata[,1]),]
 
+
+```{r}
 library(S4Vectors)
 coldata <- as(coldata, "DataFrame")
+rownames(coldata) <- NULL
 colnames(coldata)
 ```
 
 We remove the constant columns, as these are unlikely to be interesting.
 
 ```{r}
-uninteresting <- lapply(coldata, FUN=function(x) length(unique(x)))
-keep <- unlist(uninteresting)!=1L
-coldata <- coldata[,keep]
+nlevels <- vapply(coldata, FUN=function(x) length(unique(x[!is.na(x)])), 1L)
+coldata <- coldata[,nlevels > 1L]
 ```
 
 We also remove the columns related to the GEO accession itself, as well as some redundant fields.
@@ -74,7 +86,7 @@ for (i in colnames(coldata)) {
         coldata[[i]] <- as.character(coldata[[i]])
     }
 }
-colnames(coldata) <- sub(":ch1$", "", colnames(coldata))
+colnames(coldata) <- sub("[:_]ch1$", "", colnames(coldata))
 coldata
 ```
 
