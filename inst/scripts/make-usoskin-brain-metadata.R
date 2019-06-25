@@ -1,0 +1,22 @@
+write.csv(file="../extdata/metadata-usoskin-brain.csv", 
+    data.frame(
+        Title = sprintf("Usoskin brain %s", c("RPMs", "rowData", "colData")),
+        Description = sprintf("%s for the Usoskin brain single-cell RNA-seq dataset", 
+            c("RPM matrix", "Per-gene metadata", "Per-cell metadata")),
+        RDataPath = file.path("scRNAseq", "usoskin-brain", "2.0.0", 
+            c("rpms.rds", "rowdata.rds", "coldata.rds")),
+        BiocVersion="3.10",
+        Genome="mm10",
+        SourceType="TXT",
+        SourceUrl="http://linnarssonlab.org/drg/",
+        SourceVersion="External Resource Table 1",
+        Species="Mus musculus",
+        TaxonomyId="10090",
+        Coordinate_1_based=TRUE,
+        DataProvider="Sten Linnarsson",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass="character",
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)

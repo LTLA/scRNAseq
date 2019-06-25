@@ -1,0 +1,96 @@
+---
+title: Processing the Usoskin brain dataset
+author: Aaron Lun
+date: "June 8, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse brain from @usoskin2015unbiased.
+Counts for endogenous genes and repeat regions are available as External Resource Table 1 at http://linnarssonlab.org/drg/.
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("https://storage.googleapis.com",
+    "linnarsson-lab-www-blobs/blobs/drg")
+count.file <- bfcrpath(bfc, file.path(base.url,
+    "Usoskin%20et%20al.%20External%20resources%20Table%201.xlsx"))
+```
+
+We load them into memory.
+
+```{r}
+library(readxl)
+all.raw <- read_xlsx(count.file, sheet=2, col_names=FALSE)
+```
+
+# Unpacking the format
+
+We need to unpack the column data:
+
+```{r}
+meta.raw <- head(all.raw, 10)
+coldata <- data.frame(t(meta.raw[,-(1:9)]), stringsAsFactors=FALSE)
+
+library(S4Vectors)
+coldata <- DataFrame(coldata)
+colnames(coldata) <- meta.raw[,9,drop=TRUE]
+rownames(coldata) <- NULL
+
+coldata[,5] <- as.numeric(coldata[,5])
+coldata
+```
+
+And then the rowdata:
+
+```{r}
+gene.info <- tail(all.raw, -11)
+rowdata <- as.data.frame(gene.info[,1:8])
+rowdata.names <- all.raw[11,1:8,drop=TRUE]
+rowdata.names <- sub("^[0-9]\\. ", "", rowdata.names)
+rowdata <- DataFrame(rowdata)
+colnames(rowdata) <- rowdata.names
+rowdata
+```
+
+And finally, the RPMs (since no raw counts have been provided):
+
+```{r}
+rpms <- as.matrix(gene.info[,-(1:9)])
+storage.mode(rpms) <- "numeric"
+colnames(rpms) <- NULL
+dim(rpms)
+```
+
+# Saving to file 
+
+We now save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
+
+```{r}
+path <- file.path("scRNAseq", "usoskin-brain", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(rpms, file=file.path(path, "rpms.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
+saveRDS(rowdata, file=file.path(path, "rowdata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References

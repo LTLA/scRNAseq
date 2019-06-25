@@ -14,15 +14,9 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Overview
-
-The @zeisel2015brain study provides a single-cell RNA seq dataset involving the mouse brain. 
-This contains approximately 3000 cells of varying types such as oligodendrocytes, microglia and neurons.
-Individual cells were isolated using the Fluidigm C1 microfluidics system [@pollen2014lowcoverage] and library preparation was performed on each cell using a UMI-based protocol.
-After sequencing, expression was quantified by counting the number of UMIs mapped to each gene.
-
 # Downloading the data
 
+We obtain a single-cell RNA sequencing dataset of the mouse brain from @zeisel2015brain. 
 Counts for endogenous genes, mitochondrial genes, repeats and spike-in transcripts are available from http://linnarssonlab.org/cortex.
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
