@@ -10,7 +10,7 @@ write.csv(file="../extdata/metadata-chen-brain.csv",
         SourceType="TXT",
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE87544",
         SourceVersion=c(
-            "GSE87544_Merged_17samples_14437cells_count.txt.gz"
+            "GSE87544_Merged_17samples_14437cells_count.txt.gz",
             "GSE87544_1443737Cells.SVM.cluster.identity.renamed.csv.gz"),
         Species="Mus musculus",
         TaxonomyId="10090",

@@ -1,7 +1,7 @@
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom S4Vectors DataFrame
-.create_sce <- function(dataset, hub=ExperimentHub(), assay="counts", has.rowdata=TRUE, suffix=NULL) {
+.create_sce <- function(dataset, hub=ExperimentHub(), assays="counts", has.rowdata=TRUE, suffix=NULL) {
     host <- file.path("scRNAseq", dataset)
     if (is.null(suffix)) {
         suffix <- ""
