@@ -17,7 +17,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the count data
 
 We obtain a single-cell RNA sequencing dataset of the mouse hypothalamus from @romanov2017molecular.
-Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE74672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE74672).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 
