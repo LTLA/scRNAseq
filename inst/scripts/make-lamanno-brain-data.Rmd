@@ -17,7 +17,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the count data
 
 We obtain a single-cell RNA sequencing dataset of the mouse and human midbrains from @lamanno2016molecular.
-Counts for cells from adult and embryo mice are available from the Gene Expression Omnibus 
+Counts for cells from various developmental stages in both species are available from the Gene Expression Omnibus 
 using the accession number [GSE76381](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76381).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 
@@ -116,12 +116,12 @@ SAVEFUN <- function(input, suffix) {
 }
 ```
 
-We save all of the relevant components of `sce` to file for upload to `r Biocpkg("ExperimentHub")`.
+We save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
 
 ```{r}
 SAVEFUN(es.data, "human-es")
 SAVEFUN(embryo.data, "human-embryo")
-SAVEFUN(es.data, "human-es")
+SAVEFUN(ips.data, "human-ips")
 SAVEFUN(madult.data, "mouse-adult")
 SAVEFUN(membryo.data, "mouse-embryo")
 ```
