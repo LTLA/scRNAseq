@@ -77,27 +77,44 @@ We retrieve the column metadata fields from ArrayExpress using the same accessio
 meta.fname <- bfcrpath(bfc, file.path("https://www.ebi.ac.uk/arrayexpress",
     "files/E-MTAB-5061/E-MTAB-5061.sdrf.txt"))
 emtab.sdrf <- read.delim(meta.fname, stringsAsFactors=FALSE, check.names=FALSE)
+colnames(emtab.sdrf)
+```
 
-# Making sure they match.
+We make sure that the sample IDs match with the column names of the count matrix.
+
+```{r}
 stopifnot(identical(sort(emtab.sdrf[["Source Name"]]), sort(colnames(emtab.df))))
 emtab.sdrf <- emtab.sdrf[match(colnames(counts), emtab.sdrf[["Source Name"]]),]
 ```
 
-We only keep the `Characteristics` fields.
+We only keep the `Source Name` and `Characteristics` fields.
 The other fields describe relationships to other files/identifiers within ArrayExpress and are not of (primary) interest.
 
 ```{r}
 keep <- grep("Characteristics", colnames(emtab.sdrf))
-emtab.sdrf <- emtab.sdrf[,keep]
-colnames(emtab.sdrf) <- sub("Characteristics\\[(.*)\\]", "\\1", 
-    colnames(emtab.sdrf))
-head(emtab.sdrf)
+emtab.sdrf <- emtab.sdrf[,c(1, keep)]
+colnames(emtab.sdrf) <- sub(".*\\[(.*)\\]", "\\1", colnames(emtab.sdrf))
+```
+
+We also remove fields that only have one level and thus are not really useful.
+
+```{r}
+has.multi.levels <- vapply(emtab.sdrf, function(x) length(unique(x))>1L, TRUE)
+emtab.sdrf <- emtab.sdrf[,has.multi.levels]
+```
+
+The `cell type` field has some `"not applicable"` entries that should be more formally represented as `NA`s.
+
+```{r}
+lost <- emtab.sdrf$`cell type`=="not applicable"
+emtab.sdrf$`cell type`[lost] <- NA_character_
 ```
 
 We coerce this into a column-level `DataFrame`.
 
 ```{r}
 coldata <- as(emtab.sdrf, "DataFrame")
+coldata
 ```
 
 # Saving to file
