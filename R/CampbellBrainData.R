@@ -5,7 +5,7 @@
 #'
 #' @details
 #' This function provides the brain scRNA-seq data from Campbell et al. (2017)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' Column metadata is provided in the same form as supplied in GSE93374.
 #' This contains information such as the diet of the mice, sex and proposed cell type for each cell.

@@ -5,7 +5,7 @@
 #'
 #' @details
 #' This function provides the brain scRNA-seq data from Marques et al. (2016)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single count matrix.
+#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' Column metadata is provided in the same form as supplied in GSE75330. 
 #' This contains information such as the cell type and age/sex of the mouse of origin for each cell.
