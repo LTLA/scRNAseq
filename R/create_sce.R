@@ -18,7 +18,7 @@
     if (has.rowdata) {
         rowdata <- hub[hub$rdatapath==file.path(host, sprintf("rowdata.rds", suffix))][[1]]
     } else {
-        rowdata <- DataFrame(row.names=rownames(counts))
+        rowdata <- new("DataFrame", nrows=nrow(all.assays[[1]]))
     }
 
     SingleCellExperiment(all.assays, rowData=rowdata, colData=coldata)
