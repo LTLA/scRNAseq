@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from @romanov2017molecular.
+We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from @marques2016oligodendrocyte.
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE75330](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
@@ -43,6 +43,11 @@ We extract the metadata for this study using the `r Biocpkg("GEOquery")` package
 ```{r}
 library(GEOquery)
 coldata <- pData(getGEO("GSE75330")[[1]])
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+rownames(coldata) <- NULL
+colnames(coldata)
 ```
 
 Unfortunately, some of the cells are named differently in the `coldata` compared to the `counts`, which needs correction.
@@ -51,16 +56,6 @@ Unfortunately, some of the cells are named differently in the `coldata` compared
 coldata[,1] <- sub("T[0-9]-", "-", coldata[,1])
 coldata <- coldata[match(colnames(counts), coldata[,1]),]
 stopifnot(identical(colnames(counts), coldata[,1]))
-```
-
-coldata <- coldata[match(colnames(counts), coldata[,1]),]
-
-
-```{r}
-library(S4Vectors)
-coldata <- as(coldata, "DataFrame")
-rownames(coldata) <- NULL
-colnames(coldata)
 ```
 
 We remove the constant columns, as these are unlikely to be interesting.
