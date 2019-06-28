@@ -1,0 +1,142 @@
+---
+title: Processing the Baron pancreas dataset
+author: Aaron Lun
+date: "June 27, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of human pancreas from @baron2016singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE84133](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE84133).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache(ask=FALSE)    
+tarball <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE84133&format=file")
+```
+
+We unpack it to a temporary directory.
+
+```{r}
+temp <- tempfile()
+untar(tarball, exdir=temp)
+```
+
+# Reading in human data
+
+We set up a function to load in each set of counts as a sparse matrix.
+
+```{r}
+library(Matrix)
+FUN <- function(X) {
+    input <- read.csv(X, stringsAsFactors=FALSE)
+    rownames(input) <- input[,1]
+    labels <- as.character(input$assigned_cluster)
+    input <- input[,4:ncol(input)]
+    input <- t(input)
+    list(mat=as(input, "dgCMatrix"), label=labels)
+}
+```
+
+We read in all the human datasets.
+
+```{r}
+hs.files <- c(
+    "GSM2230757_human1_umifm_counts.csv.gz",
+    "GSM2230759_human3_umifm_counts.csv.gz",
+    "GSM2230758_human2_umifm_counts.csv.gz",  
+    "GSM2230760_human4_umifm_counts.csv.gz"
+)
+all.human <- lapply(file.path(temp, hs.files), FUN)
+sapply(all.human, function(x) dim(x$mat))
+```
+
+We verify that the gene order is the same, and combine the counts.
+
+```{r}
+stopifnot(length(unique(lapply(all.human, function(x) rownames(x$mat))))==1L)
+counts <- do.call(cbind, lapply(all.human, function(x) x$mat))
+dim(counts)
+```
+
+We do the same thing with the column metadata.
+
+```{r}
+labels <- lapply(all.human, function(x) x$label)
+donor <- rep(sub("_.*", "", hs.files), lengths(labels))
+labels <- unlist(labels)
+
+library(S4Vectors)
+coldata <- DataFrame(donor=donor, label=labels)
+coldata
+```
+
+We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "baron-pancreas", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts-human.rds"))
+saveRDS(coldata, file=file.path(path, "coldata-human.rds"))
+```
+
+# Reading in mouse data
+
+We read in all the mouse datasets.
+
+```{r}
+mm.files <- c(
+    "GSM2230761_mouse1_umifm_counts.csv.gz",
+    "GSM2230762_mouse2_umifm_counts.csv.gz"
+)
+all.mouse <- lapply(file.path(temp, mm.files), FUN)
+sapply(all.mouse, function(x) dim(x$mat))
+```
+
+We verify that the gene order is the same, and combine the counts.
+
+```{r}
+stopifnot(length(unique(lapply(all.mouse, function(x) rownames(x$mat))))==1L)
+counts <- do.call(cbind, lapply(all.mouse, function(x) x$mat))
+dim(counts)
+```
+
+We do the same thing with the column metadata.
+
+```{r}
+labels <- lapply(all.mouse, function(x) x$label)
+strain <- rep(c("ICR", "C57BL/6"), lengths(labels))
+labels <- unlist(labels)
+coldata <- DataFrame(strain=strain, label=labels)
+coldata
+```
+
+We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "baron-pancreas", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts-mouse.rds"))
+saveRDS(coldata, file=file.path(path, "coldata-mouse.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
