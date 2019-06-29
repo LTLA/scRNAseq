@@ -1,0 +1,22 @@
+write.csv(file="../extdata/metadata-grun-pancreas.csv",
+    data.frame(
+        Title = sprintf("Grun pancreas %s", c("counts", "rowData", "colData")),
+        Description = sprintf("%s for the Grun pancreas single-cell RNA-seq dataset", 
+            c("Count matrix", "Per-gene metadata", "Per-cell metadata")),
+        RDataPath = file.path("scRNAseq", "grun-pancreas", "2.0.0", 
+            c("counts.rds", "rowdata.rds", "coldata.rds")),
+        BiocVersion="3.10",
+        Genome="hg19",
+        SourceType="TSV",
+        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81076",
+        SourceVersion="GSE81076_D2_3_7_10_17.txt.gz",
+        Species="Homo sapiens",
+        TaxonomyId="9606",
+        Coordinate_1_based=TRUE,
+        DataProvider="Mauro Javier Grun",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass="character",
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)
