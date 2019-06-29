@@ -28,6 +28,6 @@
 #' @export
 UsoskinBrainData <- function() {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("tasic-brain", version), assays="rpms", has.rowdata=FALSE)
+    sce <- .create_sce(file.path("tasic-brain", version), assays="rpm", has.rowdata=FALSE)
     sce
 }

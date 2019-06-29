@@ -17,7 +17,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the count data
 
 We obtain a single-cell RNA sequencing dataset of the mouse brain from @usoskin2015unbiased.
-Counts for endogenous genes and repeat regions are available as External Resource Table 1 at http://linnarssonlab.org/drg/.
+RPMs for endogenous genes and repeat regions are available as External Resource Table 1 at http://linnarssonlab.org/drg/.
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
