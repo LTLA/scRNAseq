@@ -31,7 +31,7 @@
 #' @importFrom SummarizedExperiment rowData
 LunSpikeInData <- function(which=c("416b", "tropho")) {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("lun-spikein", version), suffix=which)
+    sce <- .create_sce(file.path("lun-spikein", version), suffix=match.arg(which))
     isSpike(sce, "ERCC") <- rownames(sce)=="ERCC"
     isSpike(sce, "SIRV") <- rownames(sce)=="SIRV"
     sce

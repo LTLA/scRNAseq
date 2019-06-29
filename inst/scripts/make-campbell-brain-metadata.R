@@ -7,7 +7,7 @@ write.csv(file="../extdata/metadata-campbell-brain.csv",
             c("counts.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="mm10",
-        SourceType="TXT",
+        SourceType="TSV",
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE93374",
         SourceVersion=c(
             "GSE93374_Merged_all_020816_DGE.txt.gz",
