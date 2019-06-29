@@ -7,7 +7,7 @@ write.csv(file="../extdata/metadata-marques-brain.csv",
             c("counts.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="mm10",
-        SourceType="TXT",
+        SourceType="TSV",
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330",
         SourceVersion=c(
             "GSE75330_Marques_et_al_mol_counts2.tab.gz",

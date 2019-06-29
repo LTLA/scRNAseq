@@ -7,7 +7,7 @@ write.csv(file="../extdata/metadata-tasic-brain.csv",
             c("counts.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="mm10",
-        SourceType="TXT",
+        SourceType="CSV",
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71585",
         SourceVersion=c(
             paste(

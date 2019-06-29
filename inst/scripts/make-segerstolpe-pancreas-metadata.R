@@ -7,7 +7,7 @@ write.csv(file="../extdata/metadata-segerstolpe-pancreas.csv",
             c("counts.rds", "rowdata.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="hg19",
-        SourceType="TXT",
+        SourceType="TSV",
         SourceUrl="https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-5061/",
         SourceVersion=c(
             "E-MTAB-5061.processed.1.zip",

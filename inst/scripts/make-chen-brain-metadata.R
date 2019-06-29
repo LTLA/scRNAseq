@@ -7,7 +7,7 @@ write.csv(file="../extdata/metadata-chen-brain.csv",
             c("counts.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="mm10",
-        SourceType="TXT",
+        SourceType=c("TSV", "CSV"),
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE87544",
         SourceVersion=c(
             "GSE87544_Merged_17samples_14437cells_count.txt.gz",

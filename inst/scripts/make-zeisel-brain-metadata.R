@@ -7,7 +7,7 @@ write.csv(file="../extdata/metadata-zeisel-brain.csv",
             c("counts.rds", "rowdata.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="mm10",
-        SourceType="TXT",
+        SourceType="TSV",
         SourceUrl="https://storage.googleapis.com/linnarsson-lab-www-blobs/blobs/cortex",
         SourceVersion=paste(
             "expression_mRNA_17-Aug-2014.txt",
