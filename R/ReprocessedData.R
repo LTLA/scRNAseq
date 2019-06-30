@@ -4,6 +4,10 @@
 #' Raw sequencing data were downloaded from NCBI's SRA or from EBI's ArrayExpress,
 #' aligned to the relevant genome build and used to quantify gene expression.
 #'
+#' @param assays Character vector specifying one or more assays to return.
+#' Choices are \code{"tophat_counts"}, \code{"cufflinks_fpkm"}, \code{"rsem_counts"} and \code{"rsem_tpm"}.
+#' If \code{NULL}, all assays are returned.
+#' 
 #' @return
 #' A \linkS4class{SingleCellExperiment} object containing one or more expression matrices,
 #' column metadata and (possibly) spike-in information.
@@ -60,9 +64,9 @@
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
-ReprocessedAllenData <- function() {
+ReprocessedAllenData <- function(assays=NULL) {
     version <- "1.10.0"
-    sce <- .create_sce_legacy(file.path("legacy-allen", version))
+    sce <- .create_sce_legacy(file.path("legacy-allen", version), assays)
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
     sce
 }
@@ -70,9 +74,9 @@ ReprocessedAllenData <- function() {
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
-ReprocessedTh2Data <- function() {
+ReprocessedTh2Data <- function(assays=NULL) {
     version <- "1.10.0"
-    sce <- .create_sce_legacy(file.path("legacy-th2", version))
+    sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
     sce
 }
@@ -80,7 +84,7 @@ ReprocessedTh2Data <- function() {
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment isSpike
-ReprocessedFluidigmData <- function() {
+ReprocessedFluidigmData <- function(assays=NULL) {
     version <- "1.10.0"
-    .create_sce_legacy(file.path("legacy-fluidigm", version))
+    .create_sce_legacy(file.path("legacy-fluidigm", version), assays)
 }
