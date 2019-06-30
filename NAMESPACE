@@ -3,6 +3,7 @@
 export(CampbellBrainData)
 export(ChenBrainData)
 export(LaMannoBrainData)
+export(LunSpikeInData)
 export(MarquesBrainData)
 export(ReprocessedAllenData)
 export(ReprocessedFluidigmData)

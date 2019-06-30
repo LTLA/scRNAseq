@@ -19,7 +19,7 @@ returning a \linkS4class{SingleCellExperiment} object for further use.
 }
 \details{
 This function provides the brain scRNA-seq data from La Manno et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+in the form of a \linkS4class{SingleCellExperiment} object with one of several possible matrices of UMI counts.
 
 Column metadata is provided in the same form as supplied in the supplementary tables in GSE71585.
 This contains information such as the time point and cell type.

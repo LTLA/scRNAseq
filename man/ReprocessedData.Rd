@@ -6,11 +6,16 @@
 \alias{ReprocessedFluidigmData}
 \title{Reprocessed single-cell data sets}
 \usage{
-ReprocessedAllenData()
+ReprocessedAllenData(assays = NULL)
 
-ReprocessedTh2Data()
+ReprocessedTh2Data(assays = NULL)
 
-ReprocessedFluidigmData()
+ReprocessedFluidigmData(assays = NULL)
+}
+\arguments{
+\item{assays}{Character vector specifying one or more assays to return.
+Choices are \code{"tophat_counts"}, \code{"cufflinks_fpkm"}, \code{"rsem_counts"} and \code{"rsem_tpm"}.
+If \code{NULL}, all assays are returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object containing one or more expression matrices,
