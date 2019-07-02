@@ -27,11 +27,15 @@
 #' sce <- GrunPancreasData()
 #' 
 #' @export
-#' @importFrom SummarizedExperiment rowData
+#' @importFrom S4Vectors DataFrame
+#' @importFrom SummarizedExperiment rowData<-
 #' @importFrom SingleCellExperiment isSpike<-
 GrunPancreasData <- function() {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("grun-pancreas", version)) 
-    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", rowData(sce)$symbol)
+    sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE) 
+    symbol <- sub("__.*", "", rownames(sce))
+    loc <- sub(".*__", "", rownames(sce))
+    rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", symbol)
     sce
 }

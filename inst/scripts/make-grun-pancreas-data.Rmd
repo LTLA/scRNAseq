@@ -38,6 +38,7 @@ dim(mat)
 # Loading the column metadata
 
 We extract the metadata from the column names.
+The definition of the `treatment` is based on the the sample descriptions in the GEO entry.
 
 ```{r}
 lib.names <- sub("_.*", "", colnames(mat))
@@ -74,17 +75,6 @@ coldata <- DataFrame(donor=donor.names, sample=treatment)
 coldata
 ```
 
-# Processing the row metadata
-
-As an extra service, we will clean up the row metadata as well.
-
-```{r}
-symbol <- sub("__.*", "", rownames(mat))
-loc <- sub(".*__", "", rownames(mat))
-rowdata <- DataFrame(symbol=symbol, chr=loc)
-rowdata
-```
-
 # Saving to file
 
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
@@ -93,7 +83,6 @@ We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`
 path <- file.path("scRNAseq", "grun-pancreas", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts.rds"))
-saveRDS(rowdata, file=file.path(path, "rowdata.rds"))
 saveRDS(coldata, file=file.path(path, "coldata.rds"))
 ```
 

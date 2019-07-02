@@ -27,11 +27,15 @@
 #' sce <- MuraroPancreasData()
 #' 
 #' @export
-#' @importFrom SummarizedExperiment rowData
+#' @importFrom S4Vectors DataFrame
+#' @importFrom SummarizedExperiment rowData<-
 #' @importFrom SingleCellExperiment isSpike<-
 MuraroPancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("muraro-pancreas", version)) 
-    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", rowData(sce)$symbol)
+    symbol <- sub("__.*", "", rownames(sce))
+    loc <- sub(".*__", "", rownames(sce))
+    rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", symbol)
     sce
 }

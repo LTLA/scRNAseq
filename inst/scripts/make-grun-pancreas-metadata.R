@@ -1,10 +1,10 @@
 write.csv(file="../extdata/metadata-grun-pancreas.csv",
     data.frame(
-        Title = sprintf("Grun pancreas %s", c("counts", "rowData", "colData")),
+        Title = sprintf("Grun pancreas %s", c("counts", "colData")),
         Description = sprintf("%s for the Grun pancreas single-cell RNA-seq dataset", 
-            c("Count matrix", "Per-gene metadata", "Per-cell metadata")),
+            c("Count matrix", "Per-cell metadata")),
         RDataPath = file.path("scRNAseq", "grun-pancreas", "2.0.0", 
-            c("counts.rds", "rowdata.rds", "coldata.rds")),
+            c("counts.rds", "coldata.rds")),
         BiocVersion="3.10",
         Genome="hg19",
         SourceType="TSV",
