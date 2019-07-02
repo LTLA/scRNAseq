@@ -9,6 +9,7 @@
 #'
 #' Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
 #' Spike-ins are specially labelled with the \code{\link{isSpike}} function.
+#' The rows of the output object are named with the symbol, but note that these are not unique.
 #'
 #' Column metadata were extracted from the \code{Characteristcs} fields of the SDRF file for ArrayExpress E-MTAB-5061.
 #' This contains information such as the cell type labels and patient status.
@@ -32,5 +33,6 @@ SegerstolpePancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("segerstolpe-pancreas", version))
     isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+", rowData(sce)$refseq)
+    rownames(sce) <- rowData(sce)$symbol
     sce
 }

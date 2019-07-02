@@ -26,8 +26,11 @@
 #' sce <- UsoskinBrainData()
 #' 
 #' @export
+#' @importFrom SummarizedExperiment rowData colData
 UsoskinBrainData <- function() {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("tasic-brain", version), assays="rpm", has.rowdata=FALSE)
+    sce <- .create_sce(file.path("usoskin-brain", version), assays="rpm")
+    colnames(sce) <- colData(sce)[["Sample ID"]]
+    rownames(sce) <- rowData(sce)[,1]
     sce
 }

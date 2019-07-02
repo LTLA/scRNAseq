@@ -16,7 +16,7 @@
 
     coldata <- hub[hub$rdatapath==file.path(host, sprintf("coldata%s.rds", suffix))][[1]]
     if (has.rowdata) {
-        rowdata <- hub[hub$rdatapath==file.path(host, sprintf("rowdata.rds", suffix))][[1]]
+        rowdata <- hub[hub$rdatapath==file.path(host, sprintf("rowdata%s.rds", suffix))][[1]]
     } else {
         rowdata <- new("DataFrame", nrows=nrow(all.assays[[1]]))
     }

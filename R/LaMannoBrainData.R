@@ -41,5 +41,6 @@
 LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo")) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("lamanno-brain", version), has.rowdata=FALSE, suffix=match.arg(which))
+    colnames(sce) <- colData(sce)[[grep("Cell_ID", colnames(colData(sce)), ignore.case=TRUE)]]
     sce
 }

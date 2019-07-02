@@ -27,8 +27,10 @@
 #' sce <- MarquesBrainData()
 #' 
 #' @export
+#' @importFrom SingleCellExperiment isSpike
 MarquesBrainData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("tasic-brain", version), assays="counts", has.rowdata=FALSE)
+    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+", rownames(sce))
     sce
 }
