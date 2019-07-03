@@ -7,7 +7,9 @@
 #' This function provides the mouse retina scRNA-seq data from Macosko et al. (2016)
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
-#' Column metadata contains the cluster identity as reported in the paper, as obtained from the McCarroll website.
+#' Column metadata contains the cluster identity as reported in the paper.
+#' Note that some cells will have \code{NA} identities as they are present in the count matrix but not in the metadata file.
+#' These are presumably low-quality cells that were discarded prior to clustering.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object.
 #'
