@@ -1,0 +1,20 @@
+write.csv(file="../extdata/metadata-grun-hsc.csv", 
+    data.frame(
+        Title = "Grun HSC counts",
+        Description = "Count matrix for the Grun haematopoietic stem cell single-cell RNA-seq dataset", 
+        RDataPath = file.path("scRNAseq", "grun-hsc", "2.0.0", "counts.rds"),
+        BiocVersion="3.10",
+        Genome="mm10",
+        SourceType="TSV",
+        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76983",
+        SourceVersion="GSE76983_expdata_BMJhscC.csv.gz",
+        Species="Mus musculus",
+        TaxonomyId="10090",
+        Coordinate_1_based=TRUE,
+        DataProvider="Jean-Charles Boisset",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass="character",
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)
