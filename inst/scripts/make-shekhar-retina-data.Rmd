@@ -1,0 +1,81 @@
+---
+title: Processing the Macosko retina dataset
+author: Aaron Lun
+date: "June 8, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse retina from @shekhar2016comprehensive. 
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE81904](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81904).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+count.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+    "GSE81nnn/GSE81904/suppl/GSE81904_BipolarUMICounts_Cell2016.txt.gz")
+count.file <- bfcrpath(bfc, count.url)
+```
+
+We load them into memory.
+
+```{r}
+library(scater)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Downloading the per-cell metadata
+
+We also download a file containing the metadata for each cell.
+(Courtesy of Vladimir Kiselev and Martin Hemberg, as the original annotation has disappeared.)
+
+```{r}
+meta.file <- bfcrpath(bfc, file.path("https://s3.amazonaws.com",
+    "scrnaseq-public-datasets/manual-data/shekhar/clust_retinal_bipolar.txt"))
+coldata <- read.delim(meta.file, stringsAsFactors=FALSE, check.names=FALSE)
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+coldata
+```
+
+We match the metadata to the columns.
+
+```{r}
+m <- match(colnames(counts), coldata$NAME)
+coldata <- coldata[m,]
+coldata$NAME <- colnames(counts)
+summary(is.na(m))
+```
+
+# Saving to file 
+
+We now save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "shekhar-retina", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References

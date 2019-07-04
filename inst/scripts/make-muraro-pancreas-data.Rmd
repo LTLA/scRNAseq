@@ -1,0 +1,97 @@
+---
+title: Processing the Muraro pancreas dataset
+author: Aaron Lun
+date: 28 June 2019
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of human pancreas from @muraro2016singlecell.
+A count matrix is provided from the Gene Expression Omnibus under the accession code GSE85241.
+We download it using `r Biocpkg("BiocFileCache")` to cache the results:
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask=FALSE)
+muraro.fname <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+    "GSE85nnn/GSE85241/suppl",
+    "GSE85241%5Fcellsystems%5Fdataset%5F4donors%5Fupdated%2Ecsv%2Egz"))
+```
+
+We first read the table into memory as a sparse matrix.
+
+```{r}
+library(scater)
+mat <- readSparseCounts(muraro.fname, quote="\"")
+dim(mat)
+```
+
+# Loading the column metadata
+
+We extract the metadata from the column names.
+
+```{r}
+donor.names <- sub("^(D[0-9]+).*", "\\1", colnames(mat))
+plate.id <- sub("^D[0-9]+-([0-9]+)_.*", "\\1", colnames(mat))
+table(donor.names, plate.id)
+```
+
+We also load in some cell annotations provided by the authors (via Vladimir Wikislev and Martin Hemberg).
+
+```{r}
+muraro.cell <- bfcrpath(bfc, file.path("https://s3.amazonaws.com",
+    "scrnaseq-public-datasets/manual-data/muraro",
+    "cell_type_annotation_Cels2016.csv"))
+coldata <- read.delim(muraro.cell, row.names=1, stringsAsFactors=FALSE)
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+coldata
+```
+
+We clean up the names of `coldata` and make sure to synchronize the rows with `mat`.
+
+```{r}
+colnames(coldata) <- "label"
+rownames(coldata) <- sub("\\.", "-", rownames(coldata))
+m <- match(colnames(mat), rownames(coldata))
+coldata <- coldata[m,,drop=FALSE]
+rownames(coldata) <- colnames(mat)
+```
+
+Finally, we add the extra annotations.
+
+```{r}
+coldata$donor <- donor.names
+coldata$plate <- factor(plate.id)
+coldata
+```
+
+# Saving to file
+
+We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "muraro-pancreas", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References

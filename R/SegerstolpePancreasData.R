@@ -4,7 +4,7 @@
 #' returning a \linkS4class{SingleCellExperiment} object for further use.
 #'
 #' @details
-#' This function provides the pancreas scRNA-seq data from Segerstolpe et al. (2015)
+#' This function provides the pancreas scRNA-seq data from Segerstolpe et al. (2016)
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
