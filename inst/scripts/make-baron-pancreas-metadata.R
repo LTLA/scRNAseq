@@ -4,7 +4,7 @@ FUN <- function(species, short, long, id) {
         Description = sprintf("%s for the Baron %s pancreas single-cell RNA-seq dataset", 
             c("Count matrix", "Per-cell metadata"), species),
         RDataPath = file.path("scRNAseq", "baron-pancreas", "2.0.0", 
-            c("counts.rds", "coldata.rds")),
+            sprintf(c("counts-%s.rds", "coldata-%s.rds"), species)),
         BiocVersion="3.10",
         Genome=short,
         SourceType="CSV",
