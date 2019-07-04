@@ -32,8 +32,8 @@ We first read the table into memory as a sparse matrix.
 
 ```{r}
 library(scater)
-mat <- readSparseCounts(muraro.fname, quote="\"")
-dim(mat)
+counts <- readSparseCounts(muraro.fname, quote="\"")
+dim(counts)
 ```
 
 # Loading the column metadata
@@ -41,8 +41,8 @@ dim(mat)
 We extract the metadata from the column names.
 
 ```{r}
-donor.names <- sub("^(D[0-9]+).*", "\\1", colnames(mat))
-plate.id <- sub("^D[0-9]+-([0-9]+)_.*", "\\1", colnames(mat))
+donor.names <- sub("^(D[0-9]+).*", "\\1", colnames(counts))
+plate.id <- sub("^D[0-9]+-([0-9]+)_.*", "\\1", colnames(counts))
 table(donor.names, plate.id)
 ```
 
@@ -59,14 +59,15 @@ coldata <- as(coldata, "DataFrame")
 coldata
 ```
 
-We clean up the names of `coldata` and make sure to synchronize the rows with `mat`.
+We clean up the names of `coldata` and make sure to synchronize the rows with `counts`.
 
 ```{r}
 colnames(coldata) <- "label"
 rownames(coldata) <- sub("\\.", "-", rownames(coldata))
-m <- match(colnames(mat), rownames(coldata))
+m <- match(colnames(counts), rownames(coldata))
 coldata <- coldata[m,,drop=FALSE]
-rownames(coldata) <- colnames(mat)
+rownames(coldata) <- colnames(counts)
+summary(is.na(m))
 ```
 
 Finally, we add the extra annotations.
