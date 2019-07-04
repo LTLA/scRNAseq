@@ -17,7 +17,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the data
 
 We obtain a single-cell RNA sequencing dataset of the mouse haematopoietic stem cells from @nestorowa2016singlecell.
-Counts for endogenous genes are available from the Gene Expression Omnibus
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
 using the accession number [GSE81682](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81682).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
@@ -89,7 +89,7 @@ We now save all of the relevant components to file for upload to `r Biocpkg("Exp
 path <- file.path("scRNAseq", "nestorowa-hsc", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts.rds"))
-saveRDS(coldata, file=file.path(path, "rowdata.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
 ```
 
 # Session information
