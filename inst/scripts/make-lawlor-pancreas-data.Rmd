@@ -75,6 +75,8 @@ for (i in colnames(coldata)) {
         coldata[[i]] <- as.character(coldata[[i]])
     }
 }
+
+stopifnot(identical(colnames(counts), coldata[,1]))
 colnames(coldata) <- sub("[:_]ch1$", "", colnames(coldata))
 coldata
 ```
