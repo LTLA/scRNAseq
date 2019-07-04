@@ -1,0 +1,2 @@
+"Title","Description","RDataPath","BiocVersion","Genome","SourceType","SourceUrl","SourceVersion","Species","TaxonomyId","Coordinate_1_based","DataProvider","Maintainer","RDataClass","DispatchClass"
+"Grun HSC counts","Count matrix for the Grun haematopoietic stem cell single-cell RNA-seq dataset","scRNAseq/grun-hsc/2.0.0/counts.rds","3.10","mm10","TSV","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76983","GSE76983_expdata_BMJhscC.csv.gz","Mus musculus","10090",TRUE,"Jean-Charles Boisset","Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>","character","Rds"
