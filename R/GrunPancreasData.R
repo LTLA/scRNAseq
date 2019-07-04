@@ -19,7 +19,7 @@
 #' using additional metadata obtained by Vladimir Kiselev.
 #'
 #' @references
-#' Grun MJ et al. (2016). 
+#' Grun D et al. (2016). 
 #' De novo prediction of stem cell identity using single-cell transcriptome data. 
 #' \emph{Cell Stem Cell} 19(2), 266-277. 
 #'

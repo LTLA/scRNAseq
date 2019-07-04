@@ -40,6 +40,6 @@ NestorowaHSCData <- function(remove.htseq=TRUE) {
     if (remove.htseq) {
         sce <- sce[grep("^__", rownames(sce), invert=TRUE),]
     }
-    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+", rowData(sce)$refseq)
+    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+", rownames(sce))
     sce
 }
