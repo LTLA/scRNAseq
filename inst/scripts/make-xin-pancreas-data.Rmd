@@ -17,7 +17,8 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the count data
 
 We obtain a single-cell RNA sequencing dataset of human pancreas from @xin2016rna. 
-A matrix of RPKMs is provided in the ArrayExpress entry for this project.
+A matrix of RPKMs is provided in the Gene Expression Omnibus
+under the accession [GSE81608](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81608).
 We download it using `r Biocpkg("BiocFileCache")` to cache the results:
 
 ```{r}
@@ -27,7 +28,7 @@ rpkm.txt <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
     "GSE81nnn/GSE81608/suppl/GSE81608_human_islets_rpkm.txt.gz"))
 ```
 
-We read the counts into memory as a sparse matrix.
+We read the RPKMs into memory as a sparse matrix.
 
 ```{r}
 library(scater)
@@ -37,7 +38,7 @@ dim(mat)
 
 # Preparing the column metadata
 
-We download the metadata:
+We download the metadata, which was supplied by the authors to Vladimir Kiselev, Tallulah Andrews and Martin Hemberg.
 
 ```{r}
 col.path <- bfcrpath(bfc, file.path("https://s3.amazonaws.com/",
