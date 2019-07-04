@@ -28,7 +28,7 @@
 #' @importFrom S4Vectors DataFrame
 GrunHSCData <- function(remove.htseq=TRUE) {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("grun-hsc", version), has.rowdata=FALSE)
+    sce <- .create_sce(file.path("grun-hsc", version), has.rowdata=FALSE, has.coldata=FALSE)
 
     # Cleaning up the row data.
     symbol <- sub("__.*", "", rownames(sce))
