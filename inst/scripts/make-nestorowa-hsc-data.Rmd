@@ -1,0 +1,101 @@
+---
+title: Processing the Nestorowa HSC dataset
+author: Aaron Lun
+date: 18 May 2019
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the mouse haematopoietic stem cells from @nestorowa2016singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE81682](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81682).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+count.file <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+    "GSE81nnn/GSE81682/suppl/GSE81682_HTSeq_counts.txt.gz"))
+```
+
+We read this into memory as a sparse matrix.
+
+```{r}
+library(scater)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Downloading the per-cell metadata
+
+We download the per-cell metadata from the website.
+
+```{r}
+celltype.file <- bfcrpath(bfc, file.path(
+    "http://blood.stemcells.cam.ac.uk/data/all_cell_types.txt"))
+celltype <- read.delim(celltype.file)
+celltype <- celltype[match(colnames(counts), rownames(celltype)),]
+stopifnot(identical(colnames(counts), rownames(celltype)))
+head(celltype)
+```
+
+We convert this into a sparse logical matrix of identities.
+
+```{r}
+library(Matrix)
+celltype <- as(as.matrix(celltype), "lgCMatrix")
+head(celltype)
+```
+
+We also obtain a matrix of flow cytometry intensities:
+
+```{r}
+flowcyt.file <- bfcrpath(bfc, file.path("http://blood.stemcells.cam.ac.uk",
+    "data/coordinates_gene_counts_flow_cytometry.txt.gz"))
+flowcyt <- read.delim(flowcyt.file, row.names=1)
+flowcyt <- flowcyt[match(colnames(counts), rownames(flowcyt)),]
+rownames(flowcyt) <- colnames(counts)
+
+is.diffusion <- grep("^DC[0-9]+$", colnames(flowcyt))
+colnames(flowcyt)[is.diffusion]
+is.facs <- setdiff(grep("^ENSMUSG[0-9]+$", colnames(flowcyt), invert=TRUE), is.diffusion)
+colnames(flowcyt)[is.facs]
+```
+
+We pack this into a single `DataFrame`:
+
+```{r}
+coldata <- DataFrame(cell.type=I(celltype),
+    diffusion=I(as.matrix(flowcyt[,is.diffusion])),
+    FACS=I(as.matrix(flowcyt[,is.facs])))
+coldata
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "nestorowa-hsc", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(coldata, file=file.path(path, "rowdata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
