@@ -1,5 +1,5 @@
 ---
-title: Processing the Muraro pancreas dataset
+title: Processing the Grun pancreas dataset
 author: Aaron Lun
 date: 28 June 2019
 output:
@@ -17,7 +17,8 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the count data
 
 We obtain a single-cell RNA sequencing dataset of human pancreas from @grun2016denovo.
-A count matrix is provided from the Gene Expression Omnibus under the accession code GSE81076.
+A count matrix for endogenous genes and spike-ins is provided from the Gene Expression Omnibus 
+using accession code [GSE81076](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81076).
 We download it using `r Biocpkg("BiocFileCache")` to cache the results:
 
 ```{r}
@@ -27,52 +28,12 @@ grun.fname <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
     "GSE81nnn/GSE81076/suppl/GSE81076%5FD2%5F3%5F7%5F10%5F17%2Etxt%2Egz"))
 ```
 
-We first read the table into memory as a sparse matrix.
+We read the table into memory as a sparse matrix.
 
 ```{r}
 library(scater)
-mat <- readSparseCounts(grun.fname, quote="\"")
-dim(mat)
-```
-
-# Loading the column metadata
-
-We extract the metadata from the column names.
-The definition of the `treatment` is based on the the sample descriptions in the GEO entry.
-
-```{r}
-lib.names <- sub("_.*", "", colnames(mat))
-donor.names <- sub("(D10|D17|D2|D3|D7).*", "\\1", lib.names)
-table(donor.names)
-treatment <- c(
-    D10631="CD63+ sorted cells",
-    D101="live sorted cells, library 1",
-    D102="live sorted cells, library 2",
-    D1713="CD13+ sorted cells",
-    D172444="CD24+ CD44+ live sorted cells",
-    D17All1="live sorted cells, library 1",
-    D17All2="live sorted cells, library 2",
-    D17TGFB="TGFBR3+ sorted cells",
-    D2ex="exocrine fraction, live sorted cells",
-    D3en1="live sorted cells, library 1",
-    D3en2="live sorted cells, library 2",
-    D3en3="live sorted cells, library 3",
-    D3en4="live sorted cells, library 4",
-    D3ex="exocrine fraction, live sorted cells",
-    D71="live sorted cells, library 1",
-    D72="live sorted cells, library 2",
-    D73="live sorted cells, library 3",
-    D74="live sorted cells, library 4"
-)[lib.names]
-table(treatment, useNA="ifany")
-```
-
-We use these annotations to create a `DataFrame`:
-
-```{r}
-library(S4Vectors)
-coldata <- DataFrame(donor=donor.names, sample=treatment)
-coldata
+counts <- readSparseCounts(grun.fname, quote="\"")
+dim(counts)
 ```
 
 # Saving to file
@@ -83,7 +44,6 @@ We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`
 path <- file.path("scRNAseq", "grun-pancreas", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts.rds"))
-saveRDS(coldata, file=file.path(path, "coldata.rds"))
 ```
 
 # Session information
