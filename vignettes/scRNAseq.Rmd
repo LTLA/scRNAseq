@@ -50,21 +50,31 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 
 | Study                 | System           | Number of cells   | Function            |
 |-----------------------|------------------|-------------------|---------------------|
-|@tasic2016adult        | Mouse brain      | 1809              | `TasicBrainData()` |
-|@zeisel2015brain       | Mouse brain      | 3005              | `ZeiselBrainData()` |
+|@baron2016singlecell   | Human pancreas   | 8569              | `BaronPancreasData('human')` |
+|@baron2016singlecell   | Mouse pancreas   | 1886              | `BaronPancreasData('mouse')` |
 |@campbell2017molecular | Mouse brain      | 21086             | `CampbellBrainData()` | 
 |@chen2017singlecell    | Mouse brain      | 14437             | `ChenBrainData()` |
 |@grun2016denovo        | Mouse haematopoietic stem cells | 1915              | `GrunHSCData()` | 
-|@nestorowa2016singlecell | Mouse haematopoietic stem cells | 1920              | `NestorowaHSCData()` | 
-|@segerstolpe2016single | Human pancreas   | 3514              | `SegerstolpePancreasData()` |
 |@grun2016denovo        | Human pancreas   | 1728              | `GrunPancreasData()` |
 |@lamanno2016molecular  | Human embryonic stem cells | 1715    | `LaMannoBrainData('human-es')` |
 |@lamanno2016molecular  | Human embryonic midbrain   | 1977    | `LaMannoBrainData('human-embryo')` |
 |@lamanno2016molecular  | Human induced pluripotent stem cells | 337 | `LaMannoBrainData('human-ips')` |
 |@lamanno2016molecular  | Mouse adult dopaminergic neurons | 243 | `LaMannoBrainData('mouse-adult')` |
 |@lamanno2016molecular  | Human embyronic midbrain | 1907 | `LaMannoBrainData('mouse-embryo')` |
-|@baron2017singlecell   | Human pancreas   | 8569              | `BaronPancreasData('human')` |
-|@baron2017singlecell   | Mouse pancreas   | 1886              | `BaronPancreasData('mouse')` |
+|@lawlor2017singlecell  | Human pancreas   | 638               | `LawlorPancreasData()` |
+|@lun2017assessing      | 416B cells       | 192               | `LunSpikeInData('416b')` |
+|@lun2017assessing      | Mouse trophoblasts | 192             | `LunSpikeInData('tropho')` |
+|@macosko2015highly     | Mouse retina     | 49300             | `MacoskoRetinaData()` |
+|@marques2016oligodendrocyte | Mouse brain | 5069              | `MarquesBrainData()` | 
+|@muraro2016singlecell  | Human pancreas   | 3072              | `MuraroPancreasData()` |
+|@nestorowa2016singlecell | Mouse haematopoietic stem cells | 1920              | `NestorowaHSCData()` | 
+|@romanov2017molecular  | Mouse brain      | 2881              | `RomanovBrainData()` |
+|@segerstolpe2016single | Human pancreas   | 3514              | `SegerstolpePancreasData()` |
+|@shekhar2016comprehensive | Mouse retina  | 44994             | `ShekharRetinaData()` |
+|@usoskin2015unbiased   | Mouse brain      | 864               | `UsoskinBrainData()` |
+|@tasic2016adult        | Mouse brain      | 1809              | `TasicBrainData()` |
+|@xin2016rna            | Human pancreas    | 1600             | `XinPancreasData()` |
+|@zeisel2015brain       | Mouse brain      | 3005              | `ZeiselBrainData()` |
 
 # Adding new data sets
 
