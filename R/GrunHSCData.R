@@ -24,7 +24,7 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment isSpike<-
-#' @importFrom SummarizedExperiment rowData rowData<-
+#' @importFrom SummarizedExperiment rowData rowData<- colData<-
 #' @importFrom S4Vectors DataFrame
 GrunHSCData <- function(remove.htseq=TRUE) {
     version <- "2.0.0"
@@ -41,7 +41,7 @@ GrunHSCData <- function(remove.htseq=TRUE) {
     sample <- sub("_.*", "", cn)
     protocol <- ifelse(sample %in% c("JC4", "JC48P2", "JC48P4", "JC48P6", "JC48P7"),
         "sorted hematopoietic stem cells", "micro-dissected cells")
-    colData(sce) <- DataFrame(sample=sample, protocol=protocol)
+    colData(sce) <- DataFrame(sample=sample, protocol=protocol, row.names=cn)
 
     sce
 }

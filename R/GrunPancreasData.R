@@ -35,7 +35,7 @@ GrunPancreasData <- function() {
     sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE, has.coldata=FALSE)
 
     # Loading the column metadata
-    lib.names <- sub("_.*", "", colnames(counts))
+    lib.names <- sub("_.*", "", colnames(sce))
     donor.names <- sub("(D10|D17|D2|D3|D7).*", "\\1", lib.names)
     treatment <- c(
         D10631="CD63+ sorted cells",
@@ -57,7 +57,7 @@ GrunPancreasData <- function() {
         D73="live sorted cells, library 3",
         D74="live sorted cells, library 4"
     )[lib.names]
-    colData(sce) <- DataFrame(donor=donor.names, sample=treatment)
+    colData(sce) <- DataFrame(donor=donor.names, sample=treatment, row.names=colnames(sce))
 
     # Splitting up gene information.
     symbol <- sub("__.*", "", rownames(sce))

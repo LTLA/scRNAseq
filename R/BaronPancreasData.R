@@ -22,12 +22,14 @@
 #' \emph{Cell Syst.} 3(4), 346-360.
 #'
 #' @examples
-#' sce <- BaronPancreasData()
+#' sce.human <- BaronPancreasData()
+#'
+#' sce.mouse <- BaronPancreasData("mouse")
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
 BaronPancreasData <- function(which=c("human", "mouse")) {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=which)
+    sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=match.arg(which))
     sce
 }

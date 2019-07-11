@@ -33,7 +33,7 @@
 #' @importFrom SingleCellExperiment isSpike<-
 MuraroPancreasData <- function() {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("muraro-pancreas", version)) 
+    sce <- .create_sce(file.path("muraro-pancreas", version), has.rowdata=FALSE) 
     symbol <- sub("__.*", "", rownames(sce))
     loc <- sub(".*__", "", rownames(sce))
     rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
