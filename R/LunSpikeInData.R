@@ -1,8 +1,10 @@
 #' Obtain the Lun spike-in data
 #'
-#' Download and cache the Zeisel brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
+#' Download and cache the Lun spike-in single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
 #' returning a \linkS4class{SingleCellExperiment} object for further use.
 #'
+#' @param which String specifying whether the 416B or trophoblast data should be obtained.
+#' 
 #' @details
 #' This function provides the spike-in scRNA-seq data from Lun et al. (2017)
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -25,6 +27,8 @@
 #'
 #' @examples
 #' sce <- LunSpikeInData()
+#'
+#' sce <- LunSpikeInData("tropho")
 #' 
 #' @export
 #' @importFrom SingleCellExperiment isSpike<-

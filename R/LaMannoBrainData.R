@@ -34,7 +34,15 @@
 #' \emph{Cell} 167(2), 566-580.
 #'
 #' @examples
-#' sce <- LaMannoBrainData()
+#' sce.h.es <- LaMannoBrainData()
+#'
+#' sce.h.em <- LaMannoBrainData("human-embryo")
+#'
+#' sce.h.ip <- LaMannoBrainData("human-ips")
+#'
+#' sce.m.ad <- LaMannoBrainData("mouse-adult")
+#'
+#' sce.m.em <- LaMannoBrainData("mouse-embryo")
 #' 
 #' @export
 #' @importFrom SingleCellExperiment isSpike<-
