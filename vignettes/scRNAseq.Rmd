@@ -9,7 +9,7 @@ package: scRNAseq
 vignette: >
   %\VignetteIndexEntry{User's Guide}
   %\VignetteEngine{knitr::rmarkdown}
-bibliography: biblio.bib
+bibliography: "`r system.file('scripts', 'ref.bib', package='scRNAseq')`"
 ---
 
 ```{r style, echo=FALSE}
@@ -48,9 +48,23 @@ This includes:
 The second category contains expression matrices that were provided by the authors of each study.
 No further reprocessing has been performed other than some cross-checks betweeh the count matrix and the sample metadata.
 
-- `TasicBrainData()` provides 1809 cells (and some control libraries) from the mouse brain [@tasic2016adult].
-- `ZeiselBrainData()` provides 3005 cells from the mouse brain [@zeisel2015brain].
-- `SegerstolpePancreasData()` provides 3514 cells from human pancreas [@segerstolpe2016single].
+| Study                 | System           | Number of cells   | Function            |
+|-----------------------|------------------|-------------------|---------------------|
+|@tasic2016adult        | Mouse brain      | 1809              | `TasicBrainData()` |
+|@zeisel2015brain       | Mouse brain      | 3005              | `ZeiselBrainData()` |
+|@campbell2017molecular | Mouse brain      | 21086             | `CampbellBrainData()` | 
+|@chen2017singlecell    | Mouse brain      | 14437             | `ChenBrainData()` |
+|@grun2016denovo        | Mouse haematopoietic stem cells | 1915              | `GrunHSCData()` | 
+|@nestorowa2016singlecell | Mouse haematopoietic stem cells | 1920              | `NestorowaHSCData()` | 
+|@segerstolpe2016single | Human pancreas   | 3514              | `SegerstolpePancreasData()` |
+|@grun2016denovo        | Human pancreas   | 1728              | `GrunPancreasData()` |
+|@lamanno2016molecular  | Human embryonic stem cells | 1715    | `LaMannoBrainData('human-es')` |
+|@lamanno2016molecular  | Human embryonic midbrain   | 1977    | `LaMannoBrainData('human-embryo')` |
+|@lamanno2016molecular  | Human induced pluripotent stem cells | 337 | `LaMannoBrainData('human-ips')` |
+|@lamanno2016molecular  | Mouse adult dopaminergic neurons | 243 | `LaMannoBrainData('mouse-adult')` |
+|@lamanno2016molecular  | Human embyronic midbrain | 1907 | `LaMannoBrainData('mouse-embryo')` |
+|@baron2017singlecell   | Human pancreas   | 8569              | `BaronPancreasData('human')` |
+|@baron2017singlecell   | Mouse pancreas   | 1886              | `BaronPancreasData('mouse')` |
 
 # Adding new data sets
 
