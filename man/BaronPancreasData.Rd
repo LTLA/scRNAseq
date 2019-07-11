@@ -24,7 +24,9 @@ Column metadata is provided in the same form as supplied in GSE84133.
 This contains information such as the cell type labels and donor ID (for humans) or strain (for mouse).
 }
 \examples{
-sce <- BaronPancreasData()
+sce.human <- BaronPancreasData()
+
+sce.mouse <- BaronPancreasData("mouse")
 
 }
 \references{

@@ -4,7 +4,7 @@
 \alias{GrunHSCData}
 \title{Obtain the Grun HSC data}
 \usage{
-GrunHSCData(remove.htseq = TRUE)
+GrunHSCData()
 }
 \value{
 A \linkS4class{SingleCellExperiment} object.

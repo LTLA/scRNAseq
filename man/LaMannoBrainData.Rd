@@ -37,7 +37,15 @@ If multiple datasets are to be used simultaneously, users will have to decide ho
 e.g., by taking the intersection of common features across all datasets.
 }
 \examples{
-sce <- LaMannoBrainData()
+sce.h.es <- LaMannoBrainData()
+
+sce.h.em <- LaMannoBrainData("human-embryo")
+
+sce.h.ip <- LaMannoBrainData("human-ips")
+
+sce.m.ad <- LaMannoBrainData("mouse-adult")
+
+sce.m.em <- LaMannoBrainData("mouse-embryo")
 
 }
 \references{

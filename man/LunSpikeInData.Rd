@@ -6,11 +6,14 @@
 \usage{
 LunSpikeInData(which = c("416b", "tropho"))
 }
+\arguments{
+\item{which}{String specifying whether the 416B or trophoblast data should be obtained.}
+}
 \value{
 A \linkS4class{SingleCellExperiment} object.
 }
 \description{
-Download and cache the Zeisel brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
+Download and cache the Lun spike-in single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
 returning a \linkS4class{SingleCellExperiment} object for further use.
 }
 \details{
@@ -26,6 +29,8 @@ This contains information such as the cell type, plate of origin, spike-in addit
 }
 \examples{
 sce <- LunSpikeInData()
+
+sce <- LunSpikeInData("tropho")
 
 }
 \references{
