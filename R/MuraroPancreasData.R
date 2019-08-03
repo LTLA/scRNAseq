@@ -8,11 +8,12 @@
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
 #'
 #' Row data contains fields for the symbol and chromosomal location of each gene.
-#' Spike-ins are specially labelled with the \code{\link{isSpike}} function.
 #'
 #' Column metadata is derived from the columns of the count matrix provided in GSE85241,
 #' with additional cell type labels obtained from the authors (indirectly, via the Hemberg group).
 #' Some cells have \code{NA} labels and were presumably removed prior to downstream analyses.
+#'
+#' ERCC spike-ins are represented as an alternative experiment.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object.
 #'
@@ -30,13 +31,15 @@
 #' @export
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment rowData<-
-#' @importFrom SingleCellExperiment isSpike<-
+#' @importFrom SingleCellExperiment splitSCEByAlt
 MuraroPancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("muraro-pancreas", version), has.rowdata=FALSE) 
+
     symbol <- sub("__.*", "", rownames(sce))
     loc <- sub(".*__", "", rownames(sce))
     rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
-    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", symbol)
-    sce
+
+    status <- ifelse(grepl("^ERCC-[0-9]+", symbol), "ERCC", "endogenous")
+    splitSCEByAlt(sce, status, ref="endogenous")
 }

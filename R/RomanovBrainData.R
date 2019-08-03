@@ -27,10 +27,11 @@
 #' sce <- RomanovBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
+#' @importFrom SingleCellExperiment splitSCEByAlt
 RomanovBrainData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("romanov-brain", version), has.rowdata=FALSE)
-    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
-    sce
+
+    status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
+    splitSCEByAlt(sce, status, ref="endogenous")
 }

@@ -7,7 +7,7 @@
 #' This function provides the haematopoietic stem cell scRNA-seq data from Grun et al. (2016)
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
-#' Rows containing spike-in transcripts are specially labelled with the \code{\link{isSpike}} function.
+#' Row metadata contains the symbol and chromosomal location for each gene.
 #' Column metadata contains the extraction protocol used for each sample, as described in GSE76983.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object.
@@ -23,7 +23,6 @@
 #' sce <- GrunHSCData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
 #' @importFrom SummarizedExperiment rowData rowData<- colData<-
 #' @importFrom S4Vectors DataFrame
 GrunHSCData <- function() {
@@ -34,7 +33,6 @@ GrunHSCData <- function() {
     symbol <- sub("__.*", "", rownames(sce))
     loc <- sub(".*__", "", rownames(sce))
     rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
-    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", symbol)
 
     # Cleaning up the col data.
     cn <- colnames(sce)

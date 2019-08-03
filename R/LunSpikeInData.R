@@ -10,12 +10,12 @@
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' Row data contains a single \code{"Length"} field describing the total exonic length of each feature.
-#' Spike-ins are also specially labelled with the \code{\link{isSpike}} function.
-#' Two sets of spike-ins are available for each dataset - SIRVs and ERCCs.
 #'
 #' Column metadata is provided in the same form as supplied in E-MTAB-5522.
 #' This contains information such as the cell type, plate of origin, spike-in addition order and oncogene induction. 
 #'
+#' Two sets of spike-ins are available for each dataset - SIRVs and ERCCs - and stored as alternative experiments.
+#' 
 #' @return A \linkS4class{SingleCellExperiment} object.
 #'
 #' @author Aaron Lun
@@ -31,12 +31,15 @@
 #' sce <- LunSpikeInData("tropho")
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
 #' @importFrom SummarizedExperiment rowData
+#' @importFrom SingleCellExperiment splitSCEByAlt
 LunSpikeInData <- function(which=c("416b", "tropho")) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("lun-spikein", version), suffix=match.arg(which))
-    isSpike(sce, "ERCC") <- grep("ERCC", rownames(sce))
-    isSpike(sce, "SIRV") <- grep("SIRV", rownames(sce))
-    sce
+
+    spike.type <- rep("endogenous", nrow(sce))
+    spike.type[grep("ERCC", rownames(sce))] <- "ERCC"
+    spike.type[grep("SIRV", rownames(sce))] <- "SIRV"
+
+    splitSCEByAlt(sce, spike.type, ref="endogenous")
 }

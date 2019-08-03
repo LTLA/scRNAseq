@@ -45,7 +45,6 @@
 #' sce.m.em <- LaMannoBrainData("mouse-embryo")
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
 LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo")) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("lamanno-brain", version), has.rowdata=FALSE, suffix=match.arg(which))

@@ -8,12 +8,13 @@
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
-#' Spike-ins are specially labelled with the \code{\link{isSpike}} function.
 #' The rows of the output object are named with the symbol, but note that these are not unique.
 #'
-#' Column metadata were extracted from the \code{Characteristcs} fields of the SDRF file for ArrayExpress E-MTAB-5061.
+#' Column metadata were extracted from the \code{Characteristics} fields of the SDRF file for ArrayExpress E-MTAB-5061.
 #' This contains information such as the cell type labels and patient status.
 #'
+#' ERCC spike-ins are represented as an alternative experiment.
+#' 
 #' @return A \linkS4class{SingleCellExperiment} object.
 #'
 #' @author Aaron Lun
@@ -27,12 +28,13 @@
 #' sce <- SegerstolpePancreasData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
+#' @importFrom SingleCellExperiment splitSCEByAlt
 #' @importFrom SummarizedExperiment rowData
 SegerstolpePancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("segerstolpe-pancreas", version))
-    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+", rowData(sce)$refseq)
     rownames(sce) <- rowData(sce)$symbol
-    sce
+
+    status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
+    splitSCEByAlt(sce, status, ref="endogenous")
 }

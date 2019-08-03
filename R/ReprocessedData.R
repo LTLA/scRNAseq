@@ -18,11 +18,11 @@
 #' 
 #' \code{ReprocessedTh2Data} returns a dataset of 96 T helper cells from Mahata et al. (2014),
 #' obtained from ArrayExpress accession E-MTAB-2512.
-#' This will contain spike-in information labelled with \code{\link{isSpike}}.
+#' This contains spike-in information stored as an alternative experiment.
 #'
 #' \code{ReprocessedAllenData} return a dataset of 379 cells from Tasic et al. (2016).
 #' This is a re-processed subset of the data from \code{\link{TasicBrainData}},
-#' It also contains spike-in information labelled with \code{\link{isSpike}}.
+#' This contains spike-in information stored as an alternative experiment.
 #'
 #' In each dataset, the first columns of the \code{colData} are sample quality metrics from FastQC and Picard.
 #' The remaining fields were obtained from the original study in their GEO/SRA submission
@@ -63,27 +63,26 @@
 #'
 #' @export
 #' @rdname ReprocessedData
-#' @importFrom SingleCellExperiment isSpike
+#' @importFrom SingleCellExperiment splitSCEByAlt
 ReprocessedAllenData <- function(assays=NULL) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-allen", version), assays)
-    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
-    sce
+    status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
+    splitSCEByAlt(sce, status, ref="endogenous")
 }
 
 #' @export
 #' @rdname ReprocessedData
-#' @importFrom SingleCellExperiment isSpike
+#' @importFrom SingleCellExperiment splitSCEByAlt
 ReprocessedTh2Data <- function(assays=NULL) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
-    isSpike(sce, "ERCC") <- grep("^ERCC-[0-9]+$", rownames(sce))
-    sce
+    status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
+    splitSCEByAlt(sce, status, ref="endogenous")
 }
 
 #' @export
 #' @rdname ReprocessedData
-#' @importFrom SingleCellExperiment isSpike
 ReprocessedFluidigmData <- function(assays=NULL) {
     version <- "1.10.0"
     .create_sce_legacy(file.path("legacy-fluidigm", version), assays)

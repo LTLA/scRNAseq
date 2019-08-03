@@ -7,11 +7,13 @@
 #' This function provides the human pancreas scRNA-seq data from Grun et al. (2016)
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
 #'
-#' Row data contains fields for the symbol and chromosomal location of each gene.
-#' Spike-ins are specially labelled with the \code{\link{isSpike}} function.
+#' Row metadata contains fields for the symbol and chromosomal location of each gene,
+#' as derived from the row names.
 #'
 #' Column metadata is derived from the column names of the count matrix with the sample annotations in GSE81076.
 #' This includes the donor identity for each cell and the type of sample.
+#'
+#' An alternative experiment contains the data for the spike-in transcripts.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object.
 #'
@@ -29,7 +31,7 @@
 #' @export
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment rowData<- colData<-
-#' @importFrom SingleCellExperiment isSpike<-
+#' @importFrom SingleCellExperiment splitSCEByAlt
 GrunPancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE, has.coldata=FALSE)
@@ -63,6 +65,8 @@ GrunPancreasData <- function() {
     symbol <- sub("__.*", "", rownames(sce))
     loc <- sub(".*__", "", rownames(sce))
     rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
-    isSpike(sce, "ERCC") <- grep("ERCC-[0-9]+", symbol)
-    sce
+
+    # Splitting spike-ins into an alternative experiment.
+    status <- ifelse(grepl("ERCC-[0-9]+", symbol), "ERCC", "endogenous")
+    splitSCEByAlt(sce, status, ref="endogenous")
 }

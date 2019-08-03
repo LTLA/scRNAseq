@@ -9,7 +9,7 @@
 #'
 #' Row data contains a single \code{"featureType"} field describing the type of each feature
 #' (endogenous genes, mitochondrial genes, spike-in transcripts and repeats).
-#' Spike-ins are also specially labelled with the \code{\link{isSpike}} function.
+#' Spike-ins and repeats are stored as alternative experiments.
 #'
 #' Column metadata is provided in the same form as supplied in \url{http://linnarssonlab.org/cortex/}.
 #' This contains information such as the cell diameter and the published cell type annotations.
@@ -27,11 +27,13 @@
 #' sce <- ZeiselBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment isSpike<-
+#' @importFrom SingleCellExperiment splitSCEByAlt
 #' @importFrom SummarizedExperiment rowData
 ZeiselBrainData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("zeisel-brain", version))
-    isSpike(sce, "ERCC") <- rowData(sce)$featureType=="ERCC"
-    sce
+
+    status <- rowData(sce)$featureType
+    status[status=="mito"] <- "endogenous"
+    splitSCEByAlt(sce, status, "endogenous")
 }
