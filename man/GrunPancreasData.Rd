@@ -17,11 +17,13 @@ returning a \linkS4class{SingleCellExperiment} object for further use.
 This function provides the human pancreas scRNA-seq data from Grun et al. (2016)
 in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
 
-Row data contains fields for the symbol and chromosomal location of each gene.
-Spike-ins are specially labelled with the \code{\link{isSpike}} function.
+Row metadata contains fields for the symbol and chromosomal location of each gene,
+as derived from the row names.
 
 Column metadata is derived from the column names of the count matrix with the sample annotations in GSE81076.
 This includes the donor identity for each cell and the type of sample.
+
+An alternative experiment contains the data for the spike-in transcripts.
 }
 \examples{
 sce <- GrunPancreasData()

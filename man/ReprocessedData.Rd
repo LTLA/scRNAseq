@@ -32,11 +32,11 @@ each sequenced at high and low coverage (SRA accession SRP041736).
 
 \code{ReprocessedTh2Data} returns a dataset of 96 T helper cells from Mahata et al. (2014),
 obtained from ArrayExpress accession E-MTAB-2512.
-This will contain spike-in information labelled with \code{\link{isSpike}}.
+This contains spike-in information stored as an alternative experiment.
 
 \code{ReprocessedAllenData} return a dataset of 379 cells from Tasic et al. (2016).
 This is a re-processed subset of the data from \code{\link{TasicBrainData}},
-It also contains spike-in information labelled with \code{\link{isSpike}}.
+This contains spike-in information stored as an alternative experiment.
 
 In each dataset, the first columns of the \code{colData} are sample quality metrics from FastQC and Picard.
 The remaining fields were obtained from the original study in their GEO/SRA submission

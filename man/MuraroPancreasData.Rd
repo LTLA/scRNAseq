@@ -18,11 +18,12 @@ This function provides the human pancreas scRNA-seq data from Muraro et al. (201
 in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
 
 Row data contains fields for the symbol and chromosomal location of each gene.
-Spike-ins are specially labelled with the \code{\link{isSpike}} function.
 
 Column metadata is derived from the columns of the count matrix provided in GSE85241,
 with additional cell type labels obtained from the authors (indirectly, via the Hemberg group).
 Some cells have \code{NA} labels and were presumably removed prior to downstream analyses.
+
+ERCC spike-ins are represented as an alternative experiment.
 }
 \examples{
 sce <- MuraroPancreasData()

@@ -17,7 +17,7 @@ returning a \linkS4class{SingleCellExperiment} object for further use.
 This function provides the haematopoietic stem cell scRNA-seq data from Grun et al. (2016)
 in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 
-Rows containing spike-in transcripts are specially labelled with the \code{\link{isSpike}} function.
+Row metadata contains the symbol and chromosomal location for each gene.
 Column metadata contains the extraction protocol used for each sample, as described in GSE76983.
 }
 \examples{

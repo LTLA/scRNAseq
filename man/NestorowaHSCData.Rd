@@ -20,12 +20,13 @@ returning a \linkS4class{SingleCellExperiment} object for further use.
 This function provides the haematopoietic stem cell scRNA-seq data from Nestorowa et al. (2015)
 in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 
-Rows containing spike-in transcripts are specially labelled with the \code{\link{isSpike}} function.
-Note that rows corresponding to HT-seq's alignment statistics are also included in the design matrix;
-these should probably be removed prior to downstream analyses.
+Row corresponding to HT-seq's alignment statistics are present in the count matrix.
+By default, these are removed prior to downstream analyses.
 
 Column metadata includes the cell type mapping, as described on the website (see References),
 the diffusion map components and the FACS expression levels of selected markers.
+
+ERCC spike-ins are stored as alternative experiments.
 }
 \examples{
 sce <- NestorowaHSCData()

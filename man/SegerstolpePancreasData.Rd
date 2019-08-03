@@ -18,11 +18,12 @@ This function provides the pancreas scRNA-seq data from Segerstolpe et al. (2016
 in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 
 Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
-Spike-ins are specially labelled with the \code{\link{isSpike}} function.
 The rows of the output object are named with the symbol, but note that these are not unique.
 
-Column metadata were extracted from the \code{Characteristcs} fields of the SDRF file for ArrayExpress E-MTAB-5061.
+Column metadata were extracted from the \code{Characteristics} fields of the SDRF file for ArrayExpress E-MTAB-5061.
 This contains information such as the cell type labels and patient status.
+
+ERCC spike-ins are represented as an alternative experiment.
 }
 \examples{
 sce <- SegerstolpePancreasData()

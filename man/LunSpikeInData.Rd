@@ -21,11 +21,11 @@ This function provides the spike-in scRNA-seq data from Lun et al. (2017)
 in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 
 Row data contains a single \code{"Length"} field describing the total exonic length of each feature.
-Spike-ins are also specially labelled with the \code{\link{isSpike}} function.
-Two sets of spike-ins are available for each dataset - SIRVs and ERCCs.
 
 Column metadata is provided in the same form as supplied in E-MTAB-5522.
-This contains information such as the cell type, plate of origin, spike-in addition order and oncogene induction.
+This contains information such as the cell type, plate of origin, spike-in addition order and oncogene induction. 
+
+Two sets of spike-ins are available for each dataset - SIRVs and ERCCs - and stored as alternative experiments.
 }
 \examples{
 sce <- LunSpikeInData()

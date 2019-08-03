@@ -20,7 +20,7 @@ in the form of a \linkS4class{SingleCellExperiment} object with a single matrix 
 Column metadata is provided in the same form as supplied in GSE71585.
 This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 
-Rows corresponding to spike-in transcripts are labelled with the \code{\link{isSpike}} function.
+Spike-in transcripts are stored as alternative experiments.
 Note that some of the spike-in rows have \code{NA} observations for some (but not all) cells.
 
 The last 9 columns (containing \code{_CTX_} in their names) correspond to no-cell control libraries.
