@@ -27,6 +27,7 @@ biocViews:
     ExperimentData, 
     ExpressionData, 
     SequencingData, 
-    RNASeqData
+    RNASeqData,
+    SingleCellData
 BuildResaveData: no
 RoxygenNote: 6.1.1
