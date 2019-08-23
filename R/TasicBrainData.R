@@ -28,11 +28,11 @@
 #' sce <- TasicBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 TasicBrainData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("tasic-brain", version), has.rowdata=FALSE)
 
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }

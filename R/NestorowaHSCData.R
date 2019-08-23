@@ -34,7 +34,7 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 NestorowaHSCData <- function(remove.htseq=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("nestorowa-hsc", version), has.rowdata=FALSE)
@@ -44,5 +44,5 @@ NestorowaHSCData <- function(remove.htseq=TRUE) {
     }
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }

@@ -31,7 +31,7 @@
 #' @export
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment rowData<- colData<-
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 GrunPancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE, has.coldata=FALSE)
@@ -68,5 +68,5 @@ GrunPancreasData <- function() {
 
     # Splitting spike-ins into an alternative experiment.
     status <- ifelse(grepl("ERCC-[0-9]+", symbol), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }

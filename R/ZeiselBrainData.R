@@ -27,7 +27,7 @@
 #' sce <- ZeiselBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 #' @importFrom SummarizedExperiment rowData
 ZeiselBrainData <- function() {
     version <- "2.0.0"
@@ -35,5 +35,5 @@ ZeiselBrainData <- function() {
 
     status <- rowData(sce)$featureType
     status[status=="mito"] <- "endogenous"
-    splitSCEByAlt(sce, status, "endogenous")
+    splitAltExps(sce, status, "endogenous")
 }

@@ -28,7 +28,7 @@
 #' sce <- SegerstolpePancreasData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 #' @importFrom SummarizedExperiment rowData
 SegerstolpePancreasData <- function() {
     version <- "2.0.0"
@@ -36,5 +36,5 @@ SegerstolpePancreasData <- function() {
     rownames(sce) <- rowData(sce)$symbol
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }

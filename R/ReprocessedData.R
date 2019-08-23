@@ -63,22 +63,22 @@
 #'
 #' @export
 #' @rdname ReprocessedData
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 ReprocessedAllenData <- function(assays=NULL) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-allen", version), assays)
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }
 
 #' @export
 #' @rdname ReprocessedData
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 ReprocessedTh2Data <- function(assays=NULL) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }
 
 #' @export

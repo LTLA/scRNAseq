@@ -32,7 +32,7 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 LunSpikeInData <- function(which=c("416b", "tropho")) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("lun-spikein", version), suffix=match.arg(which))
@@ -41,5 +41,5 @@ LunSpikeInData <- function(which=c("416b", "tropho")) {
     spike.type[grep("ERCC", rownames(sce))] <- "ERCC"
     spike.type[grep("SIRV", rownames(sce))] <- "SIRV"
 
-    splitSCEByAlt(sce, spike.type, ref="endogenous")
+    splitAltExps(sce, spike.type, ref="endogenous")
 }

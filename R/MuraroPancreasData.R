@@ -31,7 +31,7 @@
 #' @export
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment rowData<-
-#' @importFrom SingleCellExperiment splitSCEByAlt
+#' @importFrom SingleCellExperiment splitAltExps
 MuraroPancreasData <- function() {
     version <- "2.0.0"
     sce <- .create_sce(file.path("muraro-pancreas", version), has.rowdata=FALSE) 
@@ -41,5 +41,5 @@ MuraroPancreasData <- function() {
     rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
 
     status <- ifelse(grepl("^ERCC-[0-9]+", symbol), "ERCC", "endogenous")
-    splitSCEByAlt(sce, status, ref="endogenous")
+    splitAltExps(sce, status, ref="endogenous")
 }
