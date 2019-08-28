@@ -1,2 +1,6 @@
 .Deprecated(msg="'data(allen)' is deprecated.\nUse ReprocessedAllenData() instead.")
-allen <- scRNAseq::ReprocessedAllenData()
+bfc <- BiocFileCache::BiocFileCache(ask=FALSE)
+bpath <- BiocFileCache::bfcrpath(bfc, "https://github.com/LTLA/scRNAseq/raw/80b3d4dde812b72406499922c5cd157e7b8d3b45/data/allen.rda")
+env <- new.env()
+load(bpath, envir=env)
+allen <- env$allen
