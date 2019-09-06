@@ -17,10 +17,10 @@ CREATOR <- function(desc, path, genome, src, species, taxid, append=TRUE) {
             SourceVersion=src,
             Species=species,
             TaxonomyId=taxid,
-            Coordinate_1_based=TRUE,
+            Coordinate_1_based=NA,
             DataProvider="Michael Cole",
             Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-            RDataClass="character",
+            RDataClass=c(rep("matrix", length(file.titles)), "DataFrame", "list"),
             DispatchClass="Rds",
             stringsAsFactors = FALSE
         ),

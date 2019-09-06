@@ -15,10 +15,10 @@ FUN <- function(type, short) {
             "E-MTAB-5522.sdrf.txt"),
         Species="Mus musculus",
         TaxonomyId="10090",
-        Coordinate_1_based=TRUE,
-        DataProvider="Aaron Lun",
+        Coordinate_1_based=NA,
+        DataProvider="ArrayExpress",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass="character",
+        RDataClass=c("matrix", "DataFrame", "DataFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     )

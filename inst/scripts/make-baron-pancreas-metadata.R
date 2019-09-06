@@ -12,10 +12,10 @@ FUN <- function(species, short, long, id) {
         SourceVersion="GSE84133_RAW.tar", 
         Species=long,
         TaxonomyId=id,
-        Coordinate_1_based=TRUE,
-        DataProvider="Adrian Veres",
+        Coordinate_1_based=NA,
+        DataProvider="GEO",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass="character",
+        RDataClass=c("matrix", "DataFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     )

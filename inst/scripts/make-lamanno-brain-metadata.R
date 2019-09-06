@@ -12,10 +12,10 @@ spawn_df <- function(type, suffix, src, file="TSV") {
         SourceVersion=src,
         Species="Mus musculus",
         TaxonomyId="10090",
-        Coordinate_1_based=TRUE,
-        DataProvider="Sten Linnarsson",
+        Coordinate_1_based=NA,
+        DataProvider="GEO",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass="character",
+        RDataClass=c("matrix", "DataFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     )
