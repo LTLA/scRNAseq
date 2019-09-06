@@ -1,18 +1,21 @@
 #' Obtain the Baron pancreas data
 #'
-#' Download and cache the Baron pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the human/mouse pancreas single-cell RNA-seq data from Baron et al. (2017).
 #'
 #' @param which String specifying the species to get data for.
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #'
 #' @details
-#' This function provides the pancreas scRNA-seq data from Baron et al. (2017)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts for human or mouse.
-#'
 #' Column metadata is provided in the same form as supplied in GSE84133.
 #' This contains information such as the cell type labels and donor ID (for humans) or strain (for mouse).
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/baron-pancreas}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun
 #'
@@ -28,8 +31,14 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-BaronPancreasData <- function(which=c("human", "mouse")) {
+BaronPancreasData <- function(which=c("human", "mouse"), ensembl=FALSE) {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=match.arg(which))
+    which <- match.arg(which)
+    sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=which)
+
+    if (ensembl) {
+        species <- if (which=="human") "Hs" else "Mm"
+        sce <- .convert_to_ensembl(sce, species=species, symbols=rownames(sce))
+    }
     sce
 }

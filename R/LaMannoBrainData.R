@@ -1,14 +1,11 @@
 #' Obtain the La Manno brain data
 #'
-#' Download and cache the La Manno brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the mouse/human brain scRNA-seq data from La Manno et al. (2016).
 #'
-#' @param which A string specifying which data set should be obtained.
+#' @param which A string specifying which dataset should be obtained.
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' 
 #' @details
-#' This function provides the brain scRNA-seq data from La Manno et al. (2016)
-#' in the form of a \linkS4class{SingleCellExperiment} object with one of several possible matrices of UMI counts.
-#'
 #' Column metadata is provided in the same form as supplied in the supplementary tables in GSE71585.
 #' This contains information such as the time point and cell type.
 #'
@@ -24,7 +21,13 @@
 #' If multiple datasets are to be used simultaneously, users will have to decide how to merge them,
 #' e.g., by taking the intersection of common features across all datasets.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/lamanno-brain}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'
@@ -45,9 +48,14 @@
 #' sce.m.em <- LaMannoBrainData("mouse-embryo")
 #' 
 #' @export
-LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo")) {
+LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo"), ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("lamanno-brain", version), has.rowdata=FALSE, suffix=match.arg(which))
     colnames(sce) <- colData(sce)[[grep("Cell_ID", colnames(colData(sce)), ignore.case=TRUE)]]
+
+    if (ensembl) {
+        species <- if (grepl("human", which)) "Hs" else "Mm"
+        sce <- .convert_to_ensembl(sce, species=species, symbols=rownames(sce))
+    }
     sce
 }
