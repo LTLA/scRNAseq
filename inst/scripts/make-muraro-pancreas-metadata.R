@@ -21,7 +21,7 @@ write.csv(file="../extdata/metadata-muraro-pancreas.csv",
         Coordinate_1_based=NA,
         DataProvider=c("GEO", "Martin Hemberg"),
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=c("matrix", "DataFrame"),
+        RDataClass=c("dgCMatrix", "DataFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     ),

@@ -15,7 +15,7 @@ write.csv(file="../extdata/metadata-romanov-brain.csv",
         Coordinate_1_based=NA,
         DataProvider="GEO",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=c("matrix", "DataFrame"),
+        RDataClass=c("dgCMatrix", "DataFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     ),

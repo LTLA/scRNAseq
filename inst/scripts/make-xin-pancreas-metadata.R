@@ -19,7 +19,7 @@ write.csv(file="../extdata/metadata-xin-pancreas.csv",
         Coordinate_1_based=NA,
         DataProvider=c("GEO", rep("Martin Hemberg", 2)),
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=c("matrix", rep("DataFrame", 2)),
+        RDataClass=c("dgCMatrix", rep("DataFrame", 2)),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     ),

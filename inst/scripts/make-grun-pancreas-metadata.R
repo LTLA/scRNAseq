@@ -13,7 +13,7 @@ write.csv(file="../extdata/metadata-grun-pancreas.csv",
         Coordinate_1_based=NA,
         DataProvider="GEO",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass="matrix",
+        RDataClass="dgCMatrix",
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     ),
