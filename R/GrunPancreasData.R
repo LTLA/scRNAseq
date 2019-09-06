@@ -3,6 +3,9 @@
 #' Download and cache the Grun pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
 #' returning a \linkS4class{SingleCellExperiment} object for further use.
 #'
+#' @param ensembl Logical scalar indicating whether the row names of the returned object should contain Ensembl identifiers.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
 #' @details
 #' This function provides the human pancreas scRNA-seq data from Grun et al. (2016)
 #' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
@@ -32,7 +35,7 @@
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment rowData<- colData<-
 #' @importFrom SingleCellExperiment splitAltExps
-GrunPancreasData <- function() {
+GrunPancreasData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE, has.coldata=FALSE)
 
@@ -68,5 +71,10 @@ GrunPancreasData <- function() {
 
     # Splitting spike-ins into an alternative experiment.
     status <- ifelse(grepl("ERCC-[0-9]+", symbol), "ERCC", "endogenous")
-    splitAltExps(sce, status, ref="endogenous")
+    sce <- splitAltExps(sce, status, ref="endogenous")
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, rowData(sce)$symbol, species="Hs")
+    }
+    sce
 }

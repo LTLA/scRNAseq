@@ -18,7 +18,8 @@ Imports:
     ExperimentHub
 Suggests: 
     BiocStyle, 
-    BiocFileCache,
+    AnnotationHub,
+    AnnotationDbi, 
     knitr, 
     rmarkdown
 VignetteBuilder: knitr
