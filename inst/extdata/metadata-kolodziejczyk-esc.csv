@@ -1,0 +1,2 @@
+"Title","Description","RDataPath","BiocVersion","Genome","SourceType","SourceUrl","SourceVersion","Species","TaxonomyId","Coordinate_1_based","DataProvider","Maintainer","RDataClass","DispatchClass"
+"Kolodziejczyk ESC counts","Count matrix for the Kolodziejczyk embryonic stem cell single-cell RNA-seq dataset","scRNAseq/kolodziejczyk-esc/2.0.0/counts.rds","3.10","mm10","TXT","https://espresso.teichlab.sanger.ac.uk/static","counttable_es.csv","Mus musculus","10090",NA,"Sarah Teichmann","Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>","matrix","Rds"
