@@ -14,7 +14,7 @@ write.csv(file="../extdata/metadata-aztekin-tail.csv",
         Coordinate_1_based=NA,
         DataProvider="ArrayExpress",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=c("dgCMatrix", "DataFrame"),
+        RDataClass=c("dgCMatrix", "DFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     ),

@@ -13,7 +13,7 @@ GENERATOR <- function(short, long, target, src) {
         Coordinate_1_based=NA,
         DataProvider="GEO",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=if (grepl("counts", target)) "dgCMatrix" else "DataFrame",
+        RDataClass=if (grepl("counts", target)) "dgCMatrix" else "DFrame",
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     )

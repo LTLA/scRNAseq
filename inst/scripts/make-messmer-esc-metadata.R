@@ -18,7 +18,7 @@ write.csv(file="../extdata/metadata-messmer-esc.csv", row.names=FALSE,
         Coordinate_1_based=NA,
         DataProvider="ArrayExpress",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=c("matrix", "DataFrame", "DataFrame"),
+        RDataClass=c("matrix", "DFrame", "DFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     )

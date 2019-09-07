@@ -14,7 +14,7 @@ write.csv(file="../extdata/metadata-richard-tcell.csv",
         Coordinate_1_based=NA,
         DataProvider="ArrayExpress",
         Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
-        RDataClass=c("matrix", "DataFrame"),
+        RDataClass=c("matrix", "DFrame"),
         DispatchClass="Rds",
         stringsAsFactors = FALSE
     ),
