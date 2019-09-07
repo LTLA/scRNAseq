@@ -1,0 +1,126 @@
+---
+title: Processing the Richard CD8^+^ T cell dataset
+author: Aaron Lun
+date: "September 6, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of CD8^+^ T cells from @richard2018tcell.
+Counts for endogenous genes and spike-in transcripts are available from ArrayExpress
+using the accession number [E-MTAB-6051](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6051/).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+richard.zip <- bfcrpath(bfc, 
+    file.path("https://www.ebi.ac.uk/arrayexpress/files",
+        "E-MTAB-6051/E-MTAB-6051.processed.1.zip"))
+unzip(richard.zip, exdir=tempdir())
+```
+
+# Reading in the metadata
+
+We read in the metadata from the SDRF file:
+
+```{r}
+richard.sdrf <- bfcrpath(bfc, 
+    file.path("https://www.ebi.ac.uk/arrayexpress/files",
+        "E-MTAB-6051/E-MTAB-6051.sdrf.txt"))
+coldata <- read.delim(richard.sdrf, check.names=FALSE, stringsAsFactors=FALSE)
+libnames <- coldata[["Assay Name"]]
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+colnames(coldata)
+```
+
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+We also discard some ArrayExpress-specific columns.
+
+```{r}
+keep <- grep("(Characteristics|Factor|Parameter Value|Comment)", colnames(coldata))
+coldata <- coldata[,keep] 
+
+new.colnames <- sub(".*\\[(.*)\\]", "\\1", colnames(coldata))
+u <- !duplicated(new.colnames)
+coldata <- coldata[,u]
+colnames(coldata) <- new.colnames[u]
+
+has.multi.levels <- vapply(coldata, FUN=function(x) length(unique(x))>1L, TRUE)
+coldata <- coldata[,has.multi.levels]
+coldata <- coldata[,setdiff(colnames(coldata), c("ENA_SAMPLE", 
+    "BioSD_SAMPLE", "technical replicate group", "ENA_EXPERIMENT", 
+    "SUBMITTED_FILE_NAME", "ENA_RUN", "FASTQ_URI",
+    "single cell identifier"))]
+coldata
+```
+
+Many of these are actually technical replicates, so we only need to keep the first one of each pair.
+
+```{r}
+libnames <- sub("(_[iS][0-9]{3}\\.).*", "\\1", libnames)
+first <- !duplicated(libnames)
+last <- !duplicated(libnames, fromLast=TRUE)
+stopifnot(identical(coldata[first,], coldata[last,]))
+
+coldata <- coldata[first,]
+libnames <- libnames[first]
+dim(coldata)
+```
+
+# Processing the read counts
+
+We load the counts into memory.
+
+```{r}
+batch1 <- read.delim(file.path(tempdir(), 
+    "counts_table_sortdate20160727.txt"),
+    header=TRUE, row.names=1, check.names=FALSE)
+batch2 <- read.delim(file.path(tempdir(),
+    "counts_table_sortdate20161026.txt"),
+    header=TRUE, row.names=1, check.names=FALSE)
+stopifnot(identical(rownames(batch1), rownames(batch2)))
+```
+
+We combine the matrices together, and make sure they match up with the `coldata` order.
+
+```{r}
+combined <- cbind(batch1, batch2)
+stopifnot(identical(sort(colnames(combined)), sort(libnames)))
+m <- match(libnames, colnames(combined))
+combined <- combined[,m]
+```
+
+# Saving for upload 
+
+We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "richard-tcell", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(combined, file=file.path(path, "counts.rds"))
+saveRDS(coldata, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
+
+
