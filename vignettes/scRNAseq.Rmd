@@ -1,6 +1,10 @@
 ---
 title: "Overview of the scRNAseq dataset collection"
-author: "Davide Risso"
+author: 
+- name: Davide Risso
+  affiliation: Division of Biostatistics and Epidemiology, Weill Cornell Medicine
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
 date: "Created: May 25, 2016; Compiled: `r Sys.Date()`"
 output:
   BiocStyle::html_document:
@@ -50,12 +54,15 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 
 | Study                 | System           | Number of cells   | Function            |
 |-----------------------|------------------|-------------------|---------------------|
+|@aztekin2019identification | Xenopus tail | 13199             | `AztekinTailData()` |
+|@bach2017differentiation | Mouse mammary gland | 25806        | `BachMammaryData()` |
 |@baron2016singlecell   | Human pancreas   | 8569              | `BaronPancreasData('human')` |
 |@baron2016singlecell   | Mouse pancreas   | 1886              | `BaronPancreasData('mouse')` |
 |@campbell2017molecular | Mouse brain      | 21086             | `CampbellBrainData()` | 
 |@chen2017singlecell    | Mouse brain      | 14437             | `ChenBrainData()` |
 |@grun2016denovo        | Mouse haematopoietic stem cells | 1915 | `GrunHSCData()` | 
 |@grun2016denovo        | Human pancreas   | 1728              | `GrunPancreasData()` |
+|@kolodziejczyk2015singlecell | Mouse mebryonic stem cells | 704 | `KolodziejczykESCData()` |
 |@lamanno2016molecular  | Human embryonic stem cells | 1715    | `LaMannoBrainData('human-es')` |
 |@lamanno2016molecular  | Human embryonic midbrain   | 1977    | `LaMannoBrainData('human-embryo')` |
 |@lamanno2016molecular  | Human induced pluripotent stem cells | 337 | `LaMannoBrainData('human-ips')` |
@@ -64,7 +71,6 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 |@lawlor2017singlecell  | Human pancreas   | 638               | `LawlorPancreasData()` |
 |@lun2017assessing      | 416B cells       | 192               | `LunSpikeInData('416b')` |
 |@lun2017assessing      | Mouse trophoblasts | 192             | `LunSpikeInData('tropho')` |
-|@kolodziejczyk2015singlecell | Mouse mebryonic stem cells | 704 | `KolodziejczykESCData()` |
 |@macosko2015highly     | Mouse retina     | 49300             | `MacoskoRetinaData()` |
 |@marques2016oligodendrocyte | Mouse brain | 5069              | `MarquesBrainData()` | 
 |@messmer2019transcriptional | Human embryonic stem cells | 1344 | `MessmerESCData()` |
