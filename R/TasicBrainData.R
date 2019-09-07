@@ -1,12 +1,10 @@
 #' Obtain the Tasic brain data
 #'
-#' Download and cache the Tasic brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the mouse brain single-cell RNA-seq data from Tasic et al. (2015).
 #'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' 
 #' @details
-#' This function provides the brain scRNA-seq data from Tasic et al. (2015)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-#'
 #' Column metadata is provided in the same form as supplied in GSE71585.
 #' This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 #'
@@ -15,7 +13,13 @@
 #'
 #' The last 9 columns (containing \code{_CTX_} in their names) correspond to no-cell control libraries.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/tasic-brain}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun
 #'
@@ -29,10 +33,15 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-TasicBrainData <- function() {
+TasicBrainData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("tasic-brain", version), has.rowdata=FALSE)
 
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, status, ref="endogenous")
+    sce <- splitAltExps(sce, status, ref="endogenous")
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, symbols=rownames(sce), species="Mm")
+    }
+    sce
 }

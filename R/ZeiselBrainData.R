@@ -1,12 +1,10 @@
 #' Obtain the Zeisel brain data
 #'
-#' Download and cache the Zeisel brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the mouse brain single-cell RNA-seq dataset from Zeisel et al. (2015).
 #'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' 
 #' @details
-#' This function provides the brain scRNA-seq data from Zeisel et al. (2015)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
-#'
 #' Row data contains a single \code{"featureType"} field describing the type of each feature
 #' (endogenous genes, mitochondrial genes, spike-in transcripts and repeats).
 #' Spike-ins and repeats are stored as alternative experiments.
@@ -14,7 +12,13 @@
 #' Column metadata is provided in the same form as supplied in \url{http://linnarssonlab.org/cortex/}.
 #' This contains information such as the cell diameter and the published cell type annotations.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-brain}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'
@@ -29,11 +33,16 @@
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
 #' @importFrom SummarizedExperiment rowData
-ZeiselBrainData <- function() {
+ZeiselBrainData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("zeisel-brain", version))
 
     status <- rowData(sce)$featureType
     status[status=="mito"] <- "endogenous"
-    splitAltExps(sce, status, "endogenous")
+    sce <- splitAltExps(sce, status, "endogenous")
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, symbols=rownames(sce), species="Mm")
+    }
+    sce
 }

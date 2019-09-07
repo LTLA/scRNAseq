@@ -1,15 +1,10 @@
 #' Obtain the Muraro pancreas data
 #'
-#' Download and cache the Muraro pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the human pancreas single-cell RNA-seq data from Muraro et al. (2016).
 #'
-#' @param ensembl Logical scalar indicating whether the row names of the returned object should contain Ensembl identifiers.
-#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' 
 #' @details
-#' This function provides the human pancreas scRNA-seq data from Muraro et al. (2016)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
-#'
 #' Row data contains fields for the symbol and chromosomal location of each gene.
 #'
 #' Column metadata is derived from the columns of the count matrix provided in GSE85241,
@@ -18,7 +13,13 @@
 #'
 #' ERCC spike-ins are represented as an alternative experiment.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/muraro-pancreas}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun,
 #' using additional metadata obtained by Vladimir Kiselev.
@@ -47,7 +48,7 @@ MuraroPancreasData <- function(ensembl=FALSE) {
     sce <- splitAltExps(sce, status, ref="endogenous")
 
     if (ensembl) {
-        sce <- .convert_to_ensembl(sce, rowData(sce)$symbol, species="Hs")
+        sce <- .convert_to_ensembl(sce, symbols=rowData(sce)$symbol, species="Hs")
     }
     sce
 }

@@ -1,17 +1,21 @@
 #' Obtain the Shekhar retina data
 #'
-#' Download and cache the Shekhar retina single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the mouse retina single-cell RNA-seq dataset from Shekhar et al. (2016).
 #'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' 
 #' @details
-#' This function provides the mouse retina scRNA-seq data from Shekhar et al. (2016)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
-#'
 #' Column metadata contains the cluster identities as reported in the paper.
 #' Note that some cells will have \code{NA} identities as they are present in the count matrix but not in the metadata file.
 #' These are presumably low-quality cells that were discarded prior to clustering.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/shekhar-retina}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'
@@ -24,8 +28,11 @@
 #' sce <- ShekharRetinaData()
 #' 
 #' @export
-ShekharRetinaData <- function() {
+ShekharRetinaData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("shekhar-retina", version), has.rowdata=FALSE)
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
+    }
     sce
 }

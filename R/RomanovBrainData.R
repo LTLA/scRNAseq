@@ -1,19 +1,23 @@
 #' Obtain the Romanov brain data
 #'
-#' Download and cache the Romanov brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the mouse brain single-cell RNA-seq dataset from Romanov et al. (2017).
+#'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #'
 #' @details
-#' This function provides the brain scRNA-seq data from Romanov et al. (2017)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
-#'
 #' Column metadata is provided in the same form as supplied in GSE74672.
 #' This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 #'
-#' Rows corresponding to spike-in transcripts are labelled with the \code{\link{isSpike}} function.
+#' ERCC spike-ins are represented as an alternative experiment.
 #' Note that some of the spike-in rows have \code{NA} observations for some (but not all) cells.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/romanov-brain}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun,
 #' based on code by Vladimir Kiselev and Tallulah Andrews.
@@ -28,10 +32,15 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-RomanovBrainData <- function() {
+RomanovBrainData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("romanov-brain", version), has.rowdata=FALSE)
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, status, ref="endogenous")
+    sce <- splitAltExps(sce, status, ref="endogenous")
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
+    }
+    sce
 }

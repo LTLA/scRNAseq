@@ -7,22 +7,23 @@
 #' @param assays Character vector specifying one or more assays to return.
 #' Choices are \code{"tophat_counts"}, \code{"cufflinks_fpkm"}, \code{"rsem_counts"} and \code{"rsem_tpm"}.
 #' If \code{NULL}, all assays are returned.
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' 
 #' @return
-#' A \linkS4class{SingleCellExperiment} object containing one or more expression matrices,
-#' column metadata and (possibly) spike-in information.
+#' A \linkS4class{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,
+#' depending on \code{assays}.
 #' 
 #' @details
-#' \code{ReprocessedFluidigmData} returns a dataset of 65 cells from Pollen et al. (2014), 
+#' \code{ReprocessedFluidigmData} returns a dataset of 65 human neural cells from Pollen et al. (2014), 
 #' each sequenced at high and low coverage (SRA accession SRP041736).
 #' 
-#' \code{ReprocessedTh2Data} returns a dataset of 96 T helper cells from Mahata et al. (2014),
+#' \code{ReprocessedTh2Data} returns a dataset of 96 mouse T helper cells from Mahata et al. (2014),
 #' obtained from ArrayExpress accession E-MTAB-2512.
 #' This contains spike-in information stored as an alternative experiment.
 #'
-#' \code{ReprocessedAllenData} return a dataset of 379 cells from Tasic et al. (2016).
+#' \code{ReprocessedAllenData} return a dataset of 379 mouse brain cells from Tasic et al. (2016).
 #' This is a re-processed subset of the data from \code{\link{TasicBrainData}},
-#' This contains spike-in information stored as an alternative experiment.
+#' and contains spike-in information stored as an alternative experiment.
 #'
 #' In each dataset, the first columns of the \code{colData} are sample quality metrics from FastQC and Picard.
 #' The remaining fields were obtained from the original study in their GEO/SRA submission
@@ -30,6 +31,13 @@
 #' These two categories of \code{colData} are distinguished by a \code{which_qc} element in the \code{\link{metadata}},
 #' which contains the names of the quality-related columns in each object.
 #' 
+#' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/legacy-allen},
+#' \code{scRNAseq/legacy-fluidigm} or \code{scRNAseq/legacy-th2}.
+#'
 #' @section Pre-processing details:
 #' FASTQ files were either obtained directly from ArrayExpress, 
 #' or converted from SRA files (downloaded from the Sequence Read Archive) using the SRA Toolkit.
@@ -64,11 +72,17 @@
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment splitAltExps
-ReprocessedAllenData <- function(assays=NULL) {
+ReprocessedAllenData <- function(assays=NULL, ensembl=FALSE) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-allen", version), assays)
+
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, status, ref="endogenous")
+    sce <- splitAltExps(sce, status, ref="endogenous")
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
+    }
+    sce
 }
 
 #' @export
@@ -77,13 +91,24 @@ ReprocessedAllenData <- function(assays=NULL) {
 ReprocessedTh2Data <- function(assays=NULL) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
+
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, status, ref="endogenous")
+    sce <- splitAltExps(sce, status, ref="endogenous")
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
+    }
+    sce
 }
 
 #' @export
 #' @rdname ReprocessedData
 ReprocessedFluidigmData <- function(assays=NULL) {
     version <- "1.10.0"
-    .create_sce_legacy(file.path("legacy-fluidigm", version), assays)
+    sce <- .create_sce_legacy(file.path("legacy-fluidigm", version), assays)
+
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, species="Hs", symbols=rownames(sce))
+    }
+    sce
 }

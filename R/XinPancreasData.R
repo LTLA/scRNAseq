@@ -1,17 +1,21 @@
 #' Obtain the Xin pancreas data
 #'
-#' Download and cache the Xin pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-#' returning a \linkS4class{SingleCellExperiment} object for further use.
+#' Obtain the human pancreas single-cell RNA-seq dataset from Xin et al. (2016).
 #'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' 
 #' @details
-#' This function provides the pancreas scRNA-seq data from Xin et al. (2016)
-#' in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of RPKMs.
-#'
 #' Row data contains fields for the Entrez ID and symbol for each gene.
 #' Column metadata was obtained from the authors (indirectly, via the Hemberg group) 
 #' and contains information such as the cell type labels and donor status.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object.
+#' If \code{ensembl=TRUE}, the Entrez IDs are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' All data are downloaded from ExperimentHub and cached for local re-use.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/xin-pancreas}.
+#'
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of RPKMs.
 #'
 #' @author Aaron Lun,
 #' using additional metadata obtained by Vladimir Kiselev.
@@ -25,8 +29,11 @@
 #' sce <- XinPancreasData()
 #' 
 #' @export
-XinPancreasData <- function() {
+XinPancreasData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("xin-pancreas", version), assays="rpkm")
+    if (ensembl) {
+        sce <- .convert_to_ensembl(sce, symbols=rownames(sce), species="Hs", keytype="ENTREZID")
+    }
     sce
 }
