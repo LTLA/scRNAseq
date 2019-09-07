@@ -95,7 +95,7 @@ We save these to file for upload to `r Biocpkg("ExperimentHub")`.
 ```{r}
 path <- file.path("scRNAseq", "bach-mammary", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(gene.info[[1]], file=file.path(path, "rowdata.rds"))
+saveRDS(collected.rowdata[[1]], file=file.path(path, "rowdata.rds"))
 for (i in seq_along(samples)) {
     saveRDS(collected.counts[[i]], file=file.path(path, sprintf("counts-%s.rds", samples[i])))
     saveRDS(collected.coldata[[i]], file=file.path(path, sprintf("coldata-%s.rds", samples[i])))
