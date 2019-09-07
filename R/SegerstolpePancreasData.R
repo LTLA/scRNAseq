@@ -2,6 +2,8 @@
 #'
 #' Download the human pancreas single-cell RNA-seq (scRNA-seq) dataset from Segerstolpe et al. (2016)
 #'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#'
 #' @details
 #' Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
 #' The rows of the output object are named with the symbol, but note that these are not unique.

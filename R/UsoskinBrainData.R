@@ -2,6 +2,8 @@
 #'
 #' Obtain the mouse brain single-cell RNA-seq dataset from Usoskin et al. (2015).
 #'
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#'
 #' @details
 #' Column metadata is provided in the same form as supplied in External Table 2 of \url{http://linnarssonlab.org/drg/}.
 #' This contains information such as the library of origin and the cell type.

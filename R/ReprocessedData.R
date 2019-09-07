@@ -88,7 +88,7 @@ ReprocessedAllenData <- function(assays=NULL, ensembl=FALSE) {
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment splitAltExps
-ReprocessedTh2Data <- function(assays=NULL) {
+ReprocessedTh2Data <- function(assays=NULL, ensembl=FALSE) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
 
@@ -103,7 +103,7 @@ ReprocessedTh2Data <- function(assays=NULL) {
 
 #' @export
 #' @rdname ReprocessedData
-ReprocessedFluidigmData <- function(assays=NULL) {
+ReprocessedFluidigmData <- function(assays=NULL, ensembl=FALSE) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-fluidigm", version), assays)
 

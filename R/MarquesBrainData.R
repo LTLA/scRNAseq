@@ -32,7 +32,7 @@
 #' sce <- MarquesBrainData()
 #' 
 #' @export
-MarquesBrainData <- function() {
+MarquesBrainData <- function(ensembl=FALSE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("marques-brain", version), assays="counts", has.rowdata=FALSE)
 
@@ -40,5 +40,4 @@ MarquesBrainData <- function() {
         sce <- .convert_to_ensembl(sce, species="Mm", symbols=sub("_loc[0-9]+$", "", rownames(sce)))
     }
     sce
-
 }
