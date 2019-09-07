@@ -5,7 +5,7 @@ GENERATOR <- function(short, long, target, src) {
         RDataPath = file.path("scRNAseq", "messmer-esc", "2.0.0", target), 
         BiocVersion="3.10",
         Genome="mm10",
-        SourceType=if (grepl("counts", target)) "TXT" else "TSV",
+        SourceType=if (grepl("counts", target)) "MTX" else "TSV",
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE106273",
         SourceVersion=src,
         Species="Mus musculus",
@@ -31,10 +31,10 @@ samples <- c(
     "L_1", "L_2",
     "PI_1", "PI_2")
 
-conditions <- c(NP="Nulliparous",
-    G="Gestation",
-    L="Lactation",
-    PI="Post-involution")[sub("_.*", "", samples)]
+conditions <- c(NP="nulliparous",
+    G="gestation",
+    L="lactation",
+    PI="post-involution")[sub("_.*", "", samples)]
 
 collected <- list()
 for (i in seq_along(accessions)) {
