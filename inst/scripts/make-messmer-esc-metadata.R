@@ -1,7 +1,7 @@
 write.csv(file="../extdata/metadata-messmer-esc.csv", row.names=FALSE,
     data.frame(
-        Title = sprintf("Messmer human ESC %s", c("counts", "rowData", "colData")),
-        Description = sprintf("%s for the Messmer human embryonic stem cell single-cell RNA-seq dataset", 
+        Title = sprintf("Messmer ESC %s", c("counts", "rowData", "colData")),
+        Description = sprintf("%s for the Messmer embryonic stem cell single-cell RNA-seq dataset", 
             c("Count matrix", "Per-gene metadata", "Per-cell metadata")),
         RDataPath = file.path("scRNAseq", "messmer-esc", "2.0.0", 
             c("counts.rds", "rowdata.rds", "coldata.rds")), 

@@ -1,7 +1,7 @@
 write.csv(file="../extdata/metadata-richard-tcell.csv", 
     data.frame(
-        Title = sprintf("Richard mouse CD8+ T cell %s", c("counts", "colData")),
-        Description = sprintf("%s for the Richard mouse CD8+ T cell single-cell RNA-seq dataset", 
+        Title = sprintf("Richard CD8+ T cell %s", c("counts", "colData")),
+        Description = sprintf("%s for the Richard CD8+ T cell single-cell RNA-seq dataset", 
             c("Count matrix", "Per-cell metadata")),
         RDataPath = file.path("scRNAseq", "richard-tcell", "2.0.0", c("counts.rds", "coldata.rds")),
         BiocVersion="3.10",

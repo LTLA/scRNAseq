@@ -1,7 +1,7 @@
 write.csv(file="../extdata/metadata-kolodziejczyk-esc.csv", 
     data.frame(
-        Title = "Kolodziejczyk mouse ESC counts",
-        Description = "Count matrix for the Kolodziejczyk mouse embryonic stem cell single-cell RNA-seq dataset", 
+        Title = "Kolodziejczyk ESC counts",
+        Description = "Count matrix for the Kolodziejczyk embryonic stem cell single-cell RNA-seq dataset", 
         RDataPath = file.path("scRNAseq", "kolodziejczyk-esc", "2.0.0", "counts.rds"),
         BiocVersion="3.10",
         Genome="mm10",
