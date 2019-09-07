@@ -68,6 +68,14 @@ coldata <- coldata[,setdiff(colnames(coldata), c("ENA_SAMPLE",
 coldata
 ```
 
+We convert all of the FACS intensity measurements to numeric values.
+
+```{r}
+for (i in grep("^CD[0-9]+", colnames(coldata))) {
+    suppressWarnings(coldata[[i]] <- as.numeric(coldata[[i]]))
+}
+```
+
 Many of these are actually technical replicates, so we only need to keep the first one of each pair.
 
 ```{r}
