@@ -4,19 +4,15 @@
 \alias{SegerstolpePancreasData}
 \title{Obtain the Segerstolpe pancreas data}
 \usage{
-SegerstolpePancreasData()
+SegerstolpePancreasData(ensembl = FALSE)
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
-Download and cache the Segerstolpe pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Download the human pancreas single-cell RNA-seq (scRNA-seq) dataset from Segerstolpe et al. (2016)
 }
 \details{
-This function provides the pancreas scRNA-seq data from Segerstolpe et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-
 Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
 The rows of the output object are named with the symbol, but note that these are not unique.
 
@@ -24,6 +20,12 @@ Column metadata were extracted from the \code{Characteristics} fields of the SDR
 This contains information such as the cell type labels and patient status.
 
 ERCC spike-ins are represented as an alternative experiment.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/segerstolpe-pancreas}.
 }
 \examples{
 sce <- SegerstolpePancreasData()

@@ -10,22 +10,21 @@ LunSpikeInData(which = c("416b", "tropho"))
 \item{which}{String specifying whether the 416B or trophoblast data should be obtained.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
-Download and cache the Lun spike-in single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the spike-in single-cell RNA-seq data from Lun et al. (2017).
 }
 \details{
-This function provides the spike-in scRNA-seq data from Lun et al. (2017)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-
 Row data contains a single \code{"Length"} field describing the total exonic length of each feature.
 
 Column metadata is provided in the same form as supplied in E-MTAB-5522.
 This contains information such as the cell type, plate of origin, spike-in addition order and oncogene induction. 
 
 Two sets of spike-ins are available for each dataset - SIRVs and ERCCs - and stored as alternative experiments.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/lun-spikein}.
 }
 \examples{
 sce <- LunSpikeInData()

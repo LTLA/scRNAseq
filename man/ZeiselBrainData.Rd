@@ -4,25 +4,30 @@
 \alias{ZeiselBrainData}
 \title{Obtain the Zeisel brain data}
 \usage{
-ZeiselBrainData()
+ZeiselBrainData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the Zeisel brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse brain single-cell RNA-seq dataset from Zeisel et al. (2015).
 }
 \details{
-This function provides the brain scRNA-seq data from Zeisel et al. (2015)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
-
 Row data contains a single \code{"featureType"} field describing the type of each feature
 (endogenous genes, mitochondrial genes, spike-in transcripts and repeats).
 Spike-ins and repeats are stored as alternative experiments.
 
 Column metadata is provided in the same form as supplied in \url{http://linnarssonlab.org/cortex/}.
 This contains information such as the cell diameter and the published cell type annotations.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-brain}.
 }
 \examples{
 sce <- ZeiselBrainData()

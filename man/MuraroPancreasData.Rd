@@ -4,19 +4,18 @@
 \alias{MuraroPancreasData}
 \title{Obtain the Muraro pancreas data}
 \usage{
-MuraroPancreasData()
+MuraroPancreasData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the Muraro pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the human pancreas single-cell RNA-seq data from Muraro et al. (2016).
 }
 \details{
-This function provides the human pancreas scRNA-seq data from Muraro et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
-
 Row data contains fields for the symbol and chromosomal location of each gene.
 
 Column metadata is derived from the columns of the count matrix provided in GSE85241,
@@ -24,6 +23,12 @@ with additional cell type labels obtained from the authors (indirectly, via the 
 Some cells have \code{NA} labels and were presumably removed prior to downstream analyses.
 
 ERCC spike-ins are represented as an alternative experiment.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/muraro-pancreas}.
 }
 \examples{
 sce <- MuraroPancreasData()

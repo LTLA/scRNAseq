@@ -4,26 +4,31 @@
 \alias{GrunPancreasData}
 \title{Obtain the Grun pancreas data}
 \usage{
-GrunPancreasData()
+GrunPancreasData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the Grun pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the human pancreas single-cell RNA-seq data from Grun et al. (2016).
 }
 \details{
-This function provides the human pancreas scRNA-seq data from Grun et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts. 
-
 Row metadata contains fields for the symbol and chromosomal location of each gene,
 as derived from the row names.
 
 Column metadata is derived from the column names of the count matrix with the sample annotations in GSE81076.
 This includes the donor identity for each cell and the type of sample.
 
-An alternative experiment contains the data for the spike-in transcripts.
+An alternative experiment contains the data for the ERCC spike-in transcripts.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/grun-pancreas}.
 }
 \examples{
 sce <- GrunPancreasData()

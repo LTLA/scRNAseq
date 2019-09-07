@@ -4,19 +4,18 @@
 \alias{TasicBrainData}
 \title{Obtain the Tasic brain data}
 \usage{
-TasicBrainData()
+TasicBrainData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
-Download and cache the Tasic brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse brain single-cell RNA-seq data from Tasic et al. (2015).
 }
 \details{
-This function provides the brain scRNA-seq data from Tasic et al. (2015)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-
 Column metadata is provided in the same form as supplied in GSE71585.
 This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 
@@ -24,6 +23,12 @@ Spike-in transcripts are stored as alternative experiments.
 Note that some of the spike-in rows have \code{NA} observations for some (but not all) cells.
 
 The last 9 columns (containing \code{_CTX_} in their names) correspond to no-cell control libraries.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/tasic-brain}.
 }
 \examples{
 sce <- TasicBrainData()

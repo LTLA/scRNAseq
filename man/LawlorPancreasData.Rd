@@ -7,18 +7,17 @@
 LawlorPancreasData()
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
-Download and cache the Lawlor pancreas single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Provides the human pancreas single-cell RNA-seq data from Lawlor et al. (2017).
 }
 \details{
-This function provides the pancreas scRNA-seq data from Lawlor et al. (2017)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-
 Column metadata is provided in the same form as supplied in GSE86469. 
 This contains information such as the cell type labels and patient status.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/lawlor-pancreas}.
 }
 \examples{
 sce <- LawlorPancreasData()

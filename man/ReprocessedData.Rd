@@ -6,7 +6,7 @@
 \alias{ReprocessedFluidigmData}
 \title{Reprocessed single-cell data sets}
 \usage{
-ReprocessedAllenData(assays = NULL)
+ReprocessedAllenData(assays = NULL, ensembl = FALSE)
 
 ReprocessedTh2Data(assays = NULL)
 
@@ -16,10 +16,12 @@ ReprocessedFluidigmData(assays = NULL)
 \item{assays}{Character vector specifying one or more assays to return.
 Choices are \code{"tophat_counts"}, \code{"cufflinks_fpkm"}, \code{"rsem_counts"} and \code{"rsem_tpm"}.
 If \code{NULL}, all assays are returned.}
+
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object containing one or more expression matrices,
-column metadata and (possibly) spike-in information.
+A \linkS4class{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,
+depending on \code{assays}.
 }
 \description{
 Obtain the legacy count matrices for three publicly available single-cell RNA-seq datasets.
@@ -27,22 +29,29 @@ Raw sequencing data were downloaded from NCBI's SRA or from EBI's ArrayExpress,
 aligned to the relevant genome build and used to quantify gene expression.
 }
 \details{
-\code{ReprocessedFluidigmData} returns a dataset of 65 cells from Pollen et al. (2014), 
+\code{ReprocessedFluidigmData} returns a dataset of 65 human neural cells from Pollen et al. (2014), 
 each sequenced at high and low coverage (SRA accession SRP041736).
 
-\code{ReprocessedTh2Data} returns a dataset of 96 T helper cells from Mahata et al. (2014),
+\code{ReprocessedTh2Data} returns a dataset of 96 mouse T helper cells from Mahata et al. (2014),
 obtained from ArrayExpress accession E-MTAB-2512.
 This contains spike-in information stored as an alternative experiment.
 
-\code{ReprocessedAllenData} return a dataset of 379 cells from Tasic et al. (2016).
+\code{ReprocessedAllenData} return a dataset of 379 mouse brain cells from Tasic et al. (2016).
 This is a re-processed subset of the data from \code{\link{TasicBrainData}},
-This contains spike-in information stored as an alternative experiment.
+and contains spike-in information stored as an alternative experiment.
 
 In each dataset, the first columns of the \code{colData} are sample quality metrics from FastQC and Picard.
 The remaining fields were obtained from the original study in their GEO/SRA submission
 and/or as Supplementary files in the associated publication.
 These two categories of \code{colData} are distinguished by a \code{which_qc} element in the \code{\link{metadata}},
 which contains the names of the quality-related columns in each object.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/legacy-allen},
+\code{scRNAseq/legacy-fluidigm} or \code{scRNAseq/legacy-th2}.
 }
 \section{Pre-processing details}{
 

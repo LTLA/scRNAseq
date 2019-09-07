@@ -10,23 +10,22 @@ NestorowaHSCData(remove.htseq = TRUE)
 \item{remove.htseq}{Logical scalar indicating whether HT-seq alignment statistics should be removed.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
-Download and cache the Nestorowa HSC single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse haematopoietic stem cell single-cell RNA-seq data from Nestorowa et al. (2015).
 }
 \details{
-This function provides the haematopoietic stem cell scRNA-seq data from Nestorowa et al. (2015)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-
-Row corresponding to HT-seq's alignment statistics are present in the count matrix.
-By default, these are removed prior to downstream analyses.
+Rows corresponding to HT-seq's alignment statistics are removed by default.
+These can be retained by setting \code{remove.htseq=FALSE}.
 
 Column metadata includes the cell type mapping, as described on the website (see References),
 the diffusion map components and the FACS expression levels of selected markers.
 
-ERCC spike-ins are stored as alternative experiments.
+ERCC spike-ins are stored in an alternative experiment.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.
 }
 \examples{
 sce <- NestorowaHSCData()

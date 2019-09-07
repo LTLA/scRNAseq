@@ -5,22 +5,20 @@
 \title{Obtain the La Manno brain data}
 \usage{
 LaMannoBrainData(which = c("human-es", "human-embryo", "human-ips",
-  "mouse-adult", "mouse-embryo"))
+  "mouse-adult", "mouse-embryo"), ensembl = FALSE)
 }
 \arguments{
-\item{which}{A string specifying which data set should be obtained.}
+\item{which}{A string specifying which dataset should be obtained.}
+
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the La Manno brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse/human brain scRNA-seq data from La Manno et al. (2016).
 }
 \details{
-This function provides the brain scRNA-seq data from La Manno et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with one of several possible matrices of UMI counts.
-
 Column metadata is provided in the same form as supplied in the supplementary tables in GSE71585.
 This contains information such as the time point and cell type.
 
@@ -35,6 +33,12 @@ The various settings of \code{which} will obtain different data sets.
 Unfortunately, each of these datasets uses a different set of features.
 If multiple datasets are to be used simultaneously, users will have to decide how to merge them,
 e.g., by taking the intersection of common features across all datasets.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/lamanno-brain}.
 }
 \examples{
 sce.h.es <- LaMannoBrainData()

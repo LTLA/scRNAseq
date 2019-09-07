@@ -4,22 +4,27 @@
 \alias{ShekharRetinaData}
 \title{Obtain the Shekhar retina data}
 \usage{
-ShekharRetinaData()
+ShekharRetinaData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the Shekhar retina single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse retina single-cell RNA-seq dataset from Shekhar et al. (2016).
 }
 \details{
-This function provides the mouse retina scRNA-seq data from Shekhar et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
-
 Column metadata contains the cluster identities as reported in the paper.
 Note that some cells will have \code{NA} identities as they are present in the count matrix but not in the metadata file.
 These are presumably low-quality cells that were discarded prior to clustering.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/shekhar-retina}.
 }
 \examples{
 sce <- ShekharRetinaData()

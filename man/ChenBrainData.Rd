@@ -4,21 +4,26 @@
 \alias{ChenBrainData}
 \title{Obtain the Chen brain data}
 \usage{
-ChenBrainData()
+ChenBrainData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the Chen brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse brain single-cell RNA-seq data from Chen et al. (2017).
 }
 \details{
-This function provides the brain scRNA-seq data from Chen et al. (2017)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
-
 Column metadata is provided in the same form as supplied in GSE87544.
 This contains the putative cell type assigned by the original authors.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/chen-brain}.
 }
 \examples{
 sce <- ChenBrainData()

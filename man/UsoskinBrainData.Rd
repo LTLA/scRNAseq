@@ -4,24 +4,26 @@
 \alias{UsoskinBrainData}
 \title{Obtain the Usoskin brain data}
 \usage{
-UsoskinBrainData()
+UsoskinBrainData(ensembl = FALSE)
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of RPMs.
 }
 \description{
-Download and cache the Usoskin brain single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse brain single-cell RNA-seq dataset from Usoskin et al. (2015).
 }
 \details{
-This function provides the brain scRNA-seq data from Usoskin et al. (2015)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of RPMs.
-
 Column metadata is provided in the same form as supplied in External Table 2 of \url{http://linnarssonlab.org/drg/}.
 This contains information such as the library of origin and the cell type.
 
 The count matrix contains information for repeats, marked with \code{r_} prefixes in the row names;
 as well as mitochondrial transcripts, marked with \code{mt-} prefixes.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/usoskin-brain}.
 }
 \examples{
 sce <- UsoskinBrainData()

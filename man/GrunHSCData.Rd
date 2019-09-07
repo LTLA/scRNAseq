@@ -4,21 +4,26 @@
 \alias{GrunHSCData}
 \title{Obtain the Grun HSC data}
 \usage{
-GrunHSCData()
+GrunHSCData(ensembl = FALSE)
+}
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object.
+A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
-Download and cache the Grun HSC single-cell RNA-seq (scRNA-seq) dataset from ExperimentHub,
-returning a \linkS4class{SingleCellExperiment} object for further use.
+Obtain the mouse haematopoietic stem cell single-cell RNA-seq data from Grun et al. (2016).
 }
 \details{
-This function provides the haematopoietic stem cell scRNA-seq data from Grun et al. (2016)
-in the form of a \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
-
 Row metadata contains the symbol and chromosomal location for each gene.
 Column metadata contains the extraction protocol used for each sample, as described in GSE76983.
+
+If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
+Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+All data are downloaded from ExperimentHub and cached for local re-use.
+Specific resources can be retrieved by searching for \code{scRNAseq/grun-hsc}.
 }
 \examples{
 sce <- GrunHSCData()
