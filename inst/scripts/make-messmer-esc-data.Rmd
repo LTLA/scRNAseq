@@ -167,6 +167,7 @@ path <- file.path("scRNAseq", "messmer-esc", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(combined.counts, file=file.path(path, "counts.rds"))
 saveRDS(coldata, file=file.path(path, "coldata.rds"))
+saveRDS(DataFrame(Length=gene.length), file=file.path(path, "rowdata.rds"))
 ```
 
 # Session information
@@ -176,5 +177,3 @@ sessionInfo()
 ```
 
 # References
-
-
