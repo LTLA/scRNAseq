@@ -7,10 +7,9 @@
 #'
 #' Column metadata is provided in the same form as supplied in E-MTAB-6819.
 #' This contains information such as the cell phenotype (naive or primed) and the batch of origin.
-#' Note that counts for technical replicates have already been summed together,
-#' so there is no longer a 1:1 mapping between the columns here and the entries of E-MTAB-6819.
+#' Note that counts for technical replicates have already been summed together.
 #'
-#' ERCC spike-ins are stored as an alternative experiment.
+#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/messmer-esc}.

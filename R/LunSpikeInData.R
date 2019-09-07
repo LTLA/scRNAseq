@@ -11,7 +11,8 @@
 #' Column metadata is provided in the same form as supplied in E-MTAB-5522.
 #' This contains information such as the cell type, plate of origin, spike-in addition order and oncogene induction. 
 #'
-#' Two sets of spike-ins are available for each dataset - SIRVs and ERCCs - and stored as alternative experiments.
+#' Two sets of spike-ins were added to each cell in each dataset.
+#' These are available as the \code{"SIRV"} and \code{"ERCC"} entries in the \code{\link{altExps}}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/lun-spikein}.

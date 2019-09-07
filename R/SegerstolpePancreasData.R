@@ -11,7 +11,7 @@
 #' Column metadata were extracted from the \code{Characteristics} fields of the SDRF file for ArrayExpress E-MTAB-5061.
 #' This contains information such as the cell type labels and patient status.
 #'
-#' ERCC spike-ins are represented as an alternative experiment.
+#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.

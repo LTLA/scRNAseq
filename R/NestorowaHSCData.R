@@ -14,7 +14,7 @@
 #'
 #' Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link{reducedDims}}.
 #'
-#' ERCC spike-ins are stored as the \code{"ERCC"} entry in the \code{\link{altExps}}.
+#' Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.

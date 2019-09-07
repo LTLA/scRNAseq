@@ -8,7 +8,7 @@
 #' Column metadata is generated from the column names,
 #' and contains the culture conditions and the plate of origin for each cell.
 #'
-#' ERCC spike-ins are stored as an alternative experiment.
+#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/kolodziejczyk-esc}.

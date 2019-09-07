@@ -7,7 +7,7 @@
 #' @details
 #' Row data contains a single \code{"featureType"} field describing the type of each feature
 #' (endogenous genes, mitochondrial genes, spike-in transcripts and repeats).
-#' Spike-ins and repeats are stored as alternative experiments.
+#' Spike-ins and repeats are stored as separate entries in the \code{\link{altExps}}.
 #'
 #' Column metadata is provided in the same form as supplied in \url{http://linnarssonlab.org/cortex/}.
 #' This contains information such as the cell diameter and the published cell type annotations.
