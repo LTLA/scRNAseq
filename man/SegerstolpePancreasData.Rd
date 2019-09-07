@@ -6,6 +6,9 @@
 \usage{
 SegerstolpePancreasData(ensembl = FALSE)
 }
+\arguments{
+\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
+}
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 }

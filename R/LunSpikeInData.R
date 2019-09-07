@@ -21,7 +21,7 @@
 #' @author Aaron Lun
 #'
 #' @references
-#' Lun et al. (2017). 
+#' Lun ATL et al. (2017). 
 #' Assessing the reliability of spike-in normalization for analyses of single-cell RNA sequencing data. 
 #' \emph{Genome Res.} 27(11), 1795-1806.
 #'
