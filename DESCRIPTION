@@ -21,7 +21,9 @@ Suggests:
     AnnotationHub,
     AnnotationDbi, 
     knitr, 
-    rmarkdown
+    rmarkdown,
+    BiocFileCache,
+    testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 

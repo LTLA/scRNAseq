@@ -4,7 +4,7 @@
 \alias{MarquesBrainData}
 \title{Obtain the Marques brain data}
 \usage{
-MarquesBrainData()
+MarquesBrainData(ensembl = FALSE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}

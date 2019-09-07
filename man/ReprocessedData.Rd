@@ -8,9 +8,9 @@
 \usage{
 ReprocessedAllenData(assays = NULL, ensembl = FALSE)
 
-ReprocessedTh2Data(assays = NULL)
+ReprocessedTh2Data(assays = NULL, ensembl = FALSE)
 
-ReprocessedFluidigmData(assays = NULL)
+ReprocessedFluidigmData(assays = NULL, ensembl = FALSE)
 }
 \arguments{
 \item{assays}{Character vector specifying one or more assays to return.
