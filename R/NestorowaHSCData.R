@@ -9,9 +9,12 @@
 #' These can be retained by setting \code{remove.htseq=FALSE}.
 #'
 #' Column metadata includes the cell type mapping, as described on the website (see References),
-#' the diffusion map components and the FACS expression levels of selected markers.
+#' and the FACS expression levels of selected markers.
+#' Note that these are stored as nested matrices within the \code{\link{colData}}.
 #'
-#' ERCC spike-ins are stored in an alternative experiment.
+#' Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link{reducedDims}}.
+#'
+#' ERCC spike-ins are stored as the \code{"ERCC"} entry in the \code{\link{altExps}}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.
@@ -33,7 +36,7 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-#' @importFrom SingleCellExperiment splitAltExps
+#' @importFrom SingleCellExperiment splitAltExps reducedDim<-
 NestorowaHSCData <- function(remove.htseq=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("nestorowa-hsc", version), has.rowdata=FALSE)
@@ -41,6 +44,9 @@ NestorowaHSCData <- function(remove.htseq=TRUE) {
     if (remove.htseq) {
         sce <- sce[grep("^__", rownames(sce), invert=TRUE),]
     }
+
+    reducedDim(sce, "diffusion") <- sce$diffusion
+    sce$diffusion <- NULL
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
     splitAltExps(sce, status, ref="endogenous")
