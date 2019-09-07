@@ -1,0 +1,60 @@
+---
+title: Processing the Kolodziejczyk ESC dataset
+author: Aaron Lun
+date: "September 6, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of mouse embryonic stem cells from @kolodziejczyk2015singlecell.
+We download and cache the count matrix using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+kolod.counts <- bfcrpath(bfc,
+    file.path("https://espresso.teichlab.sanger.ac.uk",
+        "static/counttable_es.csv"))
+```
+
+# Processing the read counts
+
+We load the counts into memory.
+Despite the name of the file, it is not actually comma-separated!
+
+```{r}
+counts <- read.table(kolod.counts, row.names=1, check.names=FALSE)
+counts <- as.matrix(counts)
+dim(counts)
+```
+
+# Saving for upload 
+
+We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "kolodziejczyk-esc", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
+
+
