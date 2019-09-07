@@ -1,0 +1,91 @@
+---
+title: Processing the Aztekin Xenopus tail dataset
+author: Aaron Lun
+date: "September 6, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of Xenopus tail cells from @aztekin2019identification.
+We download and cache the count matrix and metadata using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+contents <- bfcrpath(bfc,
+    file.path("https://www.ebi.ac.uk/arrayexpress/files",
+        "E-MTAB-7716/E-MTAB-7716.processed.1.zip"))
+
+unzip(contents, exdir=tempdir())
+unzip(file.path(tempdir(), "arrayExpressUpload.zip"), exdir=tempdir())
+unzip(file.path(tempdir(), "ArrayExpressV2.zip"), exdir=tempdir())
+```
+
+# Processing the read counts
+
+We load the counts into memory.
+Despite the name of the file, it is not actually comma-separated!
+
+```{r}
+library(Matrix)
+path <- file.path(tempdir(), "ArrayExpress")
+counts <- readMM(file.path(path, "countsMatrix.mtx"))
+counts <- as(counts, "dgCMatrix")
+rownames(counts) <- read.csv(file.path(path, "genes.csv"), 
+    stringsAsFactors=FALSE, header=FALSE)[,1]
+colnames(counts) <- read.csv(file.path(path, "cells.csv"), 
+    stringsAsFactors=FALSE, header=FALSE)[,1]
+dim(counts)
+```
+
+# Processing the metadata
+
+Processing the per-cell metadata, and merging in the per-sample metadata along with it.
+
+```{r}
+library(S4Vectors)
+meta <- read.csv(file.path(path, "meta.csv"), stringsAsFactors=FALSE)
+labels <- read.csv(file.path(path, "labels.csv"), stringsAsFactors=FALSE)
+meta <- cbind(meta, labels[match(meta$sample, labels$Sample),-1])
+meta <- DataFrame(meta)
+rownames(meta) <- NULL
+meta
+```
+
+Now enforcing consistency checks with the column names of `counts`.
+
+```{r}
+stopifnot(identical(colnames(counts), meta$cell))
+```
+
+# Saving for upload 
+
+We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+repath <- file.path("scRNAseq", "aztekin-tail", "2.0.0")
+dir.create(repath, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(repath, "counts.rds"))
+saveRDS(meta, file=file.path(repath, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
+
+
