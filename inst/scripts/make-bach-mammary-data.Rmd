@@ -1,0 +1,113 @@
+---
+title: Processing the Bach mammary gland dataset
+author: Aaron Lun
+date: "September 6, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Specifying the samples
+
+We obtain a single-cell RNA sequencing dataset of the mouse mammary gland from @bach2017differentiation.
+we define all of the samples to be pulled down.
+
+```{r}
+accessions <- c(
+    "GSM2834498", "GSM2834499", 
+    "GSM2834500", "GSM2834501", 
+    "GSM2834502", "GSM2834503", 
+    "GSM2834504", "GSM2834505")
+
+samples <- c(
+    "NP_1", "NP_2",
+    "G_1", "G_2",
+    "L_1", "L_2",
+    "PI_1", "PI_2")
+
+conditions <- c(NP="Nulliparous",
+    G="Gestation",
+    L="Lactation",
+    PI="Post-involution")[sub("_.*", "", samples)]
+
+data.frame(accessions, samples, conditions)
+```
+
+# Downloading the count data
+
+We then download and cache the assorted count matrices using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+library(Matrix)
+library(S4Vectors)
+template.path <- "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/%snnn/%s/suppl"
+collected.counts <- collected.rowdata <- collected.coldata <- list()
+for (i in seq_along(accessions)) {
+    curacc <- accessions[i]
+    subacc <- substr(curacc, 1, 7)
+    base.path <- sprintf(template.path, subacc, curacc)
+    header <- paste0(curacc, "%5F", sub("_", "%5F", samples[i]), "%5F")
+
+    barcode.fname <- bfcrpath(bfc, file.path(base.path,
+        paste0(header, "barcodes%2Etsv%2Egz")))
+    gene.fname <- bfcrpath(bfc, file.path(base.path,
+        paste0(header, "genes%2Etsv%2Egz")))
+    counts.fname <- bfcrpath(bfc, file.path(base.path,
+        paste0(header, "matrix%2Emtx%2Egz")))
+
+    collected.counts[[i]] <- as(readMM(counts.fname), "dgCMatrix")
+    gene.info <- read.table(gene.fname, stringsAsFactors=FALSE)
+    colnames(gene.info) <- c("Ensembl", "Symbol")
+    collected.rowdata[[i]] <- DataFrame(gene.info)
+    collected.coldata[[i]] <- DataFrame(
+        Barcode=readLines(barcode.fname),
+        Sample=samples[i],
+        Condition=conditions[i])
+}
+```
+
+We verify that all of the row data matches up, and that all the dimensions are consistent.
+
+```{r}
+stopifnot(length(unique(collected.rowdata))==1L)
+
+X <- vapply(collected.coldata, nrow, 0L)
+Y <- vapply(collected.counts, ncol, 0L)
+stopifnot(identical(X, Y))
+X
+```
+
+# Saving for upload 
+
+We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "bach-mammary", "2.0.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(gene.info[[1]], file=file.path(path, "rowdata.rds"))
+for (i in seq_along(samples)) {
+    saveRDS(collected.counts[[i]], file=file.path(path, sprintf("counts-%s.rds", samples[i])))
+    saveRDS(collected.coldata[[i]], file=file.path(path, sprintf("coldata-%s.rds", samples[i])))
+}
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
+
+
