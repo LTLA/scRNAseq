@@ -16,7 +16,7 @@ Obtain the mouse CD8+ T cell single-cell RNA-seq data from Richard et al. (2018)
 Column metadata is provided in the same form as supplied in E-MTAB-6051.
 This contains information such as the stimulus, time after stimulation, age of the mice and sequencing batch.
 
-ERCC spike-ins are stored as an alternative experiment.
+Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/richard-tcell}.

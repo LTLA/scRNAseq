@@ -22,7 +22,7 @@ as derived from the row names.
 Column metadata is derived from the column names of the count matrix with the sample annotations in GSE81076.
 This includes the donor identity for each cell and the type of sample.
 
-An alternative experiment contains the data for the ERCC spike-in transcripts.
+The \code{"ERCC"} entry in the \code{\link{altExps}} contains count data for the ERCC spike-in transcripts.
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.

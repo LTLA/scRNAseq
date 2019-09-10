@@ -19,7 +19,7 @@ Obtain the mouse brain single-cell RNA-seq dataset from Romanov et al. (2017).
 Column metadata is provided in the same form as supplied in GSE74672.
 This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 
-ERCC spike-ins are represented as an alternative experiment.
+Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
 Note that some of the spike-in rows have \code{NA} observations for some (but not all) cells.
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.

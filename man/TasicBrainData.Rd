@@ -19,7 +19,7 @@ Obtain the mouse brain single-cell RNA-seq data from Tasic et al. (2015).
 Column metadata is provided in the same form as supplied in GSE71585.
 This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 
-Spike-in transcripts are stored as alternative experiments.
+Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
 Note that some of the spike-in rows have \code{NA} observations for some (but not all) cells.
 
 The last 9 columns (containing \code{_CTX_} in their names) correspond to no-cell control libraries.

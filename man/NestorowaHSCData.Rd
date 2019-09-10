@@ -20,9 +20,12 @@ Rows corresponding to HT-seq's alignment statistics are removed by default.
 These can be retained by setting \code{remove.htseq=FALSE}.
 
 Column metadata includes the cell type mapping, as described on the website (see References),
-the diffusion map components and the FACS expression levels of selected markers.
+and the FACS expression levels of selected markers.
+Note that these are stored as nested matrices within the \code{\link{colData}}.
 
-ERCC spike-ins are stored in an alternative experiment.
+Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link{reducedDims}}.
+
+Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.

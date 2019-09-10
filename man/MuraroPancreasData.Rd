@@ -22,7 +22,7 @@ Column metadata is derived from the columns of the count matrix provided in GSE8
 with additional cell type labels obtained from the authors (indirectly, via the Hemberg group).
 Some cells have \code{NA} labels and were presumably removed prior to downstream analyses.
 
-ERCC spike-ins are represented as an alternative experiment.
+Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
