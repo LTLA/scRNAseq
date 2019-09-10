@@ -2,7 +2,7 @@ GENERATOR <- function(short, long, target, src) {
     data.frame(
         Title = sprintf("Bach mammary %s", short),
         Description = sprintf("%s for the Bach mammary gland single-cell RNA-seq dataset", long), 
-        RDataPath = file.path("scRNAseq", "messmer-esc", "2.0.0", target), 
+        RDataPath = file.path("scRNAseq", "bach-mammary", "2.0.0", target), 
         BiocVersion="3.10",
         Genome="mm10",
         SourceType=if (grepl("counts", target)) "MTX" else "TSV",
