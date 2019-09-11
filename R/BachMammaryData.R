@@ -41,7 +41,7 @@ BachMammaryData <- function(samples=c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2"
     sce <- do.call(cbind, collected)
 
     ehub <- ExperimentHub()
-    rowData(sce) <- ehub[[ehub$rdatapath==file.path(host, "rowdata.rds")]]
+    rowData(sce) <- ehub[ehub$rdatapath==file.path("scRNAseq", host, "rowdata.rds")][[1]]
 
     sce
 }

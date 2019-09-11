@@ -32,7 +32,7 @@ AztekinTailData <- function() {
 
     # Move UMAP coordinates to the reducedDims.
     reducedDim(sce, "UMAP") <- as.matrix(colData(sce)[,c("X", "Y")])
-    colData(sce) <- colData(sce)[,setdiff(colnames(sce), c("X", "Y"))]
+    colData(sce) <- colData(sce)[,setdiff(colnames(colData(sce)), c("X", "Y"))]
 
     sce
 }
