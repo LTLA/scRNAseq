@@ -29,6 +29,7 @@
 #' @export
 #' @importFrom SummarizedExperiment rowData<-
 #' @importFrom ExperimentHub ExperimentHub
+#' @importFrom BiocGenerics cbind
 BachMammaryData <- function(samples=c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2")) {
     version <- "2.0.0"
     host <- file.path("bach-mammary", version)
