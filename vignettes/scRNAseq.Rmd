@@ -58,6 +58,7 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 |@bach2017differentiation | Mouse mammary gland | 25806        | `BachMammaryData()` |
 |@baron2016singlecell   | Human pancreas   | 8569              | `BaronPancreasData('human')` |
 |@baron2016singlecell   | Mouse pancreas   | 1886              | `BaronPancreasData('mouse')` |
+|@buettner2015computational | Mouse embryonic stem cells | 288 | `BuettnerESCData()` |
 |@campbell2017molecular | Mouse brain      | 21086             | `CampbellBrainData()` | 
 |@chen2017singlecell    | Mouse brain      | 14437             | `ChenBrainData()` |
 |@grun2016denovo        | Mouse haematopoietic stem cells | 1915 | `GrunHSCData()` | 
@@ -69,6 +70,7 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 |@lamanno2016molecular  | Mouse adult dopaminergic neurons | 243 | `LaMannoBrainData('mouse-adult')` |
 |@lamanno2016molecular  | Human embyronic midbrain | 1907 | `LaMannoBrainData('mouse-embryo')` |
 |@lawlor2017singlecell  | Human pancreas   | 638               | `LawlorPancreasData()` |
+|@leng2015oscope        | Human embryonic stem cells | 460     | `LengESCData()` |
 |@lun2017assessing      | 416B cells       | 192               | `LunSpikeInData('416b')` |
 |@lun2017assessing      | Mouse trophoblasts | 192             | `LunSpikeInData('tropho')` |
 |@macosko2015highly     | Mouse retina     | 49300             | `MacoskoRetinaData()` |
