@@ -1,0 +1,71 @@
+---
+title: Processing the Leng ESC dataset
+author: Aaron Lun
+date: "October 13, 2019"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of mouse ESCs from @leng2015oscope.
+
+```{r}
+library(GEOquery)
+out <- getGEOSuppFiles("GSE64016", baseDir=tempdir())
+rownames(out)
+```
+
+# Processing the read counts
+
+We read in the count matrix for cells in each cell cycle phase.
+
+```{r}
+count.file <- rownames(out)[1]
+hs.counts <- read.csv(count.file, header=TRUE, row.names=1)
+hs.counts <- as.matrix(hs.counts)
+dim(hs.counts)
+```
+
+# Creating column metadata
+
+Pulling information out of GSE64016's description.
+
+```{r}
+cellline <- rep(c("H1", "H1-Fucci"), c(213, 247))
+experiment <- sub(".*_Exp([0-9]+)\\..*", "\\1", colnames(hs.counts))
+phase <- sub("_Exp.*", "", colnames(hs.counts))
+phase[!phase %in% c("G1", "S", "G2M")] <- NA
+
+library(S4Vectors)
+coldata <- DataFrame(CellLine=cellline, Experiment=experiment, Phase=phase)
+coldata
+```
+
+# Saving for upload 
+
+We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+repath <- file.path("scRNAseq", "leng-esc", "2.0.0")
+dir.create(repath, showWarnings=FALSE, recursive=TRUE)
+saveRDS(hs.counts, file=file.path(repath, "normcounts.rds"))
+saveRDS(coldata, file=file.path(repath, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
