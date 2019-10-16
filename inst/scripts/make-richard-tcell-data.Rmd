@@ -107,6 +107,7 @@ We combine the matrices together, and make sure they match up with the `coldata`
 
 ```{r}
 combined <- cbind(batch1, batch2)
+combined <- as.matrix(combined)
 stopifnot(identical(sort(colnames(combined)), sort(libnames)))
 m <- match(libnames, colnames(combined))
 combined <- combined[,m]
