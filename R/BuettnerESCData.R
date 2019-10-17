@@ -34,7 +34,7 @@ BuettnerESCData <- function(remove.htseq=TRUE) {
     sce <- .create_sce(file.path("buettner-esc", version), has.rowdata=TRUE)
 
     if (remove.htseq) {
-        sce <- sce[!grepl("ENSMUS", rownames(sce)) & !grepl("ERCC", rownames(sce)),]
+        sce <- sce[grepl("^ENSMUS", rownames(sce)) | grepl("^ERCC", rownames(sce)),]
     }
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
