@@ -3,9 +3,9 @@ Title: Collection of Public Single-Cell RNA-Seq Datasets
 Version: 2.1.1
 Date: 2019-11-01
 Authors@R: c(
-    person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cre", "cph")),
+    person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cph")),
     person("Michael", "Cole", role="aut"),
-    person("Aaron", "Lun", role="ctb", email="infinite.monkeys.with.keyboards@gmail.com"))
+    person("Aaron", "Lun", role=c("ctb", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"))
 Description: Gene-level counts for a collection of public scRNA-seq datasets,
     provided as SingleCellExperiment objects with cell- and gene-level metadata.
 License: CC0
