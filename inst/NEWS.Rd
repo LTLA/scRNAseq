@@ -2,6 +2,10 @@
 \title{scRNAseq News}
 \encoding{UTF-8}
 
+\section{Version 2.2.0}{\itemize{
+\item Removed deprecated inbuilt datasets.
+}}
+
 \section{Version 2.0.0}{\itemize{
 \item Added lots of new ExperimentHub datasets, inspired by simpleSingleCell use cases and Martin Hemberg's website.
 
