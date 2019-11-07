@@ -33,7 +33,20 @@ MacoskoRetinaData <- function(ensembl=FALSE) {
     sce <- .create_sce(file.path("macosko-retina", version), has.rowdata=FALSE)
 
     if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
+        # For some bizarre reason, this dataset has all-caps symbols... for mice.
+        # So we need to do some custom work to ensure that this converts properly.
+        tag <- "AH73905"
+        edb <- AnnotationHub::AnnotationHub()[[tag]]
+
+        anno <- select(edb, keys=keys(edb), keytype="GENEID", columns="SYMBOL")
+        all.symbols <- tolower(anno$SYMBOL)
+        cur.symbols <- tolower(rownames(sce)) 
+
+        ensid <- anno$GENEID[match(cur.symbols, all.symbols)]
+        keep <- !is.na(ensid) & !duplicated(ensid)
+
+        sce <- sce[keep, ]
+        rownames(sce) <- ensid[keep]
     }
     sce
 }
