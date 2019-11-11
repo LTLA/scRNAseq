@@ -38,7 +38,7 @@ MacoskoRetinaData <- function(ensembl=FALSE) {
         tag <- "AH73905"
         edb <- AnnotationHub::AnnotationHub()[[tag]]
 
-        anno <- select(edb, keys=keys(edb), keytype="GENEID", columns="SYMBOL")
+        anno <- AnnotationDbi::select(edb, keys=AnnotationDbi::keys(edb), keytype="GENEID", columns="SYMBOL")
         all.symbols <- tolower(anno$SYMBOL)
         cur.symbols <- tolower(rownames(sce)) 
 
