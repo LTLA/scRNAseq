@@ -4,8 +4,9 @@
 \alias{BachMammaryData}
 \title{Obtain the Bach mammary data}
 \usage{
-BachMammaryData(samples = c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2",
-  "PI_1", "PI_2"))
+BachMammaryData(
+  samples = c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2")
+)
 }
 \arguments{
 \item{samples}{A character vector with at least one element, specifying which samples(s) to retrieve.}

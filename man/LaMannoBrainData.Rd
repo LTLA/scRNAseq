@@ -4,8 +4,10 @@
 \alias{LaMannoBrainData}
 \title{Obtain the La Manno brain data}
 \usage{
-LaMannoBrainData(which = c("human-es", "human-embryo", "human-ips",
-  "mouse-adult", "mouse-embryo"), ensembl = FALSE)
+LaMannoBrainData(
+  which = c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo"),
+  ensembl = FALSE
+)
 }
 \arguments{
 \item{which}{A string specifying which dataset should be obtained.}
