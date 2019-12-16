@@ -1,0 +1,77 @@
+---
+title: Processing the Nestorowa HSC dataset
+author: Aaron Lun
+date: 18 May 2019
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the mouse haematopoietic stem cells from @paul2015transcriptional.
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE72857](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE72857).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo",
+    "series/GSE72nnn/GSE72857/suppl")
+fname.A <- bfcrpath(bfc, file.path(base.url, "GSE72857_umitab.txt.gz"))
+```
+
+We read this into memory as a sparse matrix.
+
+```{r}
+library(scater)
+counts <- readSparseCounts(fname.A, quote='"')
+dim(counts)
+```
+
+# Downloading the metadata
+
+We pull down the metadata from GEO as well. 
+
+```{r}
+meta.A <- bfcrpath(bfc, file.path(base.url, 
+    "GSE72857_experimental_design.txt.gz"))
+meta <- read.delim(meta.A, skip=19, header=TRUE, stringsAsFactors=FALSE)
+meta <- DataFrame(meta)
+meta
+```
+
+We check that the cell names match up with the matrix.
+
+```{r}
+m <- match(colnames(counts), meta$Well_ID)
+stopifnot(all(!is.na(m)))
+meta <- meta[m,]
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "paul-hsc", "2.2.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts.rds"))
+saveRDS(meta, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
