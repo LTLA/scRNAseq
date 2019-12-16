@@ -78,6 +78,7 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 |@messmer2019transcriptional | Human embryonic stem cells | 1344 | `MessmerESCData()` |
 |@muraro2016singlecell  | Human pancreas   | 3072              | `MuraroPancreasData()` |
 |@nestorowa2016singlecell | Mouse haematopoietic stem cells | 1920 | `NestorowaHSCData()` | 
+|@paul2015transcriptional | Mouse haematopoietic stem cells | 10368 | `PaulHSCData()` | 
 |@richard2018tcell      | Mouse CD8+ T cells | 572             | `RichardTCellData()` |
 |@romanov2017molecular  | Mouse brain      | 2881              | `RomanovBrainData()` |
 |@segerstolpe2016single | Human pancreas   | 3514              | `SegerstolpePancreasData()` |

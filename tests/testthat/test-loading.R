@@ -52,6 +52,11 @@ test_that("NestorowaHSCData works", {
     CHECK(NestorowaHSCData(remove.htseq=FALSE))
 })
 
+test_that("PaulHSCData works", {
+    CHECK(NestorowaHSCData(ensembl=TRUE))
+    CHECK(NestorowaHSCData(discard.multiple=FALSE))
+})
+
 test_that("Reprocessed*Data works", {
     CHECK(ReprocessedAllenData(assays="tophat_counts", ensembl=TRUE))
     CHECK(ReprocessedTh2Data(assays="tophat_counts", ensembl=TRUE))
