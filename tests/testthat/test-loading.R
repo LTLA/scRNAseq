@@ -53,8 +53,8 @@ test_that("NestorowaHSCData works", {
 })
 
 test_that("PaulHSCData works", {
-    CHECK(NestorowaHSCData(ensembl=TRUE))
-    CHECK(NestorowaHSCData(discard.multiple=FALSE))
+    CHECK(PaulHSCData(ensembl=TRUE))
+    CHECK(PaulHSCData(discard.multiple=FALSE))
 })
 
 test_that("Reprocessed*Data works", {
