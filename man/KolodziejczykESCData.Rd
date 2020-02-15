@@ -4,10 +4,12 @@
 \alias{KolodziejczykESCData}
 \title{Obtain the Kolodziejcyzk ESC data}
 \usage{
-KolodziejczykESCData(remove.htseq = TRUE)
+KolodziejczykESCData(remove.htseq = TRUE, location = TRUE)
 }
 \arguments{
 \item{remove.htseq}{Logical scalar indicating whether HT-seq alignment statistics should be removed.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -20,6 +22,8 @@ Column metadata is generated from the column names,
 and contains the culture conditions and the plate of origin for each cell.
 
 Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/kolodziejczyk-esc}.

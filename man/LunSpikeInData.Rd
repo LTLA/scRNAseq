@@ -4,10 +4,18 @@
 \alias{LunSpikeInData}
 \title{Obtain the Lun spike-in data}
 \usage{
-LunSpikeInData(which = c("416b", "tropho"))
+LunSpikeInData(
+  which = c("416b", "tropho"),
+  split.oncogene = FALSE,
+  location = TRUE
+)
 }
 \arguments{
 \item{which}{String specifying whether the 416B or trophoblast data should be obtained.}
+
+\item{split.oncogene}{Logical scalar indicating whether the oncogene should be split to a separate \code{\link{altExp}}.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -23,6 +31,11 @@ This contains information such as the cell type, plate of origin, spike-in addit
 
 Two sets of spike-ins were added to each cell in each dataset.
 These are available as the \code{"SIRV"} and \code{"ERCC"} entries in the \code{\link{altExps}}.
+
+If \code{split.oncogene=TRUE} and \code{which="416b"},
+the CBFB-MYH11-mcherry oncogene is moved to extra \code{"oncogene"} entry in the \code{\link{altExps}}.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/lun-spikein}.

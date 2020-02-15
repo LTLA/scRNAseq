@@ -4,7 +4,10 @@
 \alias{RichardTCellData}
 \title{Obtain the Richard T cell data}
 \usage{
-RichardTCellData()
+RichardTCellData(location = TRUE)
+}
+\arguments{
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -17,6 +20,8 @@ Column metadata is provided in the same form as supplied in E-MTAB-6051.
 This contains information such as the stimulus, time after stimulation, age of the mice and sequencing batch.
 
 Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/richard-tcell}.

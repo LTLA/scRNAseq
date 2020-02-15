@@ -4,12 +4,18 @@
 \alias{BaronPancreasData}
 \title{Obtain the Baron pancreas data}
 \usage{
-BaronPancreasData(which = c("human", "mouse"), ensembl = FALSE)
+BaronPancreasData(
+  which = c("human", "mouse"),
+  ensembl = FALSE,
+  location = TRUE
+)
 }
 \arguments{
 \item{which}{String specifying the species to get data for.}
 
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -23,6 +29,9 @@ This contains information such as the cell type labels and donor ID (for humans)
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+Note that this is only performed if \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/baron-pancreas}.

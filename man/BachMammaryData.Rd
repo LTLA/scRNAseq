@@ -5,11 +5,14 @@
 \title{Obtain the Bach mammary data}
 \usage{
 BachMammaryData(
-  samples = c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2")
+  samples = c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2"),
+  location = TRUE
 )
 }
 \arguments{
 \item{samples}{A character vector with at least one element, specifying which samples(s) to retrieve.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
@@ -23,6 +26,8 @@ and refers to the developmental stage of the mammary gland.
 
 If multiple samples are specified in \code{samples}, the count matrices will be \code{cbind}ed together.
 Cells originating from different samples are identifiable by the \code{"Sample"} field in the column metadata.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/bach-mammary}.

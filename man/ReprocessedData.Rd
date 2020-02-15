@@ -6,11 +6,11 @@
 \alias{ReprocessedFluidigmData}
 \title{Reprocessed single-cell data sets}
 \usage{
-ReprocessedAllenData(assays = NULL, ensembl = FALSE)
+ReprocessedAllenData(assays = NULL, ensembl = FALSE, location = TRUE)
 
-ReprocessedTh2Data(assays = NULL, ensembl = FALSE)
+ReprocessedTh2Data(assays = NULL, ensembl = FALSE, location = TRUE)
 
-ReprocessedFluidigmData(assays = NULL, ensembl = FALSE)
+ReprocessedFluidigmData(assays = NULL, ensembl = FALSE, location = TRUE)
 }
 \arguments{
 \item{assays}{Character vector specifying one or more assays to return.
@@ -18,6 +18,8 @@ Choices are \code{"tophat_counts"}, \code{"cufflinks_fpkm"}, \code{"rsem_counts"
 If \code{NULL}, all assays are returned.}
 
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,
@@ -48,6 +50,9 @@ which contains the names of the quality-related columns in each object.
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+Note that this is only performed if \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/legacy-allen},

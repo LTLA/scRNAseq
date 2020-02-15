@@ -4,10 +4,12 @@
 \alias{NestorowaHSCData}
 \title{Obtain the Nestorowa HSC data}
 \usage{
-NestorowaHSCData(remove.htseq = TRUE)
+NestorowaHSCData(remove.htseq = TRUE, location = TRUE)
 }
 \arguments{
 \item{remove.htseq}{Logical scalar indicating whether HT-seq alignment statistics should be removed.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -26,6 +28,8 @@ Note that these are stored as nested matrices within the \code{\link{colData}}.
 Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link{reducedDims}}.
 
 Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.

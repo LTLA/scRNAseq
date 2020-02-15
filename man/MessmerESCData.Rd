@@ -4,7 +4,10 @@
 \alias{MessmerESCData}
 \title{Obtain the Messmer ESC data}
 \usage{
-MessmerESCData()
+MessmerESCData(location = TRUE)
+}
+\arguments{
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -20,6 +23,8 @@ This contains information such as the cell phenotype (naive or primed) and the b
 Note that counts for technical replicates have already been summed together.
 
 Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/messmer-esc}.

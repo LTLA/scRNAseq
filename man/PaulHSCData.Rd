@@ -4,12 +4,14 @@
 \alias{PaulHSCData}
 \title{Obtain the Paul HSC data}
 \usage{
-PaulHSCData(ensembl = FALSE, discard.multiple = TRUE)
+PaulHSCData(ensembl = FALSE, discard.multiple = TRUE, location = TRUE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{discard.multiple}{Logical scalar indicating whether ambiguous rows should be discarded.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -26,6 +28,9 @@ We consider these rows to represent ambiguously assigned counts and discard them
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+Note that this is only performed if \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.

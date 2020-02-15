@@ -20,7 +20,8 @@ Imports:
 Suggests: 
     BiocStyle, 
     AnnotationHub,
-    AnnotationDbi, 
+    AnnotationDbi,
+    GenomicFeatures,
     knitr, 
     rmarkdown,
     BiocFileCache,

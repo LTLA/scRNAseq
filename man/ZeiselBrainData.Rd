@@ -4,10 +4,12 @@
 \alias{ZeiselBrainData}
 \title{Obtain the Zeisel brain data}
 \usage{
-ZeiselBrainData(ensembl = FALSE)
+ZeiselBrainData(ensembl = FALSE, location = TRUE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
@@ -25,6 +27,8 @@ This contains information such as the cell diameter and the published cell type 
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-brain}.

@@ -4,10 +4,12 @@
 \alias{BuettnerESCData}
 \title{Obtain the Buettner ESC data}
 \usage{
-BuettnerESCData(remove.htseq = TRUE)
+BuettnerESCData(remove.htseq = TRUE, location = TRUE)
 }
 \arguments{
 \item{remove.htseq}{Logical scalar indicating whether HT-seq alignment statistics should be removed.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
@@ -22,6 +24,8 @@ These can be retained by setting \code{remove.htseq=FALSE}.
 Column metadata contains the experimentally determined cell cycle phase for each cell.
 
 Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/buettner-esc}.
