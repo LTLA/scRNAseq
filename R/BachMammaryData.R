@@ -30,7 +30,7 @@
 #' sce <- BachMammaryData()
 #' 
 #' @export
-#' @importFrom SummarizedExperiment rowData<-
+#' @importFrom SummarizedExperiment rowData<- rowData
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom BiocGenerics cbind
 BachMammaryData <- function(samples=c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2"),
@@ -48,6 +48,7 @@ BachMammaryData <- function(samples=c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2"
 
     ehub <- ExperimentHub()
     rowData(sce) <- ehub[ehub$rdatapath==file.path("scRNAseq", host, "rowdata.rds")][[1]]
+    rownames(sce) <- rowData(sce)$Ensembl
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }
