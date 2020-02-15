@@ -21,6 +21,8 @@
 #' @importFrom SummarizedExperiment rowRanges<- rowRanges rowData
 #' @importFrom S4Vectors mcols<-
 #' @importFrom BiocGenerics cbind
+#' @importFrom methods as
+#' @importClassesFrom GenomicRanges GRangesList
 .define_location_from_ensembl <- function(sce, species, edb=NULL, location=TRUE) {
     if (!location) {
         return(sce)

@@ -4,6 +4,7 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param discard.multiple Logical scalar indicating whether ambiguous rows should be discarded.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #'
 #' @details
 #' Column metadata includes the plate and the mouse of origin, fluoresence intensities from indexed sorting 
@@ -14,6 +15,9 @@
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.
