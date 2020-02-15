@@ -12,6 +12,15 @@ test_that("BaronPancreasData works", {
     CHECK(BaronPancreasData("mouse", ensembl=TRUE))
 })
 
+test_that("BuettnerESCData works", {
+    out <- BuettnerESCData()
+    CHECK(out)
+
+    out <- BuettnerESCData(remove.htseq=FALSE)
+    CHECK(out)
+    expect_s4_class(rowRanges(out), "GRangesList")
+})
+
 test_that("CampbellBrainData works", {
     CHECK(CampbellBrainData(ensembl=TRUE))
 })
@@ -28,12 +37,33 @@ test_that("GrunPancreasData works", {
     CHECK(GrunPancreasData(ensembl=TRUE))
 })
 
+test_that("KolodziejczykESCData works", {
+    out <- KolodziejczykESCData()
+    CHECK(out)
+
+    out <- KolodziejczykESCData(remove.htseq=FALSE)
+    CHECK(out)
+    expect_s4_class(rowRanges(out), "GRangesList")
+})
+
 test_that("LaMannoBrainData works", {
     CHECK(LaMannoBrainData(ensembl=TRUE, "human-es"))
     CHECK(LaMannoBrainData(ensembl=TRUE, "human-embryo"))
     CHECK(LaMannoBrainData(ensembl=TRUE, "human-ips"))
     CHECK(LaMannoBrainData(ensembl=TRUE, "mouse-adult"))
     CHECK(LaMannoBrainData(ensembl=TRUE, "mouse-embryo"))
+})
+
+test_that("LunSpikeInData works", {
+    out <- LunSpikeInData()
+    CHECK(out)
+    expect_s4_class(rowRanges(out), "GRangesList")
+
+    out <- LunSpikeInData(split.oncogene=TRUE)
+    expect_true("oncogene" %in% altExpNames(out))
+    CHECK(out)
+
+    CHECK(LunSpikeInData("tropho"))
 })
 
 test_that("MacoskoRetinaData works", {
