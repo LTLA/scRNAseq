@@ -3,12 +3,15 @@
 #' Obtain the mouse embryonic stem cell single-cell RNA-seq data from Kolodziejczyk et al. (2015).
 #'
 #' @param remove.htseq Logical scalar indicating whether HT-seq alignment statistics should be removed.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #'
 #' @details
 #' Column metadata is generated from the column names,
 #' and contains the culture conditions and the plate of origin for each cell.
 #'
 #' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/kolodziejczyk-esc}.
@@ -27,7 +30,7 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-KolodziejczykESCData <- function(remove.htseq=TRUE) {
+KolodziejczykESCData <- function(remove.htseq=TRUE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("messmer-esc", version), has.rowdata=FALSE, has.coldata=FALSE)
 
@@ -39,5 +42,7 @@ KolodziejczykESCData <- function(remove.htseq=TRUE) {
     }
 
     spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, spike.type, ref="endogenous")
+    sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+    .define_location_from_ensembl(sce, species="Mm", location=location)
 }

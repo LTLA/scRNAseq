@@ -3,9 +3,10 @@
 #' Obtain the spike-in single-cell RNA-seq data from Lun et al. (2017).
 #'
 #' @param which String specifying whether the 416B or trophoblast data should be obtained.
+#' @param split.oncogene Logical scalar indicating whether the oncogene should be split to a separate \code{\link{altExp}}.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
 #' @details
-#'
 #' Row data contains a single \code{"Length"} field describing the total exonic length of each feature.
 #'
 #' Column metadata is provided in the same form as supplied in E-MTAB-5522.
@@ -13,6 +14,11 @@
 #'
 #' Two sets of spike-ins were added to each cell in each dataset.
 #' These are available as the \code{"SIRV"} and \code{"ERCC"} entries in the \code{\link{altExps}}.
+#'
+#' If \code{split.oncogene=TRUE} and \code{which="416b"},
+#' the CBFB-MYH11-mcherry oncogene is moved to extra \code{"oncogene"} entry in the \code{\link{altExps}}.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/lun-spikein}.
@@ -34,7 +40,7 @@
 #' @export
 #' @importFrom SummarizedExperiment rowData
 #' @importFrom SingleCellExperiment splitAltExps
-LunSpikeInData <- function(which=c("416b", "tropho")) {
+LunSpikeInData <- function(which=c("416b", "tropho"), split.oncogene=FALSE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("lun-spikein", version), suffix=match.arg(which))
 
@@ -42,5 +48,11 @@ LunSpikeInData <- function(which=c("416b", "tropho")) {
     spike.type[grep("ERCC", rownames(sce))] <- "ERCC"
     spike.type[grep("SIRV", rownames(sce))] <- "SIRV"
 
-    splitAltExps(sce, spike.type, ref="endogenous")
+    if (split.oncogene) {
+        spike.type[rownames(sce)=="CBFB-MYH11-mcherry"] <- "oncogene"
+    }
+
+    sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+    .define_location_from_ensembl(sce, species="Mm", location=location)
 }

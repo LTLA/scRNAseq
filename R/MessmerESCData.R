@@ -2,6 +2,8 @@
 #'
 #' Obtain the human embryonic stem cell single-cell RNA-seq data from Messmer et al. (2019).
 #'
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#'
 #' @details
 #' Row data contains a single \code{"Length"} field describing the total exonic length of each feature.
 #'
@@ -10,6 +12,8 @@
 #' Note that counts for technical replicates have already been summed together.
 #'
 #' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/messmer-esc}.
@@ -28,9 +32,12 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-MessmerESCData <- function() {
+MessmerESCData <- function(location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("messmer-esc", version))
+
     spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, spike.type, ref="endogenous")
+    sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+    .define_location_from_ensembl(sce, species="Hs", location=location)
 }

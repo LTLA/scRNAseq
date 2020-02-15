@@ -3,6 +3,7 @@
 #' Obtain the mouse retina single-cell RNA-seq dataset from Shekhar et al. (2016).
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
 #' @details
 #' Column metadata contains the cluster identities as reported in the paper.
@@ -11,6 +12,9 @@
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/shekhar-retina}.
@@ -28,11 +32,13 @@
 #' sce <- ShekharRetinaData()
 #' 
 #' @export
-ShekharRetinaData <- function(ensembl=FALSE) {
+ShekharRetinaData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("shekhar-retina", version), has.rowdata=FALSE)
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
-    }
-    sce
+
+    .convert_to_ensembl(sce, 
+        species="Mm", 
+        symbols=rownames(sce),
+        ensembl=ensembl,
+        location=location)
 }

@@ -4,6 +4,7 @@
 #'
 #' @param which A string specifying which dataset should be obtained.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
 #' @details
 #' Column metadata is provided in the same form as supplied in the supplementary tables in GSE71585.
@@ -23,6 +24,9 @@
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/lamanno-brain}.
@@ -48,14 +52,16 @@
 #' sce.m.em <- LaMannoBrainData("mouse-embryo")
 #' 
 #' @export
-LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo"), ensembl=FALSE) {
+LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo"),
+    ensembl=FALSE, location=TRUE) 
+{
     version <- "2.0.0"
     sce <- .create_sce(file.path("lamanno-brain", version), has.rowdata=FALSE, suffix=match.arg(which))
     colnames(sce) <- colData(sce)[[grep("Cell_ID", colnames(colData(sce)), ignore.case=TRUE)]]
 
-    if (ensembl) {
-        species <- if (grepl("human", which)) "Hs" else "Mm"
-        sce <- .convert_to_ensembl(sce, species=species, symbols=rownames(sce))
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        species=if (grepl("human", which)) "Hs" else "Mm",
+        symbols=rownames(sce),
+        ensembl=ensembl,
+        location=location)
 }

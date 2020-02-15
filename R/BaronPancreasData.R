@@ -4,6 +4,7 @@
 #'
 #' @param which String specifying the species to get data for.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in GSE84133.
@@ -11,6 +12,9 @@
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/baron-pancreas}.
@@ -31,14 +35,14 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-BaronPancreasData <- function(which=c("human", "mouse"), ensembl=FALSE) {
+BaronPancreasData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE) {
     version <- "2.0.0"
     which <- match.arg(which)
     sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=which)
 
-    if (ensembl) {
-        species <- if (which=="human") "Hs" else "Mm"
-        sce <- .convert_to_ensembl(sce, species=species, symbols=rownames(sce))
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        ensembl=ensembl,
+        species=if (which=="human") "Hs" else "Mm",
+        symbols=rownames(sce),
+        location=location)
 }

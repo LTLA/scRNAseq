@@ -25,9 +25,12 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-RichardTCellData <- function() {
+RichardTCellData <- function(location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("richard-tcell", version), has.rowdata=FALSE)
+
     spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, spike.type, ref="endogenous")
+    sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+    .define_location_from_ensembl(sce, species="Mm", location=location)
 }

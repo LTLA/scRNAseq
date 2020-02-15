@@ -32,7 +32,7 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE) {
+PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE, location=TRUE) {
     version <- "2.2.0"
     sce <- .create_sce(file.path("paul-hsc", version), has.rowdata=FALSE)
 
@@ -40,9 +40,9 @@ PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE) {
         sce <- sce[!grepl(";", rownames(sce)),]
     }
     
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
-    }
-
-    sce
+    .convert_to_ensembl(sce, 
+        species="Mm", 
+        symbols=rownames(sce),
+        ensembl=ensembl,
+        location=location)
 }

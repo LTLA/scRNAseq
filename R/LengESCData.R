@@ -2,8 +2,12 @@
 #'
 #' Obtain the human embryonic stem cell single-cell RNA-seq data from Leng et al. (2015).
 #'
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#'
 #' @details
 #' Column metadata contains the cell line, experiment number and experimentally determined cell cycle phase for each cell,
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/leng-esc}.
@@ -21,7 +25,8 @@
 #' sce <- LengESCData()
 #' 
 #' @export
-LengESCData <- function() {
+LengESCData <- function(location=TRUE) {
     version <- "2.0.0"
-    .create_sce(file.path("leng-esc", version), assays="normcounts", has.rowdata=FALSE)
+    sce <- .create_sce(file.path("leng-esc", version), assays="normcounts", has.rowdata=FALSE)
+    .define_location_from_ensembl(sce, species="Hs", location=location)
 }

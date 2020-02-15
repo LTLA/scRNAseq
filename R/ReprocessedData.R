@@ -8,6 +8,7 @@
 #' Choices are \code{"tophat_counts"}, \code{"cufflinks_fpkm"}, \code{"rsem_counts"} and \code{"rsem_tpm"}.
 #' If \code{NULL}, all assays are returned.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
 #' @return
 #' A \linkS4class{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,
@@ -33,6 +34,9 @@
 #' 
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/legacy-allen},
@@ -72,43 +76,46 @@
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment splitAltExps
-ReprocessedAllenData <- function(assays=NULL, ensembl=FALSE) {
+ReprocessedAllenData <- function(assays=NULL, ensembl=FALSE, location=TRUE) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-allen", version), assays)
 
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
 
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        species="Mm", 
+        symbols=rownames(sce),
+        ensembl=ensembl,
+        location=location)
 }
 
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment splitAltExps
-ReprocessedTh2Data <- function(assays=NULL, ensembl=FALSE) {
+ReprocessedTh2Data <- function(assays=NULL, ensembl=FALSE, location=TRUE) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
 
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
 
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Mm", symbols=rownames(sce))
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        species="Mm", 
+        symbols=rownames(sce),
+        ensembl=ensembl,
+        location=location)
 }
 
 #' @export
 #' @rdname ReprocessedData
-ReprocessedFluidigmData <- function(assays=NULL, ensembl=FALSE) {
+ReprocessedFluidigmData <- function(assays=NULL, ensembl=FALSE, location=TRUE) {
     version <- "1.10.0"
     sce <- .create_sce_legacy(file.path("legacy-fluidigm", version), assays)
 
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Hs", symbols=rownames(sce))
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        species="Hs", 
+        symbols=rownames(sce),
+        ensembl=ensembl,
+        location=location)
 }

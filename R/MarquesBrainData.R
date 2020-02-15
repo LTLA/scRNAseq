@@ -3,6 +3,7 @@
 #' Obtain the mouse brain single-cell RNA-seq data from Marques et al. (2016).
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in GSE75330. 
@@ -15,6 +16,9 @@
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 #' All searching is performed after removing the \code{_loc[2-9]} suffix. 
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/marques-brain}.
@@ -32,12 +36,13 @@
 #' sce <- MarquesBrainData()
 #' 
 #' @export
-MarquesBrainData <- function(ensembl=FALSE) {
+MarquesBrainData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("marques-brain", version), assays="counts", has.rowdata=FALSE)
 
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, species="Mm", symbols=sub("_loc[0-9]+$", "", rownames(sce)))
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        species="Mm", 
+        symbols=sub("_loc[0-9]+$", "", rownames(sce)),
+        ensembl=ensembl,
+        location=location)
 }

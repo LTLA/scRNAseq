@@ -3,6 +3,7 @@
 #' Obtain the mouse haematopoietic stem cell single-cell RNA-seq data from Nestorowa et al. (2015).
 #'
 #' @param remove.htseq Logical scalar indicating whether HT-seq alignment statistics should be removed.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #'
 #' @details
 #' Rows corresponding to HT-seq's alignment statistics are removed by default.
@@ -15,6 +16,8 @@
 #' Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link{reducedDims}}.
 #'
 #' Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.
@@ -37,7 +40,7 @@
 #' @export
 #' @importFrom SummarizedExperiment rowData
 #' @importFrom SingleCellExperiment splitAltExps reducedDim<-
-NestorowaHSCData <- function(remove.htseq=TRUE) {
+NestorowaHSCData <- function(remove.htseq=TRUE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("nestorowa-hsc", version), has.rowdata=FALSE)
 
@@ -49,5 +52,7 @@ NestorowaHSCData <- function(remove.htseq=TRUE) {
     sce$diffusion <- NULL
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
-    splitAltExps(sce, status, ref="endogenous")
+    sce <- splitAltExps(sce, status, ref="endogenous")
+
+    .define_location_from_ensembl(sce, species="Mm", location=location)
 }

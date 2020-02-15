@@ -33,7 +33,7 @@
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
 #' @importFrom SummarizedExperiment rowData
-ZeiselBrainData <- function(ensembl=FALSE) {
+ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("zeisel-brain", version))
 
@@ -41,8 +41,9 @@ ZeiselBrainData <- function(ensembl=FALSE) {
     status[status=="mito"] <- "endogenous"
     sce <- splitAltExps(sce, status, "endogenous")
 
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, symbols=rownames(sce), species="Mm")
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        symbols=rownames(sce), 
+        species="Mm",
+        ensembl=ensembl,
+        location=location)
 }

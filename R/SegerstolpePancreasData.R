@@ -3,6 +3,7 @@
 #' Download the human pancreas single-cell RNA-seq (scRNA-seq) dataset from Segerstolpe et al. (2016)
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #'
 #' @details
 #' Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
@@ -15,6 +16,9 @@
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/segerstolpe-pancreas}.
@@ -34,7 +38,7 @@
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
 #' @importFrom SummarizedExperiment rowData
-SegerstolpePancreasData <- function(ensembl=FALSE) {
+SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("segerstolpe-pancreas", version))
     rownames(sce) <- rowData(sce)$symbol
@@ -42,8 +46,9 @@ SegerstolpePancreasData <- function(ensembl=FALSE) {
     status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
 
-    if (ensembl) {
-        sce <- .convert_to_ensembl(sce, symbols=rownames(sce), species="Hs")
-    }
-    sce
+    .convert_to_ensembl(sce, 
+        symbols=rownames(sce), 
+        species="Hs",
+        ensembl=ensembl,
+        location=location)
 }
