@@ -120,3 +120,9 @@ test_that("XinPancreasData works", {
 test_that("ZeiselBrainData works", {
     CHECK(ZeiselBrainData(ensembl=TRUE))
 })
+
+
+test_that("ZeiselBrainData works", {
+    d <- ZeiselBrainData(ensembl=TRUE)
+    s <- ERCCSpikeInConcentrations(1, 1, 1, "ERCC-00130")
+})

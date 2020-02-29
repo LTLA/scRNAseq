@@ -1,0 +1,20 @@
+write.csv(file = "../extdata/metadata-ercc-spike-in-concentrations.csv", 
+    data.frame(
+        Title = "ERCC spike-in concentrations",
+        Description = "Concentrations for ERCC spike-in RNA molecules in 2 mixes",
+        RDataPath = file.path("scRNAseq", "ercc-spike-in-concentrations", "1.0.0", "concentrations.rds"),
+        BiocVersion = "3.10",
+        Genome = NA,
+        SourceType = "TSV",
+        SourceUrl = "https://assets.thermofisher.com/TFS-Assets/LSG/manuals/",
+        SourceVersion = "cms_095046.txt",
+        Species = NA,
+        TaxonomyId = NA,
+        Coordinate_1_based = NA,
+        DataProvider = "Thermofisher",
+        Maintainer = "Alan O'Callaghan <alan.ocallaghan@outlook.com>",
+        RDataClass = c("data.frame"),
+        DispatchClass = "Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names = FALSE)

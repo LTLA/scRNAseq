@@ -82,6 +82,22 @@ mito.data <- readFormat(mito.path)
 mito.data
 ```
 
+# Spike-in concenctrations
+
+We can add the spike-in molecule counts based on the spike-in levels.
+
+```{r}
+file <- system.file("inst/extdata/spike-concs.tsv", package = "scRNAseq")
+table <- read.delim(file, stringsAsFactors = FALSE)
+row <- table[grep("Zeisel", table$Reference), ]
+molecule_counts <- scRNAseq:::.calculate_spikeins(
+    volume_nl = row$Volume,
+    dilution = as.numeric(row$Dilution),
+    genes = rownames(spike.data)
+)
+rowData(spike.data)$molecule_counts <- molecule_counts
+```
+
 # Saving objects
 
 We need to rearrange the columns for the mitochondrial data, as the order is not consistent with the other files.
