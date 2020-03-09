@@ -5,9 +5,11 @@
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/ercc-spike-in-concentrations}.
 #'
-#' @param genes A character vector specifying the ERCC spike-in genes used.
-#' @param volume_nl Volume (in nanoliters) of ERCC spike-in mixture.
-#' @param dilution The ratio of ERCC mixture to total well content.
+#' @param genes Character vector specifying the ERCC spike-in genes used.
+#' @param volume Numeric scalar specifying the volume (in nanoliters) of ERCC 
+#' spike-in mixture.
+#' @param dilution Numeric scalar specifying the ratio of ERCC mixture to total 
+#' well content.
 #' @return A \code{data.frame} object with ERCC spike-in information.
 #'
 #' @author Alan O'Callaghan
@@ -17,7 +19,7 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-ERCCSpikeInConcentrations <- function(genes = NULL, volume_nl = NULL, dilution = NULL) {
+ERCCSpikeInConcentrations <- function(genes = NULL, volume = NULL, dilution = NULL) {
     version <- "2.0.0"
     hub <- ExperimentHub()
     host <- "scRNAseq/ercc-spike-in-concentrations"
