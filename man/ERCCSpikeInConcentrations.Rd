@@ -4,14 +4,16 @@
 \alias{ERCCSpikeInConcentrations}
 \title{Obtain the ERCC concentration from Thermofisher}
 \usage{
-ERCCSpikeInConcentrations(genes = NULL, volume_nl = NULL, dilution = NULL)
+ERCCSpikeInConcentrations(genes = NULL, volume = NULL, dilution = NULL)
 }
 \arguments{
-\item{genes}{A character vector specifying the ERCC spike-in genes used.}
+\item{genes}{Character vector specifying the ERCC spike-in genes used.}
 
-\item{volume_nl}{Volume (in nanoliters) of ERCC spike-in mixture.}
+\item{volume}{Numeric scalar specifying the volume (in nanoliters) of ERCC 
+spike-in mixture.}
 
-\item{dilution}{The ratio of ERCC mixture to total well content.}
+\item{dilution}{Numeric scalar specifying the ratio of ERCC mixture to total 
+well content.}
 }
 \value{
 A \code{data.frame} object with ERCC spike-in information.
