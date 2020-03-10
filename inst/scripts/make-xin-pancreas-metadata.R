@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-xin-pancreas.csv",
+write.csv(file="../extdata/2.0.0/metadata-xin-pancreas.csv",
     data.frame(
         Title = sprintf("Xin pancreas %s", c("RPKMs", "rowData", "colData")),
         Description = sprintf("%s for the Xin pancreas single-cell RNA-seq dataset", 

@@ -2,7 +2,7 @@
 # cd scRNAseq/ercc-concentrations/2.2.0/
 # wget https://assets.thermofisher.com/TFS-Assets/LSG/manuals/cms_095046.txt
 
-write.csv(file = "../extdata/metadata-ercc-concentrations.csv", 
+write.csv(file = "../extdata/2.2.0/metadata-ercc-concentrations.csv", 
     data.frame(
         Title = "ERCC spike-in concentrations",
         Description = "Concentrations for ERCC spike-in RNA molecules in 2 mixes",

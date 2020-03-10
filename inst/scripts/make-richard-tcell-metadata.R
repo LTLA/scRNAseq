@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-richard-tcell.csv", 
+write.csv(file="../extdata/2.0.0/metadata-richard-tcell.csv", 
     data.frame(
         Title = sprintf("Richard CD8+ T cell %s", c("counts", "colData")),
         Description = sprintf("%s for the Richard CD8+ T cell single-cell RNA-seq dataset", 

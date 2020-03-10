@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-leng-esc.csv", 
+write.csv(file="../extdata/2.0.0/metadata-leng-esc.csv", 
     data.frame(
         Title = sprintf("Leng ESC %s", c("normcounts", "colData")),
         Description = sprintf("%s for the Leng embryonic stem cell single-cell RNA-seq dataset", 

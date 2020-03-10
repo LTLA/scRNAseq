@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-messmer-esc.csv", row.names=FALSE,
+write.csv(file="../extdata/2.0.0/metadata-messmer-esc.csv", row.names=FALSE,
     data.frame(
         Title = sprintf("Messmer ESC %s", c("counts", "rowData", "colData")),
         Description = sprintf("%s for the Messmer embryonic stem cell single-cell RNA-seq dataset", 

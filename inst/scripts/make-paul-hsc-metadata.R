@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-paul-hsc.csv", 
+write.csv(file="../extdata/2.2.0/metadata-paul-hsc.csv", 
     data.frame(
         Title = sprintf("Paul HSC %s", c("counts", "colData")),
         Description = sprintf("%s for the Paul haematopoietic stem cell single-cell RNA-seq dataset", 

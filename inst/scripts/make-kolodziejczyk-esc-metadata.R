@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-kolodziejczyk-esc.csv", 
+write.csv(file="../extdata/2.0.0/metadata-kolodziejczyk-esc.csv", 
     data.frame(
         Title = "Kolodziejczyk ESC counts",
         Description = "Count matrix for the Kolodziejczyk embryonic stem cell single-cell RNA-seq dataset", 

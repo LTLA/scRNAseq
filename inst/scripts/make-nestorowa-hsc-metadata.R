@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-nestorowa-hsc.csv", 
+write.csv(file="../extdata/2.0.0/metadata-nestorowa-hsc.csv", 
     data.frame(
         Title = sprintf("Nestorowa HSC %s", c("counts", "colData")),
         Description = sprintf("%s for the Nestorowa haematopoietic stem cell single-cell RNA-seq dataset", 

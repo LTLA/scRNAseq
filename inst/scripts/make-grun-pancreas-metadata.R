@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-grun-pancreas.csv",
+write.csv(file="../extdata/2.0.0/metadata-grun-pancreas.csv",
     data.frame(
         Title = "Grun pancreas counts",
         Description = "Count matrix for the Grun pancreas single-cell RNA-seq dataset", 

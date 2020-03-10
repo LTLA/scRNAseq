@@ -21,6 +21,6 @@ FUN <- function(species, short, long, id) {
     )
 }
 
-write.csv(file="../extdata/metadata-baron-pancreas.csv", 
+write.csv(file="../extdata/2.0.0/metadata-baron-pancreas.csv", 
     rbind(FUN("human", "hg38", "Homo sapiens", "9606"), FUN("mouse", "mm10", "Mus musculus", "10090")),
     row.names=FALSE)
