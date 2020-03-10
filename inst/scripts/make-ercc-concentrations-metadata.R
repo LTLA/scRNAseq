@@ -17,8 +17,8 @@ write.csv(file = "../extdata/2.2.0/metadata-ercc-concentrations.csv",
         Coordinate_1_based = NA,
         DataProvider = "Thermo Fisher Scientific",
         Maintainer = "Alan O'Callaghan <alan.ocallaghan@outlook.com>",
-        RDataClass = "data.frame",
-        DispatchClass = "Rds",
+        RDataClass = "DFrame",
+        DispatchClass = "FilePath",
         stringsAsFactors = FALSE
     ),
     row.names = FALSE)
