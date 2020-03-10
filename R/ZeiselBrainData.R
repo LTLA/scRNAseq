@@ -46,7 +46,7 @@ ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
 
     spikedata <- ERCCSpikeInConcentrations(
         genes = rownames(altExp(sce, "ERCC")),
-        volume_nl = 9,
+        volume = 9,
         dilution = as.numeric(20000))
     rowData(altExp(sce, "ERCC"))$molecule_counts <- spikedata$molecule_counts
 
