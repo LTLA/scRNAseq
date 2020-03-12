@@ -122,7 +122,7 @@ test_that("ZeiselBrainData works", {
 })
 
 
-test_that("ZeiselBrainData works", {
-    d <- ZeiselBrainData(ensembl=TRUE)
-    s <- ERCCSpikeInConcentrations(1, 1, 1, "ERCC-00130")
+test_that("ZeiselBrainData works", {    
+    table <- ERCCSpikeInConcentrations()
+    expect_is(table, "data.frame")
 })

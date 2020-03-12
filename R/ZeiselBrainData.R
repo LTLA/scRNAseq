@@ -48,7 +48,7 @@ ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
         genes = rownames(altExp(sce, "ERCC")),
         volume = 9,
         dilution = as.numeric(20000))
-    rowData(altExp(sce, "ERCC"))$molecule_counts <- spikedata$molecule_counts
+    rowData(altExp(sce, "ERCC"))[["molecules"]] <- spikedata$molecules
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

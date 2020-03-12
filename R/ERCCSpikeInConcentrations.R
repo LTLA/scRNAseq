@@ -22,21 +22,20 @@
 ERCCSpikeInConcentrations <- function(genes = NULL, volume = NULL, dilution = NULL) {
     version <- "2.0.0"
     hub <- ExperimentHub()
-    host <- "scRNAseq/ercc-spike-in-concentrations"
-    rdata <- hub[hub$rdatapath==file.path(host, "1.0.0", "concentrations.rds")][[1]]
-    out <- readRDS(rdata)
-
+    host <- "scRNAseq/ercc-concentrations"
+    file <- hub[hub$rdatapath==file.path(host, "2.2.0", "cms_095046.txt")][[1]]
+    table <- read.delim(file, check.names = FALSE)
     if (!is.null(genes)) {
-      ind <- match(genes, spike_table[["ERCC.ID"]])
-      out <- out[ind, ]
+      ind <- match(genes, table[["ERCC ID"]])
+      table <- table[ind, ]
     }
-    if (!is.null(volume_nl) & !is.null(dilution)) {    
-      molarity <- spike_table[["concentration in Mix 1 (attomoles/ul)"]] * (10^(-18))
+    if (!is.null(volume) & !is.null(dilution)) {    
+      molarity <- table[["concentration in Mix 1 (attomoles/ul)"]] * (10^(-18))
       molecules <- molarity * (6.02214076 * (10^23))
-      out$molarity_ul <- molarity
-      out$molecules_ul <- molecules
-      out$molecules <- out$molecules_ul / dilution
-      out$molecules <- out$molecules * (volume_nl / 1000)
+      table$molarity_ul <- molarity
+      table$molecules_ul <- molecules
+      table$molecules <- table$molecules_ul / dilution
+      table$molecules <- table$molecules * (volume / 1000)
     }
-    out
+    table
 }
