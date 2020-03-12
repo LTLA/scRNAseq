@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-grun-hsc.csv", 
+write.csv(file="../extdata/2.0.0/metadata-grun-hsc.csv", 
     data.frame(
         Title = "Grun HSC counts",
         Description = "Count matrix for the Grun haematopoietic stem cell single-cell RNA-seq dataset", 

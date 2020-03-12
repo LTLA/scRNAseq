@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-buettner-esc.csv", 
+write.csv(file="../extdata/2.0.0/metadata-buettner-esc.csv", 
     data.frame(
         Title = sprintf("Buettner ESC %s", c("counts", "rowData", "colData")),
         Description = sprintf("%s for the Buettner embryonic stem cell single-cell RNA-seq dataset", 

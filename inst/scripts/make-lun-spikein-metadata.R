@@ -24,6 +24,6 @@ FUN <- function(type, short) {
     )
 }
 
-write.csv(file="../extdata/metadata-lun-spikein.csv", 
+write.csv(file="../extdata/2.0.0/metadata-lun-spikein.csv", 
     rbind(FUN("416B", "416b"), FUN("trophoblast", "tropho")),
     row.names=FALSE)

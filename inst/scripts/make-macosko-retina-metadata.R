@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-macosko-retina.csv", 
+write.csv(file="../extdata/2.0.0/metadata-macosko-retina.csv", 
     data.frame(
         Title = sprintf("Macosko retina %s", c("counts", "colData")),
         Description = sprintf("%s for the Macosko retina single-cell RNA-seq dataset", 

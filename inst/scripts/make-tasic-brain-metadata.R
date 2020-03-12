@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-tasic-brain.csv", 
+write.csv(file="../extdata/2.0.0/metadata-tasic-brain.csv", 
     data.frame(
         Title = sprintf("Tasic brain %s", c("counts", "colData")),
         Description = sprintf("%s for the Tasic brain single-cell RNA-seq dataset", 

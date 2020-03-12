@@ -49,4 +49,4 @@ for (i in seq_along(accessions)) {
 collected[[i+1]] <- GENERATOR("rowData", "Per-gene metadata", "rowdata.rds", 
     paste0(accessions[1], "_", samples[1], "_genes.tsv.gz"))
 
-write.csv(file="../extdata/metadata-bach-mammary.csv", row.names=FALSE, do.call(rbind, collected))
+write.csv(file="../extdata/2.0.0/metadata-bach-mammary.csv", row.names=FALSE, do.call(rbind, collected))

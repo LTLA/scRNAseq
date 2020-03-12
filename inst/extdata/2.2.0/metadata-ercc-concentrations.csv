@@ -1,0 +1,2 @@
+"Title","Description","RDataPath","BiocVersion","Genome","SourceType","SourceUrl","SourceVersion","Species","TaxonomyId","Coordinate_1_based","DataProvider","Maintainer","RDataClass","DispatchClass"
+"ERCC spike-in concentrations","Concentrations for ERCC spike-in RNA molecules in 2 mixes","scRNAseq/ercc-concentrations/2.2.0/cms_095046.txt","3.11",NA,"TSV","https://assets.thermofisher.com/TFS-Assets/LSG/manuals/","cms_095046.txt",NA,NA,NA,"Thermo Fisher Scientific","Alan O'Callaghan <alan.ocallaghan@outlook.com>","DataFrame","FilePath"

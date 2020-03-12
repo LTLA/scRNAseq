@@ -21,7 +21,7 @@ spawn_df <- function(type, suffix, src, file="TSV") {
     )
 }
 
-write.csv(file="../extdata/metadata-lamanno-brain.csv", 
+write.csv(file="../extdata/2.0.0/metadata-lamanno-brain.csv", 
     rbind(
         spawn_df("human ES", "human-es", "GSE76381_ESMoleculeCounts.cef.txt.gz"),
         spawn_df("human embryo midbrain", "human-embryo", "GSE76381_EmbryoMoleculeCounts.cef.txt.gz"),

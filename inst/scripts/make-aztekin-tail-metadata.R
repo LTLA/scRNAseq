@@ -1,4 +1,4 @@
-write.csv(file="../extdata/metadata-aztekin-tail.csv", 
+write.csv(file="../extdata/2.0.0/metadata-aztekin-tail.csv", 
     data.frame(
         Title = sprintf("Aztekin Xenopus tail %s", c("counts", "colData")),
         Description = sprintf("%s for the Aztekin Xenopus tail single-cell RNA-seq dataset", 
