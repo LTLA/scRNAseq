@@ -44,6 +44,12 @@ ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
     status[status=="mito"] <- "endogenous"
     sce <- splitAltExps(sce, status, "endogenous")
 
+    spikedata <- ERCCSpikeInConcentrations(
+        genes = rownames(altExp(sce, "ERCC")),
+        volume = 9,
+        dilution = as.numeric(20000))
+    rowData(altExp(sce, "ERCC"))[["molecules"]] <- spikedata$molecules
+
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
         species="Mm",
