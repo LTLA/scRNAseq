@@ -18,6 +18,9 @@
 #'
 #' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #'
+#' Spike-in metadata is added using \code{\link{ERCCSpikeInConcentrations}},
+#' with molecule counts computed using a volume of 9 nL per cell at a dilution of 1:20000.
+#' 
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-brain}.
 #'
@@ -34,8 +37,9 @@
 #' sce <- ZeiselBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment splitAltExps
-#' @importFrom SummarizedExperiment rowData
+#' @importFrom SingleCellExperiment splitAltExps altExp<-
+#' @importFrom SummarizedExperiment rowData rowData<-
+#' @importFrom BiocGenerics cbind
 ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.0.0"
     sce <- .create_sce(file.path("zeisel-brain", version))
@@ -44,11 +48,15 @@ ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
     status[status=="mito"] <- "endogenous"
     sce <- splitAltExps(sce, status, "endogenous")
 
-    spikedata <- ERCCSpikeInConcentrations(
-        genes = rownames(altExp(sce, "ERCC")),
-        volume = 9,
-        dilution = as.numeric(20000))
-    rowData(altExp(sce, "ERCC"))[["molecules"]] <- spikedata$molecules
+    # Decorating spike-ins with row metadata. Probably could be less
+    # verbose but this is pretty clear.
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 9, dilution = 20000)
+    spikedata <- spikedata[rownames(spike.exp),]
+
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
+    altExp(sce, "ERCC") <- spike.exp
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
