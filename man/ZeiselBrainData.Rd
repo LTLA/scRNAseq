@@ -30,6 +30,9 @@ Rows with missing Ensembl IDs are discarded, and only the first occurrence of du
 
 If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
+Spike-in metadata is added using \code{\link{ERCCSpikeInConcentrations}},
+with molecule counts computed using a volume of 9 nL per cell at a dilution of 1:20000.
+
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-brain}.
 }

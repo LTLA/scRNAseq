@@ -2,31 +2,36 @@
 % Please edit documentation in R/ERCCSpikeInConcentrations.R
 \name{ERCCSpikeInConcentrations}
 \alias{ERCCSpikeInConcentrations}
-\title{Obtain the ERCC concentration from Thermofisher}
+\title{Obtain ERCC concentrations}
 \usage{
-ERCCSpikeInConcentrations(genes = NULL, volume = NULL, dilution = NULL)
+ERCCSpikeInConcentrations(volume = NULL, dilution = NULL, mix = c("1", "2"))
 }
 \arguments{
-\item{genes}{Character vector specifying the ERCC spike-in genes used.}
+\item{volume}{Numeric scalar specifying the added volume (in nanoliters) of ERCC spike-in mixture.
+Only used if \code{dilution} is specified.}
 
-\item{volume}{Numeric scalar specifying the volume (in nanoliters) of ERCC 
-spike-in mixture.}
+\item{dilution}{Numeric scalar specifying the dilution factor used for the added volume of the spike-in mixture.
+Only used if \code{volume} is specified.}
 
-\item{dilution}{Numeric scalar specifying the ratio of ERCC mixture to total 
-well content.}
+\item{mix}{String specifying whether to compute the number of molecules for mix 1 or 2.
+Only used if both \code{dilution} and \code{volume} are specified.}
 }
 \value{
-A \code{data.frame} object with ERCC spike-in information.
+A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.
+This contains information such as the spike-in concentration in each mix.
 }
 \description{
-Obtain the ERCC concentration from Thermofisher
+Obtain ERCC spike-in concentrations from the Thermo Fisher Scientific website.
 }
 \details{
+If \code{volume} and \code{dilution} are specified,
+an additional column is added to the output specifying the number of molecules of spike-in transcipt for the specified mix.
+
 All data are downloaded from ExperimentHub and cached for local re-use.
-Specific resources can be retrieved by searching for \code{scRNAseq/ercc-spike-in-concentrations}.
+Specific resources can be retrieved by searching for \code{scRNAseq/ercc-concentrations}.
 }
 \examples{
-sce <- ERCCSpikeInConcentrations()
+df <- ERCCSpikeInConcentrations()
 
 }
 \author{
