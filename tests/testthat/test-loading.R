@@ -121,8 +121,7 @@ test_that("ZeiselBrainData works", {
     CHECK(ZeiselBrainData(ensembl=TRUE))
 })
 
-
-test_that("ZeiselBrainData works", {    
+test_that("ERCCSpikeInConcentrations works", {
     table <- ERCCSpikeInConcentrations()
-    expect_is(table, "data.frame")
+    expect_s4_class(table, "DFrame")
 })
