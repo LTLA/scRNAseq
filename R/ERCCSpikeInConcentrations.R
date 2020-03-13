@@ -1,41 +1,47 @@
-#' Obtain the ERCC concentration from Thermofisher
+#' Obtain ERCC concentrations
+#'
+#' Obtain ERCC spike-in concentrations from the Thermo Fisher Scientific website.
+#'
+#' @param volume Numeric scalar specifying the added volume (in nanoliters) of ERCC spike-in mixture.
+#' Only used if \code{dilution} is specified.
+#' @param dilution Numeric scalar specifying the dilution factor used for the added volume of the spike-in mixture.
+#' Only used if \code{volume} is specified.
+#' @param mix String specifying whether to compute the number of molecules for mix 1 or 2.
+#' Only used if both \code{dilution} and \code{volume} are specified.
 #'
 #' @details
-#'
+#' If \code{volume} and \code{dilution} are specified,
+#' an additional column is added to the output specifying the number of molecules of spike-in transcipt for the specified mix.
+#' 
 #' All data are downloaded from ExperimentHub and cached for local re-use.
-#' Specific resources can be retrieved by searching for \code{scRNAseq/ercc-spike-in-concentrations}.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/ercc-concentrations}.
 #'
-#' @param genes Character vector specifying the ERCC spike-in genes used.
-#' @param volume Numeric scalar specifying the volume (in nanoliters) of ERCC 
-#' spike-in mixture.
-#' @param dilution Numeric scalar specifying the ratio of ERCC mixture to total 
-#' well content.
-#' @return A \code{data.frame} object with ERCC spike-in information.
+#' @return A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.
+#' This contains information such as the spike-in concentration in each mix.
 #'
 #' @author Alan O'Callaghan
 #'
 #' @examples
-#' sce <- ERCCSpikeInConcentrations()
+#' df <- ERCCSpikeInConcentrations()
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-ERCCSpikeInConcentrations <- function(genes = NULL, volume = NULL, dilution = NULL) {
+ERCCSpikeInConcentrations <- function(volume = NULL, dilution = NULL, mix=c("1", "2")) {
     version <- "2.0.0"
     hub <- ExperimentHub()
     host <- "scRNAseq/ercc-concentrations"
     file <- hub[hub$rdatapath==file.path(host, "2.2.0", "cms_095046.txt")][[1]]
+
     table <- read.delim(file, check.names = FALSE)
-    if (!is.null(genes)) {
-      ind <- match(genes, table[["ERCC ID"]])
-      table <- table[ind, ]
+    rownames(table) <- table[,"ERCC ID"]
+    table <- table[,-(1:2)]
+
+    if (!is.null(volume) && !is.null(dilution)) {
+        field <- sprintf("concentration in Mix %s (attomoles/ul)", match.arg(mix))
+        molarity <- table[[field]] * 10^-18 # get concentration in mol/uL.
+        molecules_ul <- molarity * (6.02214076 * (10^23))
+        table$molecules <- molecules_ul / dilution * (volume / 1000) # get volume in uL.
     }
-    if (!is.null(volume) & !is.null(dilution)) {    
-      molarity <- table[["concentration in Mix 1 (attomoles/ul)"]] * (10^(-18))
-      molecules <- molarity * (6.02214076 * (10^23))
-      table$molarity_ul <- molarity
-      table$molecules_ul <- molecules
-      table$molecules <- table$molecules_ul / dilution
-      table$molecules <- table$molecules * (volume / 1000)
-    }
-    table
+
+    DataFrame(table, check.names=FALSE)
 }
