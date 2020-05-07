@@ -1,12 +1,12 @@
 ---
-title: Processing the Chen brain dataset
+title: Processing the Macosko retina dataset
 author: Aaron Lun
-date: "June 24, 2019"
+date: "June 8, 2019"
 output:
   BiocStyle::html_document:
     titlecaps: false
     toc_float: true
-bibliography: ref.bib
+bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,21 +16,21 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of the mouse brain from @chen2017singlecell.
-Counts for endogenous genes are available from the Gene Expression Omnibus
-using the accession number [GSE87544](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE87544).
+We obtain a single-cell RNA sequencing dataset of the mouse retina from @macosko2015highly. 
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE63472](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE63472).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
 base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
-    "GSE87nnn/GSE87544/suppl")
+    "GSE63nnn/GSE63472/suppl")
 count.file <- bfcrpath(bfc, file.path(base.url,
-    "GSE87544_Merged_17samples_14437cells_count.txt.gz"))
+    "GSE63472_P14Retina_merged_digital_expression.txt.gz"))
 ```
 
-Reading them in as a sparse matrix.
+We load them into memory.
 
 ```{r}
 library(scater)
@@ -38,24 +38,28 @@ counts <- readSparseCounts(count.file)
 dim(counts)
 ```
 
-# Downloading the metadata
+# Downloading the per-cell metadata
 
-We also download the cluster identities.
+We also download a file containing the metadata for each cell.
 
 ```{r}
-cluster.file <- bfcrpath(bfc, file.path(base.url,
-    "GSE87544_1443737Cells.SVM.cluster.identity.renamed.csv.gz"))
-coldata <- read.csv(cluster.file, stringsAsFactors=FALSE, row.names=1)
+meta.file <- bfcrpath(bfc, file.path("http://mccarrolllab.com",
+    "wp-content/uploads/2015/05/retina_clusteridentities.txt"))
+coldata <- read.delim(meta.file, stringsAsFactors=FALSE, header=FALSE)
+colnames(coldata) <- c("cell.id", "cluster")
+
+library(S4Vectors)
 coldata <- as(coldata, "DataFrame")
 coldata
 ```
 
-We check that the columns are in the same order.
+We match the metadata to the columns.
 
 ```{r}
-m <- match(colnames(counts), rownames(coldata))
+m <- match(colnames(counts), coldata$cell.id)
 coldata <- coldata[m,]
-stopifnot(identical(colnames(counts), rownames(coldata)))
+coldata$cell.id <- colnames(counts)
+summary(is.na(m))
 ```
 
 # Saving to file 
@@ -64,7 +68,7 @@ We now save all of the components to file for upload to `r Biocpkg("ExperimentHu
 These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
 
 ```{r}
-path <- file.path("scRNAseq", "chen-brain", "2.0.0")
+path <- file.path("scRNAseq", "macosko-retina", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts.rds"))
 saveRDS(coldata, file=file.path(path, "coldata.rds"))

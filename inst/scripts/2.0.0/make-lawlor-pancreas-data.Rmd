@@ -1,12 +1,12 @@
 ---
-title: Processing the Marques brain dataset
+title: Processing the Lawlor pancreas dataset
 author: Aaron Lun
-date: "June 8, 2019"
+date: "June 27, 2019"
 output:
   BiocStyle::html_document:
     titlecaps: false
     toc_float: true
-bibliography: ref.bib
+bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,46 +16,40 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from @marques2016oligodendrocyte.
+We obtain a single-cell RNA sequencing dataset of human pancreas from @lawlor2017singlecell.
 Counts for endogenous genes are available from the Gene Expression Omnibus
-using the accession number [GSE75330](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330).
+using the accession number [GSE86469](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE86469).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
 library(BiocFileCache)
-bfc <- BiocFileCache("raw_data", ask = FALSE)
-count.file <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
-    "GSE75nnn/GSE75330/suppl/GSE75330_Marques_et_al_mol_counts2.tab.gz"))
+bfc <- BiocFileCache(ask=FALSE)    
+count.tab <- bfcrpath(bfc, file.path(
+    "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE86nnn/GSE86469/suppl",
+    "GSE86469_GEO.islet.single.cell.processed.data.RSEM.raw.expected.counts.csv.gz"
+))
 ```
 
-We load them into memory.
+We then load it in as a sparse matrix.
 
 ```{r}
 library(scater)
-counts <- readSparseCounts(count.file)
+counts <- readSparseCounts(count.tab, sep=",", quote='"', row.names=1)
 dim(counts)
 ```
 
-# Extracting the metadata
+# Downloading the metadata
 
 We extract the metadata for this study using the `r Biocpkg("GEOquery")` package.
 
 ```{r}
 library(GEOquery)
-coldata <- pData(getGEO("GSE75330")[[1]])
+coldata <- pData(getGEO("GSE86469")[[1]])
 
 library(S4Vectors)
 coldata <- as(coldata, "DataFrame")
 rownames(coldata) <- NULL
 colnames(coldata)
-```
-
-Unfortunately, some of the cells are named differently in the `coldata` compared to the `counts`, which needs correction.
-
-```{r}
-coldata[,1] <- sub("T[0-9]-", "-", coldata[,1])
-coldata <- coldata[match(colnames(counts), coldata[,1]),]
-stopifnot(identical(colnames(counts), coldata[,1]))
 ```
 
 We remove the constant columns, as these are unlikely to be interesting.
@@ -81,6 +75,8 @@ for (i in colnames(coldata)) {
         coldata[[i]] <- as.character(coldata[[i]])
     }
 }
+
+stopifnot(identical(colnames(counts), coldata[,1]))
 colnames(coldata) <- sub("[:_]ch1$", "", colnames(coldata))
 coldata
 ```
@@ -91,7 +87,7 @@ We now save all of the components to file for upload to `r Biocpkg("ExperimentHu
 These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
 
 ```{r}
-path <- file.path("scRNAseq", "marques-brain", "2.0.0")
+path <- file.path("scRNAseq", "lawlor-pancreas", "2.0.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts.rds"))
 saveRDS(coldata, file=file.path(path, "coldata.rds"))
