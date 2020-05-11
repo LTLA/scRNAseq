@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of human and mouse lung cancer from .
+We obtain a single-cell RNA sequencing dataset of human and mouse lung cancer from @zilionis2019singlecell.
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE127465](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE127465).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
@@ -42,9 +42,8 @@ We set up a function to load in each set of counts as a sparse matrix.
 ```{r}
 library(Matrix)
 FUN <- function(X) {
-    input <- read.csv(X, sep="\t", stringsAsFactors=FALSE)
+    input <- read.csv(X, row.names = 1, sep="\t", stringsAsFactors=FALSE)
     labels <- as.character(input$barcode)
-    input <- input[,2:ncol(input)]
     input <- t(input)
     list(mat=as(input, "dgCMatrix"), label=labels)
 }
@@ -96,11 +95,11 @@ dim(counts)
 We do the same thing with the column metadata.
 
 ```{r}
-samples <- sapply(stringi::stri_split_fixed(hs.files, pattern = "_"), function(x) x[3])
+samples <- vapply(strsplit(hs.files, "_"), "[", i=3, "")
 barcode <- lapply(all.human, function(x) x$label)
-origin <- rep(samples, times = sapply(barcode, length))
-donor <- stringi::stri_match_first_regex(origin, "p[0-9]+")[,1]
-replicate <- stringi::stri_match_first_regex(origin, "[t|b][0-9]+")[,1]
+origin <- rep(samples, times = lengths(barcode))
+donor <- sub("[bt].*", "", origin)
+replicate <- sub("p.", "", origin)
 tissue <- ifelse(grepl("t", replicate), "tumor", "blood")
 barcode <- unlist(barcode)
 
@@ -154,14 +153,15 @@ dim(counts)
 We do the same thing with the column metadata.
 
 ```{r}
-animal <- sapply(stringi::stri_split_fixed(mm.files, pattern = "_"), function(x) paste0(x[3], x[4]))
-replicate <- sapply(stringi::stri_split_fixed(mm.files, pattern = "_"), function(x) x[5])
+tissue <- vapply(strsplit(mm.files, "_"), "[", i=3, "")
+animal <- vapply(strsplit(mm.files, "_"), "[", i=4, "")
+replicate <- vapply(strsplit(mm.files, "_"), "[", i=5, "")
 barcode <- lapply(all.mouse, function(x) x$label)
 
-animal <- rep(animal, times = sapply(barcode, length))
-replicate <- rep(replicate, times = sapply(barcode, length))
+animal <- paste0(rep(tissue, times = lengths(barcode)), rep(animal, times = lengths(barcode)))
+replicate <- rep(replicate, times = lengths(barcode))
 library <- paste(animal, replicate, sep = "_")
-tissue <- ifelse(grepl("t", library), "tumor", "healthy")
+tissue <- rep(ifelse(tissue == "t", "tumor", "healthy"), times = lengths(barcode))
 barcode <- unlist(barcode)
 
 library(S4Vectors)
