@@ -104,8 +104,20 @@ tissue <- ifelse(grepl("t", replicate), "tumor", "blood")
 barcode <- unlist(barcode)
 
 library(S4Vectors)
-coldata <- DataFrame(library=origin, donor=donor, replicate = replicate, tissue=tissue, barcode=barcode)
-coldata
+coldata <- data.frame(library=origin, donor=donor, replicate = replicate, tissue=tissue, barcode=barcode)
+```
+
+We next add additional metadata for a subset of cells that were used in the original paper.
+
+```{r}
+bfc <- BiocFileCache(ask=FALSE)
+tarball <- bfcrpath(bfc, 
+    "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_human_cell_metadata_54773x25.tsv.gz")
+
+read.table(tarball, sep = "\t", header = T) %>% 
+  dplyr::left_join(coldata, ., by = c("library" = "Library", "barcode" = "Barcode")) %>% 
+  DataFrame(.) -> colData
+colData
 ```
 
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
@@ -158,15 +170,27 @@ animal <- vapply(strsplit(mm.files, "_"), "[", i=4, "")
 replicate <- vapply(strsplit(mm.files, "_"), "[", i=5, "")
 barcode <- lapply(all.mouse, function(x) x$label)
 
-animal <- paste0(rep(tissue, times = lengths(barcode)), rep(animal, times = lengths(barcode)))
+animal <- paste(rep(tissue, times = lengths(barcode)), rep(animal, times = lengths(barcode)), sep = "_")
 replicate <- rep(replicate, times = lengths(barcode))
 library <- paste(animal, replicate, sep = "_")
 tissue <- rep(ifelse(tissue == "t", "tumor", "healthy"), times = lengths(barcode))
 barcode <- unlist(barcode)
 
 library(S4Vectors)
-coldata <- DataFrame(library=library, animal = animal, replicate = replicate, tissue=tissue, barcode=barcode)
-coldata
+coldata <- data.frame(library=library, animal = animal, replicate = replicate, tissue=tissue, barcode=barcode)
+```
+
+We next add additional metadata for a subset of cells that were used in the original paper.
+
+```{r}
+bfc <- BiocFileCache(ask=FALSE)
+tarball <- bfcrpath(bfc, 
+    "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_mouse_cell_metadata_15939x12.tsv.gz")
+
+read.table(tarball, sep = "\t", header = T) %>% 
+  dplyr::left_join(coldata, ., by = c("library" = "Library", "barcode" = "Barcode")) %>% 
+  DataFrame(.) -> colData
+colData
 ```
 
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
