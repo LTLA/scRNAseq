@@ -120,10 +120,17 @@ read.table(tarball, sep = "\t", header = T) %>%
 colData
 ```
 
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+
+```{r}
+keep <- grep("counts|cell.type|^x_.*_all|^y_.*_all", colnames(colData))
+colData <- colData[, c(1:5, keep)]
+```
+
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
 
 ```{r}
-path <- file.path("scRNAseq", "zilionis-lung", "2.2.0")
+path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts-human.rds"))
 saveRDS(coldata, file=file.path(path, "coldata-human.rds"))
@@ -193,10 +200,17 @@ read.table(tarball, sep = "\t", header = T) %>%
 colData
 ```
 
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+
+```{r}
+keep <- grep("counts|cell.type|^x$|^y$", colnames(colData))
+colData <- colData[, c(1:5, keep)]
+```
+
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
 
 ```{r}
-path <- file.path("scRNAseq", "zilionis-lung", "2.2.0")
+path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts-mouse.rds"))
 saveRDS(coldata, file=file.path(path, "coldata-mouse.rds"))

@@ -5,6 +5,7 @@
 #' @param which String specifying the species to get data for.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param filter Logical scalar indicating if the filtered subset should be returned.
 #'
 #' @details
 #' Column metadata is provided and contains information on the library, donor ID/animal ID, replicate and tissue.
@@ -14,6 +15,8 @@
 #'
 #' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #' Note that this is only performed if \code{ensembl=TRUE}.
+#' 
+#' If \code{filter=TRUE}, only cells that have been used in the original analysis are returned. In this case, the returned object will also contain coordinates of a SPRING representation in \code{reducedDims()}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/zilionis-lung}.
@@ -34,10 +37,22 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE) {
-  version <- "2.2.0"
+ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE, filter=FALSE) {
+  version <- "2.4.0"
   which <- match.arg(which)
   sce <- .create_sce(file.path("zilionis-lung", version), has.rowdata=FALSE, suffix=which)
+  
+  if(filter) {
+    # Subset to cells from the original analysis
+    keep <- !is.na(colData(sce)$Total.counts)
+    sce <- sce[, keep]
+    
+    # Add spring representation
+    which_x <- grep("^x_.*_all|^x$", colnames(colData(sce)))
+    which_y <- grep("^y_.*_all|^y$", colnames(colData(sce)))
+    spring_rep <- as.matrix(colData(sce)[, c(which_x, which_y)])
+    reducedDims(sce) <- list("SPRING" = spring_rep)
+  }
   
   .convert_to_ensembl(sce, 
                       ensembl=ensembl,
