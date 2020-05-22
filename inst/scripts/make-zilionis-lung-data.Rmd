@@ -114,16 +114,17 @@ bfc <- BiocFileCache(ask=FALSE)
 tarball <- bfcrpath(bfc, 
     "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_human_cell_metadata_54773x25.tsv.gz")
 
-read.table(tarball, sep = "\t", header = T) %>% 
-  dplyr::left_join(coldata, ., by = c("library" = "Library", "barcode" = "Barcode")) %>% 
-  DataFrame(.) -> colData
+metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
+colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
+colData <- DFrame(colData)
+
 colData
 ```
 
 We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
 
 ```{r}
-keep <- grep("counts|cell.type|^x_.*_all|^y_.*_all", colnames(colData))
+keep <- grep("counts|cell type|subset|^x_.*_all|^y_.*_all", colnames(colData))
 colData <- colData[, c(1:5, keep)]
 ```
 
@@ -194,16 +195,16 @@ bfc <- BiocFileCache(ask=FALSE)
 tarball <- bfcrpath(bfc, 
     "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_mouse_cell_metadata_15939x12.tsv.gz")
 
-read.table(tarball, sep = "\t", header = T) %>% 
-  dplyr::left_join(coldata, ., by = c("library" = "Library", "barcode" = "Barcode")) %>% 
-  DataFrame(.) -> colData
+metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
+colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
+colData <- DFrame(colData)
 colData
 ```
 
 We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
 
 ```{r}
-keep <- grep("counts|cell.type|^x$|^y$", colnames(colData))
+keep <- grep("counts|cell type|subset|^x$|^y$", colnames(colData))
 colData <- colData[, c(1:5, keep)]
 ```
 
