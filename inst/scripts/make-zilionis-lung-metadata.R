@@ -15,7 +15,7 @@ FUN <- function(species, short, long, id) {
     Coordinate_1_based=NA,
     DataProvider="GEO",
     Maintainer="Jens Preussner <jens.preussner@mpi-bn.mpg.de>",
-    RDataClass=c("dgCMatrix", "DataFrame"),
+    RDataClass=c("dgCMatrix", "DFrame"),
     DispatchClass="Rds",
     stringsAsFactors = FALSE
   )

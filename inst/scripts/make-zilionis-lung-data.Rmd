@@ -116,7 +116,7 @@ tarball <- bfcrpath(bfc,
 
 metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
 colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
-colData <- DFrame(colData)
+colData <- DataFrame(colData)
 
 colData
 ```
@@ -197,7 +197,7 @@ tarball <- bfcrpath(bfc,
 
 metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
 colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
-colData <- DFrame(colData)
+colData <- DataFrame(colData)
 colData
 ```
 
