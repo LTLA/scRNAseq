@@ -1,0 +1,226 @@
+---
+title: Processing the Zilionis lung cancer dataset
+author: Jens Preussner
+date: "May 4, 2020"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of human and mouse lung cancer from @zilionis2019singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE127465](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE127465).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache(ask=FALSE)    
+tarball <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE127465&format=file")
+```
+
+We unpack it to a temporary directory.
+
+```{r}
+temp <- tempfile()
+untar(tarball, exdir=temp)
+```
+
+# Reading in human data
+
+We set up a function to load in each set of counts as a sparse matrix.
+
+```{r}
+library(Matrix)
+FUN <- function(X) {
+    input <- read.csv(X, row.names = 1, sep="\t", stringsAsFactors=FALSE)
+    labels <- as.character(input$barcode)
+    input <- t(input)
+    list(mat=as(input, "dgCMatrix"), label=labels)
+}
+```
+
+We read in all the human datasets.
+
+```{r}
+hs.files <- c(
+    "GSM3635278_human_p1t1_raw_counts.tsv.gz",
+    "GSM3635279_human_p1t2_raw_counts.tsv.gz",
+    "GSM3635280_human_p1t3_raw_counts.tsv.gz",
+    "GSM3635281_human_p1t4_raw_counts.tsv.gz",
+    "GSM3635282_human_p1b1_raw_counts.tsv.gz",
+    "GSM3635283_human_p1b2_raw_counts.tsv.gz",
+    "GSM3635284_human_p1b3_raw_counts.tsv.gz",
+    "GSM3635285_human_p2t1_raw_counts.tsv.gz",
+    "GSM3635286_human_p2t2_raw_counts.tsv.gz",
+    "GSM3635287_human_p2b1_raw_counts.tsv.gz",
+    "GSM3635288_human_p3t1_raw_counts.tsv.gz",
+    "GSM3635289_human_p3t2_raw_counts.tsv.gz",
+    "GSM3635290_human_p3t3_raw_counts.tsv.gz",
+    "GSM3635291_human_p3b1_raw_counts.tsv.gz",
+    "GSM3635292_human_p4t1_raw_counts.tsv.gz",
+    "GSM3635293_human_p4t2_raw_counts.tsv.gz",
+    "GSM3635294_human_p4t3_raw_counts.tsv.gz",
+    "GSM3635295_human_p4b1_raw_counts.tsv.gz",
+    "GSM3635296_human_p5t1_raw_counts.tsv.gz",
+    "GSM3635297_human_p5t2_raw_counts.tsv.gz",
+    "GSM3635298_human_p6t1_raw_counts.tsv.gz",
+    "GSM3635299_human_p6t2_raw_counts.tsv.gz",
+    "GSM3635300_human_p6b1_raw_counts.tsv.gz",
+    "GSM3635301_human_p7t1_raw_counts.tsv.gz",
+    "GSM3635302_human_p7t2_raw_counts.tsv.gz",
+    "GSM3635303_human_p7b1_raw_counts.tsv.gz"
+)
+all.human <- lapply(file.path(temp, hs.files), FUN)
+sapply(all.human, function(x) dim(x$mat))
+```
+
+We verify that the gene order is the same, and combine the counts.
+
+```{r}
+stopifnot(length(unique(lapply(all.human, function(x) rownames(x$mat))))==1L)
+counts <- do.call(cbind, lapply(all.human, function(x) x$mat))
+dim(counts)
+```
+
+We do the same thing with the column metadata.
+
+```{r}
+samples <- vapply(strsplit(hs.files, "_"), "[", i=3, "")
+barcode <- lapply(all.human, function(x) x$label)
+origin <- rep(samples, times = lengths(barcode))
+donor <- sub("[bt].*", "", origin)
+replicate <- sub("p.", "", origin)
+tissue <- ifelse(grepl("t", replicate), "tumor", "blood")
+barcode <- unlist(barcode)
+
+library(S4Vectors)
+coldata <- data.frame(library=origin, donor=donor, replicate = replicate, tissue=tissue, barcode=barcode)
+```
+
+We next add additional metadata for a subset of cells that were used in the original paper.
+
+```{r}
+bfc <- BiocFileCache(ask=FALSE)
+tarball <- bfcrpath(bfc, 
+    "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_human_cell_metadata_54773x25.tsv.gz")
+
+metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
+colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
+colData <- DataFrame(colData)
+
+colData
+```
+
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+
+```{r}
+keep <- grep("counts|cell type|subset|^x_.*_all|^y_.*_all", colnames(colData))
+colData <- colData[, c(1:5, keep)]
+```
+
+We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts-human.rds"))
+saveRDS(coldata, file=file.path(path, "coldata-human.rds"))
+```
+
+# Reading in mouse data
+
+We read in all the mouse datasets.
+
+```{r}
+mm.files <- c(
+    "GSM3635304_mouse_h_1_1_raw_counts.tsv.gz",
+    "GSM3635305_mouse_h_1_2_raw_counts.tsv.gz",
+    "GSM3635306_mouse_h_2_1_raw_counts.tsv.gz",
+    "GSM3635307_mouse_h_2_2_raw_counts.tsv.gz",
+    "GSM3635308_mouse_h_2_3_raw_counts.tsv.gz",
+    "GSM3635309_mouse_t_1_1_raw_counts.tsv.gz",
+    "GSM3635310_mouse_t_1_2_raw_counts.tsv.gz",
+    "GSM3635311_mouse_t_1_3_raw_counts.tsv.gz",
+    "GSM3635312_mouse_t_1_4_raw_counts.tsv.gz",
+    "GSM3635313_mouse_t_1_5_raw_counts.tsv.gz",
+    "GSM3635314_mouse_t_2_1_raw_counts.tsv.gz",
+    "GSM3635315_mouse_t_2_2_raw_counts.tsv.gz",
+    "GSM3635316_mouse_t_2_3_raw_counts.tsv.gz",
+    "GSM3635317_mouse_t_2_4_raw_counts.tsv.gz"
+)
+all.mouse <- lapply(file.path(temp, mm.files), FUN)
+sapply(all.mouse, function(x) dim(x$mat))
+```
+
+We verify that the gene order is the same, and combine the counts.
+
+```{r}
+stopifnot(length(unique(lapply(all.mouse, function(x) rownames(x$mat))))==1L)
+counts <- do.call(cbind, lapply(all.mouse, function(x) x$mat))
+dim(counts)
+```
+
+We do the same thing with the column metadata.
+
+```{r}
+tissue <- vapply(strsplit(mm.files, "_"), "[", i=3, "")
+animal <- vapply(strsplit(mm.files, "_"), "[", i=4, "")
+replicate <- vapply(strsplit(mm.files, "_"), "[", i=5, "")
+barcode <- lapply(all.mouse, function(x) x$label)
+
+animal <- paste(rep(tissue, times = lengths(barcode)), rep(animal, times = lengths(barcode)), sep = "_")
+replicate <- rep(replicate, times = lengths(barcode))
+library <- paste(animal, replicate, sep = "_")
+tissue <- rep(ifelse(tissue == "t", "tumor", "healthy"), times = lengths(barcode))
+barcode <- unlist(barcode)
+
+library(S4Vectors)
+coldata <- data.frame(library=library, animal = animal, replicate = replicate, tissue=tissue, barcode=barcode)
+```
+
+We next add additional metadata for a subset of cells that were used in the original paper.
+
+```{r}
+bfc <- BiocFileCache(ask=FALSE)
+tarball <- bfcrpath(bfc, 
+    "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_mouse_cell_metadata_15939x12.tsv.gz")
+
+metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
+colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
+colData <- DataFrame(colData)
+colData
+```
+
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+
+```{r}
+keep <- grep("counts|cell type|subset|^x$|^y$", colnames(colData))
+colData <- colData[, c(1:5, keep)]
+```
+
+We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(counts, file=file.path(path, "counts-mouse.rds"))
+saveRDS(coldata, file=file.path(path, "coldata-mouse.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
