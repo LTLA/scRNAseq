@@ -5,7 +5,7 @@ FUN <- function(species, short, long, id) {
                           c("Count matrix", "Per-cell metadata"), species),
     RDataPath = file.path("scRNAseq", "zilionis-lung", "2.4.0", 
                           sprintf(c("counts-%s.rds", "coldata-%s.rds"), species)),
-    BiocVersion="3.10",
+    BiocVersion="3.12",
     Genome=short,
     SourceType="CSV",
     SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE127465",
@@ -21,6 +21,6 @@ FUN <- function(species, short, long, id) {
   )
 }
 
-write.csv(file="../extdata/2.4.0/metadata-zilionis-lung.csv", 
-          rbind(FUN("human", "hg38", "Homo sapiens", "9606"), FUN("mouse", "mm10", "Mus musculus", "10090")),
-          row.names=FALSE)
+write.csv(file="../../extdata/2.4.0/metadata-zilionis-lung.csv", 
+    rbind(FUN("human", "hg38", "Homo sapiens", "9606"), FUN("mouse", "mm10", "Mus musculus", "10090")),
+    row.names=FALSE)

@@ -6,7 +6,7 @@ output:
   BiocStyle::html_document:
     titlecaps: false
     toc_float: true
-bibliography: ref.bib
+bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -25,7 +25,8 @@ We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 library(BiocFileCache)
 bfc <- BiocFileCache(ask=FALSE)    
 tarball <- bfcrpath(bfc, 
-    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE127465&format=file")
+    file.path("https://www.ncbi.nlm.nih.gov/geo",
+        "download/?acc=GSE127465&format=file"))
 ```
 
 We unpack it to a temporary directory.
@@ -37,19 +38,7 @@ untar(tarball, exdir=temp)
 
 # Reading in human data
 
-We set up a function to load in each set of counts as a sparse matrix.
-
-```{r}
-library(Matrix)
-FUN <- function(X) {
-    input <- read.csv(X, row.names = 1, sep="\t", stringsAsFactors=FALSE)
-    labels <- as.character(input$barcode)
-    input <- t(input)
-    list(mat=as(input, "dgCMatrix"), label=labels)
-}
-```
-
-We read in all the human datasets.
+We read in all the human datasets as sparse matrices.
 
 ```{r}
 hs.files <- c(
@@ -80,52 +69,70 @@ hs.files <- c(
     "GSM3635302_human_p7t2_raw_counts.tsv.gz",
     "GSM3635303_human_p7b1_raw_counts.tsv.gz"
 )
-all.human <- lapply(file.path(temp, hs.files), FUN)
-sapply(all.human, function(x) dim(x$mat))
+
+library(scater)
+all.human <- lapply(file.path(temp, hs.files), readSparseCounts)
+
+library(Matrix) # Because the values are transposed.
+all.human <- lapply(all.human, t)
+
+t(sapply(all.human, dim))
 ```
 
 We verify that the gene order is the same, and combine the counts.
 
 ```{r}
-stopifnot(length(unique(lapply(all.human, function(x) rownames(x$mat))))==1L)
-counts <- do.call(cbind, lapply(all.human, function(x) x$mat))
+stopifnot(length(unique(lapply(all.human, rownames)))==1L)
+counts <- do.call(cbind, all.human)
 dim(counts)
 ```
 
-We do the same thing with the column metadata.
+We derive some metadata from each file name and apply them to all of the constituent barcodes.
 
 ```{r}
 samples <- vapply(strsplit(hs.files, "_"), "[", i=3, "")
-barcode <- lapply(all.human, function(x) x$label)
+barcode <- lapply(all.human, colnames)
 origin <- rep(samples, times = lengths(barcode))
+
 donor <- sub("[bt].*", "", origin)
-replicate <- sub("p.", "", origin)
-tissue <- ifelse(grepl("t", replicate), "tumor", "blood")
+tissue <- ifelse(grepl("t", origin), "tumor", "blood")
 barcode <- unlist(barcode)
 
 library(S4Vectors)
-coldata <- data.frame(library=origin, donor=donor, replicate = replicate, tissue=tissue, barcode=barcode)
+coldata <- DataFrame(Library=origin, Barcode=barcode,
+    Patient=donor, Tissue=tissue)
+coldata
 ```
 
-We next add additional metadata for a subset of cells that were used in the original paper.
+We then add additional metadata for a subset of cells that were used in the original paper.
+We convert some of the fields to logical values.
 
 ```{r}
 bfc <- BiocFileCache(ask=FALSE)
 tarball <- bfcrpath(bfc, 
-    "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_human_cell_metadata_54773x25.tsv.gz")
+    file.path("https://ftp.ncbi.nlm.nih.gov/geo/series",
+        "GSE127nnn/GSE127465/suppl",
+        "GSE127465_human_cell_metadata_54773x25.tsv.gz"))
 
-metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
-colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
-colData <- DataFrame(colData)
+metadata <- read.delim(tarball, stringsAsFactors=FALSE, check.names = FALSE)
+for (u in grep("^used", colnames(metadata))) {
+    metadata[[u]] <- metadata[[u]]=="True"
+}
 
-colData
+metadata <- DataFrame(metadata, check.names=FALSE)
+metadata
 ```
 
-We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+We merge this with our file name-derived metadata:
 
 ```{r}
-keep <- grep("counts|cell type|subset|^x_.*_all|^y_.*_all", colnames(colData))
-colData <- colData[, c(1:5, keep)]
+keys <- c("Library", "Barcode")
+m <- match(coldata[,keys], metadata[,keys])
+coldata$Used <- !is.na(m)
+
+discard <- c(keys, "Patient", "Tissue")
+colData <- cbind(coldata, metadata[m,setdiff(colnames(metadata), discard)])
+colData
 ```
 
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
@@ -135,6 +142,11 @@ path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts-human.rds"))
 saveRDS(coldata, file=file.path(path, "coldata-human.rds"))
+```
+
+```{r, echo=FALSE, results="hide"}
+rm(counts, all.human)
+gc()
 ```
 
 # Reading in mouse data
@@ -158,54 +170,66 @@ mm.files <- c(
     "GSM3635316_mouse_t_2_3_raw_counts.tsv.gz",
     "GSM3635317_mouse_t_2_4_raw_counts.tsv.gz"
 )
-all.mouse <- lapply(file.path(temp, mm.files), FUN)
-sapply(all.mouse, function(x) dim(x$mat))
+
+all.mouse <- lapply(file.path(temp, mm.files), readSparseCounts)
+all.mouse <- lapply(all.mouse, t)
+t(sapply(all.mouse, dim))
 ```
 
 We verify that the gene order is the same, and combine the counts.
 
 ```{r}
-stopifnot(length(unique(lapply(all.mouse, function(x) rownames(x$mat))))==1L)
-counts <- do.call(cbind, lapply(all.mouse, function(x) x$mat))
+stopifnot(length(unique(lapply(all.mouse, rownames)))==1L)
+counts <- do.call(cbind, all.mouse)
 dim(counts)
 ```
 
-We do the same thing with the column metadata.
+We derive some metadata from each file name and apply them to all of the constituent barcodes.
 
 ```{r}
-tissue <- vapply(strsplit(mm.files, "_"), "[", i=3, "")
-animal <- vapply(strsplit(mm.files, "_"), "[", i=4, "")
-replicate <- vapply(strsplit(mm.files, "_"), "[", i=5, "")
-barcode <- lapply(all.mouse, function(x) x$label)
+separated <- strsplit(mm.files, "_")
 
-animal <- paste(rep(tissue, times = lengths(barcode)), rep(animal, times = lengths(barcode)), sep = "_")
-replicate <- rep(replicate, times = lengths(barcode))
-library <- paste(animal, replicate, sep = "_")
+tissue <- vapply(separated, "[", i=3, "")
+animal <- vapply(separated, "[", i=4, "")
+replicate <- vapply(separated, "[", i=5, "")
+barcode <- lapply(all.mouse, colnames)
+
+animal <- rep(sprintf("%s_%s", tissue, animal), lengths(barcode))
+replicate <- rep(replicate, lengths(barcode))
+library <- sprintf("%s_%s", animal, replicate)
 tissue <- rep(ifelse(tissue == "t", "tumor", "healthy"), times = lengths(barcode))
 barcode <- unlist(barcode)
 
-library(S4Vectors)
-coldata <- data.frame(library=library, animal = animal, replicate = replicate, tissue=tissue, barcode=barcode)
+coldata <- DataFrame(Library=library, Barcode=barcode, Animal = animal, 
+    Run = replicate, Tissue=tissue)
+coldata
 ```
 
 We next add additional metadata for a subset of cells that were used in the original paper.
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
 
 ```{r}
 bfc <- BiocFileCache(ask=FALSE)
 tarball <- bfcrpath(bfc, 
-    "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127465/suppl/GSE127465_mouse_cell_metadata_15939x12.tsv.gz")
+    file.path("https://ftp.ncbi.nlm.nih.gov/geo/series",
+        "GSE127nnn/GSE127465/suppl",
+        "GSE127465_mouse_cell_metadata_15939x12.tsv.gz"))
 
-metadata <- read.table(tarball, sep = "\t", header = TRUE, check.names = FALSE)
-colData <- merge(coldata, metadata, by.x = c("library", "barcode"), by.y = c("Library", "Barcode"))
-colData <- DataFrame(colData)
-colData
+metadata <- read.delim(tarball, stringsAsFactors=FALSE, check.names = FALSE)
+metadata <- DataFrame(metadata, check.names=FALSE)
+metadata
 ```
 
-We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+We merge this with our file name-derived metadata:
 
 ```{r}
-keep <- grep("counts|cell type|subset|^x$|^y$", colnames(colData))
-colData <- colData[, c(1:5, keep)]
+keys <- c("Library", "Barcode")
+m <- match(coldata[,keys], metadata[,keys])
+coldata$Used <- !is.na(m)
+
+discard <- c(keys, "Tumor or healthy", "Biological replicate")
+colData <- cbind(coldata, metadata[m,setdiff(colnames(metadata), discard)])
+colData
 ```
 
 We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.

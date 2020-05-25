@@ -16,7 +16,8 @@
 #' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 #' Note that this is only performed if \code{ensembl=TRUE}.
 #' 
-#' If \code{filter=TRUE}, only cells that have been used in the original analysis are returned. In this case, the returned object will also contain coordinates of a SPRING representation in \code{reducedDims()}.
+#' If \code{filter=TRUE}, only cells that have been used in the original analysis are returned.
+#' In this case, the returned object will also contain coordinates of a SPRING representation in its \code{\link{reducedDims}}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/zilionis-lung}.
@@ -36,22 +37,25 @@
 #' sce.mouse <- ZilionisLungData("mouse")
 #' 
 #' @export
-#' @importFrom SummarizedExperiment rowData
+#' @importFrom SummarizedExperiment colData
+#' @importFrom SingleCellExperiment reducedDim
 ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE, filter=FALSE) {
   version <- "2.4.0"
   which <- match.arg(which)
   sce <- .create_sce(file.path("zilionis-lung", version), has.rowdata=FALSE, suffix=which)
   
   if(filter) {
-    # Subset to cells from the original analysis
-    keep <- !is.na(colData(sce)$Total.counts)
-    sce <- sce[, keep]
-    
-    # Add spring representation
-    which_x <- grep("^x_.*_all|^x$", colnames(colData(sce)))
-    which_y <- grep("^y_.*_all|^y$", colnames(colData(sce)))
-    spring_rep <- as.matrix(colData(sce)[, c(which_x, which_y)])
-    reducedDims(sce) <- list("SPRING" = spring_rep)
+      # Subset to cells from the original analysis
+      keep <- !is.na(colData(sce)$Total.counts)
+      sce <- sce[, keep]
+      
+      # Add spring representation
+      which_x <- grep("^x_.*_all|^x$", colnames(colData(sce)))
+      which_y <- grep("^y_.*_all|^y$", colnames(colData(sce)))
+      spring_rep <- as.matrix(colData(sce)[, c(which_x, which_y)])
+      reducedDims(sce, "SPRING") <- spring_rep
+
+      colData(sce) <- colData(sce)[,-c(which_x, which_y)]
   }
   
   .convert_to_ensembl(sce, 
