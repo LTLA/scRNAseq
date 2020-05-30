@@ -141,7 +141,7 @@ We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`
 path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts-human.rds"))
-saveRDS(coldata, file=file.path(path, "coldata-human.rds"))
+saveRDS(colData, file=file.path(path, "coldata-human.rds"))
 ```
 
 ```{r, echo=FALSE, results="hide"}
@@ -238,7 +238,7 @@ We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`
 path <- file.path("scRNAseq", "zilionis-lung", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(counts, file=file.path(path, "counts-mouse.rds"))
-saveRDS(coldata, file=file.path(path, "coldata-mouse.rds"))
+saveRDS(colData, file=file.path(path, "coldata-mouse.rds"))
 ```
 
 # Session information
