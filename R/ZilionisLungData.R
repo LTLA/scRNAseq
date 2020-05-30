@@ -57,8 +57,8 @@ ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=
     if (which=="human") {
         which.x <- grep("^x_", cn)
         which.y <- grep("^y_", cn)
-        grouping.x <- sub("^x_", cn[which.x])
-        grouping.y <- sub("^y_", cn[which.y])
+        grouping.x <- sub("^x_", "", cn[which.x])
+        grouping.y <- sub("^y_", "", cn[which.y])
         stopifnot(identical(grouping.x, grouping.y)) # sanity check.
 
         all.dims <- list()
