@@ -2,8 +2,16 @@
 \title{scRNAseq News}
 \encoding{UTF-8}
 
+\section{Version 2.4.0}{\itemize{
+\item Added the Zilionis Lung dataset. 
+}}
+
 \section{Version 2.2.0}{\itemize{
 \item Removed deprecated inbuilt datasets.
+
+\item Added the Paul HSC dataset.
+
+\item Added a dedicated getter for the ERCC concentrations.
 }}
 
 \section{Version 2.0.0}{\itemize{
