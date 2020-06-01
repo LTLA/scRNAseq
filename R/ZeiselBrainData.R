@@ -37,7 +37,7 @@
 #' sce <- ZeiselBrainData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment splitAltExps altExp<-
+#' @importFrom SingleCellExperiment splitAltExps altExp altExp<-
 #' @importFrom SummarizedExperiment rowData rowData<-
 #' @importFrom BiocGenerics cbind
 ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {

@@ -15,6 +15,7 @@ NeedsCompilation: no
 Depends: 
     SingleCellExperiment
 Imports:
+    utils,
     methods,
     BiocGenerics,
     S4Vectors,

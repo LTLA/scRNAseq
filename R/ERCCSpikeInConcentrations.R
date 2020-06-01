@@ -25,6 +25,7 @@
 #' df <- ERCCSpikeInConcentrations()
 #' 
 #' @export
+#' @importFrom utils read.delim
 #' @importFrom SingleCellExperiment splitAltExps
 ERCCSpikeInConcentrations <- function(volume = NULL, dilution = NULL, mix=c("1", "2")) {
     version <- "2.0.0"
