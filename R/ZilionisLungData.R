@@ -72,7 +72,7 @@ ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=
         reducedDim(sce, "SPRING") <- cbind(x=cd[,which.x], y=cd[,which.y])
     } 
 
-    colData(sce) <- colData(sce)[,-c(which_x, which_y)]
+    colData(sce) <- colData(sce)[,-c(which.x, which.y)]
     .convert_to_ensembl(sce, 
         ensembl=ensembl,
         species=if (which=="human") "Hs" else "Mm",
