@@ -122,9 +122,9 @@ test_that("ZeiselBrainData works", {
 })
 
 test_that("ZilionisBrianData works", {
-    CHECK(ZeiselBrainData(ensembl=TRUE))
+    CHECK(ZilionisLungData(ensembl=TRUE))
 
-    CHECK(ZeiselBrainData("mouse", ensembl=TRUE))
+    CHECK(ZilionisLungData("mouse", ensembl=TRUE))
 })
 
 test_that("ERCCSpikeInConcentrations works", {
