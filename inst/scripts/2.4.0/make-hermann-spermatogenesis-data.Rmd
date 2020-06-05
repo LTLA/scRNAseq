@@ -1,0 +1,206 @@
+---
+title: Processing the Hermann spermatogenesis dataset for RNA velocity analysis
+author: Charlotte Soneson
+date: "June 5, 2020"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE, eval=FALSE)
+```
+
+# Loading required R packages
+
+```{r}
+suppressPackageStartupMessages({
+    library(Biostrings)
+    library(BSgenome)
+    library(eisaR)
+    library(GenomicFeatures)
+    library(SummarizedExperiment)
+    library(tximeta)
+    library(rjson)
+    library(SingleCellExperiment)
+    library(dplyr)
+})
+```
+
+# Set working directory
+
+```{r}
+workdir <- tempdir()
+Sys.setenv(workdir = workdir)
+```
+
+# Downloading the reference sequences
+
+In order to perform the quantification of spliced and unspliced abundances with alevin [@srivastava2019alevin], we need to first prepare a suitable set of reference features (transcript isoforms and intronic sequences) to generate an index from. 
+We start by downloading the mouse reference genome and annotation gtf file from GENCODE.
+
+```{bash}
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M24/gencode.vM24.annotation.gtf.gz -P $workdir
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M24/GRCm38.primary_assembly.genome.fa.gz -P $workdir
+gunzip $workdir/GRCm38.primary_assembly.genome.fa.gz
+```
+
+# Extracting the transcript and intron sequences
+
+Next, we extract a GRanges object containing the genomic coordinates of each annotated transcript and intron. 
+
+```{r}
+gtf <- file.path(workdir, "gencode.vM24.annotation.gtf.gz")
+grl <- eisaR::getFeatureRanges(
+  gtf = gtf,
+  featureType = c("spliced", "intron"), 
+  intronType = "separate", 
+  flankLength = 90L, 
+  joinOverlappingIntrons = FALSE, 
+  verbose = TRUE
+)
+```
+
+After defining the genomic positions of all features of interest, we can extract the sequences of these, and write to a fasta file for later indexing with _Salmon_ [@patro2017salmon].
+In addition, we generate reference files that will be helpful for reading the data with _tximeta_ [@love2020tximeta] and splitting the joint count matrix into a spliced and an unspliced one.
+
+```{r}
+genome <- Biostrings::readDNAStringSet(
+    file.path(workdir, "GRCm38.primary_assembly.genome.fa")
+)
+names(genome) <- sapply(strsplit(names(genome), " "), .subset, 1)
+seqs <- GenomicFeatures::extractTranscriptSeqs(
+  x = genome, 
+  transcripts = grl
+)
+Biostrings::writeXStringSet(
+    seqs, filepath = file.path(workdir, "gencode.vM24.annotation.expanded.fa")
+)
+eisaR::exportToGtf(
+  grl, 
+  filepath = file.path(workdir, "gencode.vM24.annotation.expanded.gtf")
+)
+write.table(
+    metadata(grl)$corrgene, 
+    file = file.path(workdir, "gencode.vM24.annotation.expanded.features.tsv"),
+    row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t"
+)
+df <- eisaR::getTx2Gene(
+    grl, filepath = file.path(workdir, "gencode.vM24.annotation.expanded.tx2gene.tsv")
+)
+```
+
+# Creating the quantification index
+
+We use _Salmon_ to generate a quantification index based on the expanded fasta file assembled above.
+To improve the quantification, the full genome sequence is provided as a decoy sequence [@srivastava2019mm]. 
+This is recommended in order to avoid reads truly originating from intergenic regions being assigned to a suboptimal transcriptome location.
+
+```{bash}
+grep ">" $workdir/GRCm38.primary_assembly.genome.fa | cut -d ">" -f 2 | cut -d " " -f 1 > $workdir/GRCm38.primary_assembly.genome.chrnames.txt
+
+salmon index \
+-t <(cat $workdir/gencode.vM24.annotation.expanded.fa $workdir/GRCm38.primary_assembly.genome.fa) \
+-i $workdir/gencode.vM24.annotation.expanded.sidx --gencode -p 32 \
+-d $workdir/GRCm38.primary_assembly.genome.chrnames.txt
+```
+
+We also create a linked transcriptome for _tximeta_, to be able to add annotations when loading the quantified data into R.
+
+```{r}
+tximeta::makeLinkedTxome(
+  indexDir = file.path(workdir, "gencode.vM24.annotation.expanded.sidx"), 
+  source = "GENCODEtxintron", genome = "GRCm38", 
+  organism = "Mus musculus", release = "M24", 
+  fasta = file.path(workdir, "gencode.vM24.annotation.expanded.fa"), 
+  gtf = file.path(workdir, "gencode.vM24.annotation.expanded.gtf"), 
+  write = TRUE, jsonFile = file.path(workdir, "gencode.vM24.annotation.expanded.json")
+)
+```
+
+# Downloading the raw data
+
+We download the BAM file for the "AdultMouse3" sample (dataset GSE109033, sample ID GSM2928341) from @hermann2018spermatogenesis from SRA, and convert the downloaded BAM file into FASTQ files using the [bamtofastq](https://github.com/10XGenomics/bamtofastq) utility.
+
+```{bash}
+wget https://sra-pub-src-1.s3.amazonaws.com/SRR6459157/AdultMouse_Rep3_possorted_genome_bam.bam.1 -P $workdir
+mv $workdir/AdultMouse_Rep3_possorted_genome_bam.bam.1 $workdir/AdultMouse_Rep3_possorted_genome_bam.bam
+bamtofastq --reads-per-fastq=500000000 $workdir/AdultMouse_Rep3_possorted_genome_bam.bam $workdir/FASTQtmp
+mv $workdir/FASTQtmp/Ad-Ms-Total-Sorted_20k_count_MissingLibrary_1_HK2GNBBXX/bamtofastq_S1_L006_I1_001.fastq.gz $workdir/AdultMouseRep3_S1_L001_I1_001.fastq.gz
+mv $workdir/FASTQtmp/Ad-Ms-Total-Sorted_20k_count_MissingLibrary_1_HK2GNBBXX/bamtofastq_S1_L006_R1_001.fastq.gz $workdir/AdultMouseRep3_S1_L001_R1_001.fastq.gz
+mv $workdir/FASTQtmp/Ad-Ms-Total-Sorted_20k_count_MissingLibrary_1_HK2GNBBXX/bamtofastq_S1_L006_R2_001.fastq.gz $workdir/AdultMouseRep3_S1_L001_R2_001.fastq.gz
+```
+
+# Quantifying spliced and unspliced abundances
+
+Next, we run _alevin_ to obtain spliced and unspliced gene-level counts for each gene and cell.
+
+```{bash}
+salmon alevin -l ISR -i $workdir/gencode.vM24.annotation.expanded.sidx \
+-1 $workdir/AdultMouseRep3_S1_L001_R1_001.fastq.gz \
+-2 $workdir/AdultMouseRep3_S1_L001_R2_001.fastq.gz \
+-o $workdir/alevin_out -p 36 \
+--tgMap $workdir/gencode.vM24.annotation.expanded.tx2gene.tsv \
+--chromium --dumpFeatures --expectCells 1850
+```
+
+# Importing quantifications into R
+
+We use _tximeta_ to import the quantification files into R, after loading the linked transcriptome created previously.
+
+```{r}
+tximeta::loadLinkedTxome(file.path(workdir, "gencode.vM24.annotation.expanded.json"))
+txi <- tximeta::tximeta(coldata = data.frame(
+  names = "AdultMouseRep3",
+  files = file.path(workdir, "alevin_out/alevin/quants_mat.gz"), 
+  stringsAsFactors = FALSE
+), type = "alevin")
+```
+
+The txi object contains a single assay ('counts') containing both spliced and unspliced abundances. 
+We need to split this into two matrices, one with spliced and one with unspliced abundances, with corresponding rows. 
+This can be done using the `splitSE()` function from _tximeta_, providing the data frame linking spliced and unspliced gene identifiers that we created above. 
+
+```{r}
+cg <- read.delim(file.path(workdir, "gencode.vM24.annotation.expanded.features.tsv"),
+                 header = TRUE, as.is = TRUE)
+## Rename the 'intron' column 'unspliced' to make assay names compatible with scVelo
+colnames(cg)[colnames(cg) == "intron"] <- "unspliced"
+txis <- tximeta::splitSE(txi, cg, assayName = "counts")
+```
+
+Next, we download cell type labels provided by the data generators and add to the colData of the created object.
+The cloupe file generated by the authors was downloaded from https://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8 and loaded into the loupe cell browser, from which cell type labels were exported into a file named "Spermatogenesis_Loupe_CellTypes.csv". 
+
+```{r}
+ctp <- read.csv("Spermatogenesis_Loupe_CellTypes.csv", header = TRUE, as.is = TRUE)
+## Keep only Replicate 3
+ctp <- ctp %>% dplyr::filter(grepl("-3", Barcode)) %>%
+  dplyr::mutate(index = gsub("-3", "", Barcode)) %>%
+  dplyr::rename(celltype = Cell.Types) %>%
+  dplyr::select(index, celltype)
+txis$celltype <- ctp$celltype[match(colnames(txis), ctp$index)]
+```
+
+
+Finally, we save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "hermann-spermatogenesis", "2.4.0")
+dir.create(path, showWarnings = FALSE, recursive = TRUE)
+saveRDS(assay(txis, "spliced"), file = file.path(path, "spliced.rds"))
+saveRDS(assay(txis, "unspliced"), file = file.path(path, "unspliced.rds"))
+saveRDS(colData(txis), file = file.path(path, "coldata.rds"))
+```
+
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References

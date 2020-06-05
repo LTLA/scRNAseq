@@ -63,6 +63,7 @@ No further reprocessing has been performed other than some cross-checks betweeh 
 |@chen2017singlecell    | Mouse brain      | 14437             | `ChenBrainData()` |
 |@grun2016denovo        | Mouse haematopoietic stem cells | 1915 | `GrunHSCData()` | 
 |@grun2016denovo        | Human pancreas   | 1728              | `GrunPancreasData()` |
+|@hermann2018spermatogenesis | Mouse spermatogenesis | 2325    | `HermannSpermatogenesisData()` |
 |@kolodziejczyk2015singlecell | Mouse mebryonic stem cells | 704 | `KolodziejczykESCData()` |
 |@lamanno2016molecular  | Human embryonic stem cells | 1715    | `LaMannoBrainData('human-es')` |
 |@lamanno2016molecular  | Human embryonic midbrain   | 1977    | `LaMannoBrainData('human-embryo')` |
