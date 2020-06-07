@@ -12,8 +12,8 @@ A \linkS4class{DataFrame} where each row corresponds to a dataset, containing th
 \item \code{Reference}, a Markdown-formatted citation to \code{scripts/ref.bib} in the \pkg{scRNAseq} installation directory.
 \item \code{Taxonomy}, an identifier for the organism.
 \item \code{Part}, the part of the organism being studied.
-\item \code{Number}, the total number of cells.
-\item \code{Call}, the relevant R call required to generate the dataset.
+\item \code{Number}, the total number of cells in the dataset.
+\item \code{Call}, the relevant R call required to construct the dataset.
 }
 }
 \description{
@@ -21,8 +21,8 @@ Summary information for all available datasets in the \pkg{scRNAseq} package.
 }
 \details{
 A study may contribute multiple datasets if they cannot be reasonably combined (e.g., different species).
-If the authors provided more cells than were used in the analysis, 
-the total number of cells prior to author filtering is reported.
+The reported number of cells refers only to the dataset as it is stored in \pkg{scRNAseq};
+this may be different to the number of cells used by the authors in their analysis, e.g., due to filtering.
 }
 \examples{
 listDatasets()
