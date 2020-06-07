@@ -11,7 +11,7 @@ bibliography: ../ref.bib
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
 library(BiocStyle)
-knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE, eval=FALSE)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
 # Loading required R packages
