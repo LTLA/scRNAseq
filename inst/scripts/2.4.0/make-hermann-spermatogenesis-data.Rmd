@@ -94,7 +94,7 @@ df <- eisaR::getTx2Gene(
 
 # Creating the quantification index
 
-We use _Salmon_ to generate a quantification index based on the expanded fasta file assembled above.
+We use _Salmon_ (v1.2.0, https://github.com/COMBINE-lab/salmon/releases/tag/v1.2.0) to generate a quantification index based on the expanded fasta file assembled above.
 To improve the quantification, the full genome sequence is provided as a decoy sequence [@srivastava2019mm]. 
 This is recommended in order to avoid reads truly originating from intergenic regions being assigned to a suboptimal transcriptome location.
 
