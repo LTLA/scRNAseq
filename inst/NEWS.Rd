@@ -4,6 +4,8 @@
 
 \section{Version 2.4.0}{\itemize{
 \item Added the Zilionis Lung dataset. 
+
+\item Added the Hermann Spermatogenesis dataset.
 }}
 
 \section{Version 2.2.0}{\itemize{

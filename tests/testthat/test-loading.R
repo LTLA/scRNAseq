@@ -37,6 +37,10 @@ test_that("GrunPancreasData works", {
     CHECK(GrunPancreasData(ensembl=TRUE))
 })
 
+test_that("HermannSpermatogenesisData works", {
+    CHECK(HermannSpermatogenesisData())
+})
+
 test_that("KolodziejczykESCData works", {
     out <- KolodziejczykESCData()
     CHECK(out)
