@@ -2,8 +2,13 @@
 #'
 #' Obtain the mouse spermatogenesis single-cell RNA-seq data from Hermann et al. (2018).
 #'
+#' @param strip Logical scalar indicating whether to strip the \code{.X} notation from the row names.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' Only used if \code{strip=TRUE}.
+#'
 #' @details
-#' Column metadata contains cell types provided by the data generators via https://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8.
+#' Column metadata contains cell types provided by the data generators
+#' at \url{https://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/hermann-spermatogenesis}.
@@ -21,8 +26,15 @@
 #' sce <- HermannSpermatogenesisData()
 #' 
 #' @export
-HermannSpermatogenesisData <- function() {
-  version <- "2.4.0"
-  sce <- .create_sce(file.path("hermann-spermatogenesis", version), assays = c("spliced", "unspliced"), 
-                     has.rowdata=FALSE)
+HermannSpermatogenesisData <- function(strip=FALSE, location=FALSE) {
+    version <- "2.4.0"
+    sce <- .create_sce(file.path("hermann-spermatogenesis", version), 
+        assays = c("spliced", "unspliced"), has.rowdata=FALSE)
+  
+    if (strip) {
+        rownames(sce) <- sub("\\..*", "", rownames(sce))
+        sce <- .define_location_from_ensembl(sce, species="Mm", location=location)
+    }
+
+    sce 
 }

@@ -131,6 +131,10 @@ test_that("ZilionisBrianData works", {
     CHECK(ZilionisLungData("mouse", ensembl=TRUE))
 })
 
+test_that("HermannSpermatogenesisData works", {
+    CHECK(HermannSpermatogenesisData(strip=TRUE, location=TRUE))
+})
+
 test_that("ERCCSpikeInConcentrations works", {
     table <- ERCCSpikeInConcentrations()
     expect_s4_class(table, "DFrame")

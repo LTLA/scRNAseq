@@ -4,7 +4,13 @@
 \alias{HermannSpermatogenesisData}
 \title{Obtain the Hermann spermatogenesis data}
 \usage{
-HermannSpermatogenesisData()
+HermannSpermatogenesisData(strip = FALSE, location = FALSE)
+}
+\arguments{
+\item{strip}{Logical scalar indicating whether to strip the \code{.X} notation from the row names.}
+
+\item{location}{Logical scalar indicating whether genomic coordinates should be returned.
+Only used if \code{strip=TRUE}.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with two matrices, containing spliced and unspliced counts, respectively.
@@ -13,7 +19,8 @@ A \linkS4class{SingleCellExperiment} object with two matrices, containing splice
 Obtain the mouse spermatogenesis single-cell RNA-seq data from Hermann et al. (2018).
 }
 \details{
-Column metadata contains cell types provided by the data generators via https://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8.
+Column metadata contains cell types provided by the data generators
+at \url{ttps://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/hermann-spermatogenesis}.
