@@ -33,7 +33,10 @@ HermannSpermatogenesisData <- function(strip=FALSE, location=FALSE) {
   
     if (strip) {
         rownames(sce) <- sub("\\..*", "", rownames(sce))
-        sce <- .define_location_from_ensembl(sce, species="Mm", location=location)
+
+        # We know we mapped it to Gencode vM24 --> Ensembl 99, 
+        # hence the hard-coded AnnotationHub ID.
+        sce <- .define_location_from_ensembl(sce, ahub.id="AH78811", location=location)
     }
 
     sce 
