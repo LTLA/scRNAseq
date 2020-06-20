@@ -45,6 +45,13 @@ SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE) {
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
+    
+    ## This is wrong for one donor - donor "H1" has 100ul rather than 25ul
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 25, dilution = 40000)
+    spikedata <- spikedata[rownames(spike.exp), ]
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    altExp(sce, "ERCC") <- spike.exp
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

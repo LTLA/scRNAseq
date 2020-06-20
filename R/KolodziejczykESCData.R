@@ -44,5 +44,11 @@ KolodziejczykESCData <- function(remove.htseq=TRUE, location=TRUE) {
     spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
     sce <- splitAltExps(sce, spike.type, ref="endogenous")
 
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25e6)
+    spikedata <- spikedata[rownames(spike.exp), ]
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    altExp(sce, "ERCC") <- spike.exp
+
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

@@ -43,13 +43,6 @@ PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE, location=TRUE) {
     if (discard.multiple) {
         sce <- sce[!grepl(";", rownames(sce)),]
     }
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 10, dilution = 80000)
-    spikedata <- spikedata[rownames(spike.exp),]
-
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
-    altExp(sce, "ERCC") <- spike.exp
 
     .convert_to_ensembl(sce, 
         species="Mm", 
