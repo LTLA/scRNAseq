@@ -43,7 +43,7 @@ PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE, location=TRUE) {
     if (discard.multiple) {
         sce <- sce[!grepl(";", rownames(sce)),]
     }
-    
+
     .convert_to_ensembl(sce, 
         species="Mm", 
         symbols=rownames(sce),

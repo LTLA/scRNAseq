@@ -43,6 +43,11 @@ TasicBrainData <- function(ensembl=FALSE, location=TRUE) {
 
     status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 100, dilution = 1000000)
+    spikedata <- spikedata[rownames(spike.exp), ]
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    altExp(sce, "ERCC") <- spike.exp
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

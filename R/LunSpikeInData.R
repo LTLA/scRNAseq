@@ -54,5 +54,11 @@ LunSpikeInData <- function(which=c("416b", "tropho"), split.oncogene=FALSE, loca
 
     sce <- splitAltExps(sce, spike.type, ref="endogenous")
 
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 100, dilution = 3e6)
+    spikedata <- spikedata[rownames(spike.exp), ]
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    altExp(sce, "ERCC") <- spike.exp
+
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

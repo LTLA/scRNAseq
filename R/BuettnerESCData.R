@@ -42,6 +42,13 @@ BuettnerESCData <- function(remove.htseq=TRUE, location=TRUE) {
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 1000)
+    spikedata <- spikedata[rownames(spike.exp),]
+
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
+    altExp(sce, "ERCC") <- spike.exp
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

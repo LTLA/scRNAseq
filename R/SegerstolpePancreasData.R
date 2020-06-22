@@ -13,7 +13,10 @@
 #' This contains information such as the cell type labels and patient status.
 #'
 #' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
-#'
+#' Estimated numbers of spike-in molecules are provided in the \code{\link{rowData}}
+#' of this altExp. These concentrations are incorrect for donor H1, as 100μL
+#' of spike-in mixture were added for this donor, rather than 25μL for all others.
+#' 
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 #'
@@ -45,6 +48,13 @@ SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE) {
 
     status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
     sce <- splitAltExps(sce, status, ref="endogenous")
+    
+    ## This is wrong for one donor - donor "H1" has 100ul rather than 25ul
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 25, dilution = 40000)
+    spikedata <- spikedata[rownames(spike.exp), ]
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    altExp(sce, "ERCC") <- spike.exp
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
