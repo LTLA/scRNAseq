@@ -3,9 +3,11 @@
 \encoding{UTF-8}
 
 \section{Version 2.4.0}{\itemize{
-\item Added the Zilionis Lung dataset. 
+\item Added the Zilionis Lung dataset (Jens Preussner).
 
-\item Added the Hermann Spermatogenesis dataset.
+\item Added the Hermann Spermatogenesis dataset (Charlotte Soneson).
+
+\item Added spike-in concentrations to the \code{altExp} \code{rowData} for various datasets (Alan O'Callaghan).
 }}
 
 \section{Version 2.2.0}{\itemize{
@@ -13,7 +15,7 @@
 
 \item Added the Paul HSC dataset.
 
-\item Added a dedicated getter for the ERCC concentrations.
+\item Added a dedicated getter for the ERCC concentrations (Alan O'Callaghan).
 }}
 
 \section{Version 2.0.0}{\itemize{
