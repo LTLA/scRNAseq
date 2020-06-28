@@ -4,9 +4,11 @@
 \alias{LengESCData}
 \title{Obtain the Leng ESC data}
 \usage{
-LengESCData(location = TRUE)
+LengESCData(ensembl = FALSE, location = TRUE)
 }
 \arguments{
+\item{ensembl}{Logical scalar indicating whether gene symbols should be converted to Ensembl annotation.}
+
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
@@ -16,8 +18,9 @@ A \linkS4class{SingleCellExperiment} object with a single matrix of normalized e
 Obtain the human embryonic stem cell single-cell RNA-seq data from Leng et al. (2015).
 }
 \details{
-Column metadata contains the cell line, experiment number and experimentally determined cell cycle phase for each cell,
+Column metadata contains the cell line, experiment number and experimentally determined cell cycle phase for each cell.
 
+If \code{ensembl=TRUE}, the gene symbols in the published annotation are converted to Ensembl.
 If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
