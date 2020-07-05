@@ -20,7 +20,7 @@ Obtain the mouse spermatogenesis single-cell RNA-seq data from Hermann et al. (2
 }
 \details{
 Column metadata contains cell types provided by the data generators
-at \url{ttps://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8}.
+at \url{https://data.mendeley.com/datasets/kxd5f8vpt4/1#file-fe79c10b-c42e-472e-9c7e-9a9873d9b3d8}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/hermann-spermatogenesis}.

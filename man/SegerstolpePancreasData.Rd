@@ -25,9 +25,8 @@ Column metadata were extracted from the \code{Characteristics} fields of the SDR
 This contains information such as the cell type labels and patient status.
 
 Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
-Estimated numbers of spike-in molecules are provided in the \code{\link{rowData}}
-of this altExp. These concentrations are incorrect for donor H1, as 100μL
-of spike-in mixture were added for this donor, rather than 25μL for all others.
+Estimated numbers of spike-in molecules are provided in the \code{\link{rowData}} of this entry. 
+Note that these concentrations are incorrect for donor H1, as 100 uL of spike-in mixture were added for this donor, rather than 25 uL for all others.
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
