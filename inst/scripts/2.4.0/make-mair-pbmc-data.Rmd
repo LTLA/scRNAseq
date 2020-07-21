@@ -1,0 +1,121 @@
+---
+title: "Processing Mair-2020 data (One-SENSE paper)"
+author: "Stephany Orjuela"
+date: "June 24, 2020"
+output: 
+ BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r setup, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+Source of data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135325
+
+I download all the `*Combined_PBMC_AbSeq*.csv.gz` files which contain the data for figure 3A.
+
+# Download the data
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/samples/",
+    "GSM4005nnn/GSM4005486/suppl/")
+Abseq_1 <- count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSM4005486_Combined_PBMC_AbSeq_1_DBEC_MolsPerCell_with_SampleTag.csv.gz"))
+
+
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/samples/",
+    "GSM4005nnn/GSM4005487/suppl/")
+Abseq_2 <- count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSM4005487_Combined_PBMC_AbSeq_2_DBEC_MolsPerCell_with_SampleTag.csv.gz"))
+```
+
+
+# Load data and process
+
+Code from original [paper](https://github.com/MairFlo/Targeted_transcriptomics/blob/master/Mair%20and%20Erickson%20R%20Script%20Part1%20(Seurat2.3).R)
+```{r}
+library(stringr)
+
+#these are different cartridges
+Abseq_1 <- read.csv(Abseq_1, sep = ',', header = TRUE, row.names = 1, check.names = FALSE)
+Abseq_2 <- read.csv(Abseq_2, sep = ',', header = TRUE, row.names = 1, check.names = FALSE)
+
+Abseq_1P <- t(Abseq_1[, str_detect(string = colnames(Abseq_1), pattern = 'pAbO')]) # 
+Abseq_1RNA <- (Abseq_1[, !str_detect(string = colnames(Abseq_1), pattern = 'pAbO')]) #
+Abseq_1RNA <- t(Abseq_1RNA[, !str_detect(string = colnames(Abseq_1RNA), pattern = 'Sample')]) # 
+dim(Abseq_1P)
+dim(Abseq_1RNA)
+
+Abseq_2P <- t(Abseq_2[, str_detect(string = colnames(Abseq_2), pattern = 'pAbO')]) # 
+Abseq_2RNA <- (Abseq_2[, !str_detect(string = colnames(Abseq_2), pattern = 'pAbO')]) #
+Abseq_2RNA <- t(Abseq_2RNA[, !str_detect(string = colnames(Abseq_2RNA), pattern = 'Sample')]) # 
+dim(Abseq_2P)
+dim(Abseq_2RNA)
+
+#- Sample Tag information
+Sample_Tag1 <- t(Abseq_1[, str_detect(string = colnames(Abseq_1), pattern = 'Sample_Name')]) # 
+dim(Sample_Tag1)
+Sample_Tag2 <- t(Abseq_2[, str_detect(string = colnames(Abseq_1), pattern = 'Sample_Name')]) # 
+dim(Sample_Tag2)
+
+#- Features - Proteins
+P_names <- sapply(X = str_split(string = rownames(Abseq_1P), pattern = '\\|'), 
+                  FUN = function(x) ifelse(x[1] == 'CD197', 
+                                           paste(paste(x[1], x[2], sep = '|'), x[3], sep = '_'),
+                                           paste(x[1], x[2], sep = '|'))) # Antigen|Gene (and clone for CD197 - CD197 is not unique (two different clones))
+rownames(Abseq_1P) <- paste0(P_names, '_P')
+rownames(Abseq_2P) <- paste0(P_names, '_P')
+
+#- Features - Genes
+RNA_names <- str_replace(string = rownames(Abseq_1RNA), pattern = '\\|[^(PolyA)]*',  replacement = '_')
+RNA_names <- str_replace(string = RNA_names, pattern = '_?$', replacement = '_RNA')
+rownames(Abseq_1RNA) <- RNA_names
+rownames(Abseq_2RNA) <- RNA_names
+```
+
+my code
+```{r}
+
+colnames(Abseq_1RNA) <- colnames(Abseq_1P) <- sprintf("%s-1",colnames(Abseq_1RNA))
+colnames(Abseq_2RNA) <- colnames(Abseq_2P) <- sprintf("%s-2",colnames(Abseq_2RNA))
+
+rna_counts <- cbind(Abseq_1RNA, Abseq_2RNA)
+adt_counts <- cbind(Abseq_1P, Abseq_2P)
+
+stopifnot(identical(ncol(rna_counts), ncol(adt_counts)))
+
+meta1 <- DataFrame(Sample = as.vector(t(Sample_Tag1)), 
+                         Sample_Tag = Abseq_1$Sample_Tag,
+                         Cart = "1")
+
+meta2 <- DataFrame(Sample = as.vector(t(Sample_Tag2)), 
+                         Sample_Tag = Abseq_2$Sample_Tag,
+                         Cart = "2")
+meta <- rbind(meta1,meta2)
+
+stopifnot(identical(ncol(rna_counts), nrow(meta)))
+```
+
+# Save for upload
+ 
+??
+ 
+```{r}
+repath <- file.path("CITEnREAPseq", "mair-pbmc")
+dir.create(repath, showWarnings=FALSE, recursive=TRUE)
+saveRDS(rna_counts, file=file.path(repath, "rna_counts.rds"))
+saveRDS(adt_counts, file=file.path(repath, "adt_counts.rds"))
+saveRDS(meta, file=file.path(repath, "coldata.rds"))
+```
+
+
+```{r}
+sessionInfo()
+```
+
+# References
