@@ -1,5 +1,5 @@
 ---
-title: "Processing Mair-2020 data (One-SENSE paper)"
+title: "Processing Mair-2020 CITEseq data (One-SENSE paper)"
 author: "Stephany Orjuela"
 date: "June 24, 2020"
 output: 
@@ -37,7 +37,7 @@ Abseq_2 <- count.file <- bfcrpath(bfc, file.path(base.url,
 
 # Load data and process
 
-Code from original [paper](https://github.com/MairFlo/Targeted_transcriptomics/blob/master/Mair%20and%20Erickson%20R%20Script%20Part1%20(Seurat2.3).R)
+[Code](https://github.com/MairFlo/Targeted_transcriptomics/blob/master/Mair%20and%20Erickson%20R%20Script%20Part1%20(Seurat2.3).R) from original paper [@mair2020citeseq]
 ```{r}
 library(stringr)
 
@@ -80,7 +80,7 @@ rownames(Abseq_2RNA) <- RNA_names
 
 my code
 ```{r}
-
+library(SingleCellExperiment)
 colnames(Abseq_1RNA) <- colnames(Abseq_1P) <- sprintf("%s-1",colnames(Abseq_1RNA))
 colnames(Abseq_2RNA) <- colnames(Abseq_2P) <- sprintf("%s-2",colnames(Abseq_2RNA))
 
@@ -103,10 +103,8 @@ stopifnot(identical(ncol(rna_counts), nrow(meta)))
 
 # Save for upload
  
-??
- 
 ```{r}
-repath <- file.path("CITEnREAPseq", "mair-pbmc")
+repath <- file.path("scRNAseq", "mair-pbmc", "2.4.0")
 dir.create(repath, showWarnings=FALSE, recursive=TRUE)
 saveRDS(rna_counts, file=file.path(repath, "rna_counts.rds"))
 saveRDS(adt_counts, file=file.path(repath, "adt_counts.rds"))
