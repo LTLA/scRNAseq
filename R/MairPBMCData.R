@@ -27,7 +27,7 @@
 #' @importFrom SingleCellExperiment splitAltExps reducedDim<- 
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom SingleCellExperiment SingleCellExperiment altExp altExpNames
-AztekinTailData <- function() {
+MairPBMCData <- function() {
   version <- "2.4.0"
   
   ##Something like this...
