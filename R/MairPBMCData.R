@@ -1,11 +1,14 @@
 #' Obtain the Mair CITE-seq data
 #'
-#' Obtain the Mair PBMC targetted CITE-seq data from Mair et al. (2020).
+#' Obtain the Mair PBMC targeted CITE-seq data from Mair et al. (2020).
 #'
 #' @details
+#' Samples are flow sorted Live CD45+ PBMCs from three different healthy donors.
+#' RNA counts correspond to 499 genes from the BD Rhapsody T Cell Expression Panel Hs
+#' (see Table S1 in paper for more details).
 #' Column metadata comes directly from the count tables in GSE135325, since there is no separate metadata.
-#' This contains information such as donor and batch.
-#'
+#' This contains information of the Donor, hashtag debarcoding classification, and cartridge of origin.
+#' 
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/mair-pbmc}.

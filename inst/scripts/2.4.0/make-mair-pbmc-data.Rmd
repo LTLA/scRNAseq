@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Download the data
 
-We obtain a single-cell RNA sequencing dataset of the mouse haematopoietic stem cells from @mair2020targeted.
+We obtain a single-cell RNA sequencing dataset of the human haematopoietic stem cells from @mair2020targeted.
 Counts for endogenous genes and antibody-derived tags are available from the Gene Expression Omnibus
 using the accession number [GSE13525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135325).
 Of particular interest are the `*Combined_PBMC_AbSeq*.csv.gz` files that contain the data for Figure 3A.
@@ -102,7 +102,7 @@ final.rna.mat <- cbind(ingested1$rna.mat, ingested2$rna.mat)
 dim(final.rna.mat)
 
 final.coldata <- rbind(ingested1$coldata, ingested2$coldata)
-final.coldata$Cart <- rep(as.character(1:2), 
+final.coldata$Cartridge <- rep(as.character(1:2), 
     c(nrow(ingested1$coldata), nrow(ingested2$coldata)))
 final.coldata
 
@@ -113,7 +113,7 @@ stopifnot(identical(nrow(final.coldata), ncol(final.rna.mat)))
 We also coerce all sample names to the same set of values to avoid later confusion.
 
 ```{r}
-final.names <- paste0(colnames(final.p.mat), "-", final.coldata$Cart)
+final.names <- paste0(colnames(final.p.mat), "-", final.coldata$Cartridge)
 rownames(final.coldata) <- colnames(final.p.mat) <- colnames(final.rna.mat) <- final.names
 head(final.names)
 ```
