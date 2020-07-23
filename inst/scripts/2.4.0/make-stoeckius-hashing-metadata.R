@@ -1,0 +1,32 @@
+write.csv(file="../../extdata/2.4.0/metadata-stoeckius-hashing.csv", 
+    data.frame(
+        Title = sprintf("Stoeckius %s counts", 
+            c("PBMC RNA", "PBMC HTO", "PBMC ADT-1", "PBMC ADT-2", "cell line RNA", "cell line HTO")),
+        Description = sprintf("%s count matrix for hashed %s in the Stoeckius single-cell RNA-seq dataset", 
+            c("RNA", "HTO", "First ADT", "Second ADT", "RNA", "HTO"),
+            rep(c("PBMCs", "cell lines"), c(4, 2))),
+        RDataPath = file.path("scRNAseq", "stoeckius", "2.4.0", 
+            c("pbmc_rna_counts.rds", "pbmc_hto_counts.rds", "pbmc_adt1_counts.rds", "pbmc_adt2_counts.rds",
+                "cell_rna_counts.rds", "cell_hto_counts.rds")),
+        BiocVersion="3.12",
+        Genome="hg19",
+        SourceType=c("TSV", "CSV", "CSV", "CSV", "TSV", "CSV"),
+        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE108313",
+        SourceVersion=c(
+            "GSM2895282_Hashtag-RNA.umi.txt.gz",
+            "GSM2895283_Hashtag-HTO-count.csv.gz",
+            "GSM2895284_Hashtag-ADT1-count.csv.gz",
+            "GSM2895284_Hashtag-ADT2-count.csv.gz",
+            "GSM3501446_MixCellLines-RNA.umi.txt.gz",
+            "GSM3501447_MixCellLines-HTO-counts.csv.gz"
+        ),
+        Species="Homo sapiens",
+        TaxonomyId="9606",
+        Coordinate_1_based=NA,
+        DataProvider="GEO",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass=c("dgCMatrix", "matrix", "matrix", "matrix", "dgCMatrix", "matrix"),
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)

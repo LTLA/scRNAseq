@@ -1,0 +1,99 @@
+---
+title: Processing the Stoeckius hashing dataset
+author: Aaron Lun
+date: 23 July 2020 
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the hashed PBMCs and cell lines from @stoeckius2018hashing.
+Counts for endogenous genes, ADTs and HTOs are available from the Gene Expression Omnibus
+using the accession number [GGSE108313](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE108313).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+pbmc.rna <- bfcrpath(bfc, file.path("https://ftp.ncbi.nlm.nih.gov/geo/samples",
+    "GSM2895nnn/GSM2895282/suppl/GSM2895282_Hashtag-RNA.umi.txt.gz"))
+pbmc.hto <- bfcrpath(bfc, file.path("https://ftp.ncbi.nlm.nih.gov/geo/samples",
+    "GSM2895nnn/GSM2895283/suppl/GSM2895283_Hashtag-HTO-count.csv.gz"))
+pbmc.adt1 <- bfcrpath(bfc, file.path("https://ftp.ncbi.nlm.nih.gov/geo/samples",
+    "GSM2895nnn/GSM2895284/suppl/GSM2895284_Hashtag-ADT1-count.csv.gz"))
+pbmc.adt2 <- bfcrpath(bfc, file.path("https://ftp.ncbi.nlm.nih.gov/geo/samples",
+    "GSM2895nnn/GSM2895284/suppl/GSM2895284_Hashtag-ADT2-count.csv.gz"))
+
+cell.rna <- bfcrpath(bfc, file.path("https://ftp.ncbi.nlm.nih.gov/geo/samples",
+    "GSM3501nnn/GSM3501446/suppl/GSM3501446_MixCellLines-RNA.umi.txt.gz"))
+cell.hto <- bfcrpath(bfc, file.path("https://ftp.ncbi.nlm.nih.gov/geo/samples",
+    "GSM3501nnn/GSM3501447/suppl/GSM3501447_MixCellLines-HTO-counts.csv.gz"))
+```
+
+We read the RNA counts into memory as sparse matrices,
+while the HTO and ADT counts are read in as dense matrices owing to, well, their density.
+
+```{r}
+library(scuttle)
+pbmc.rna.mat <- readSparseCounts(pbmc.rna, row.names=1)
+dim(pbmc.rna.mat)
+pbmc.hto.mat <- as.matrix(read.csv(pbmc.hto, row.names=1))
+dim(pbmc.hto.mat)
+pbmc.adt1.mat <- as.matrix(read.csv(pbmc.adt1, row.names=1))
+dim(pbmc.adt1.mat)
+pbmc.adt2.mat <- as.matrix(read.csv(pbmc.adt2, row.names=1))
+dim(pbmc.adt2.mat)
+
+cell.rna.mat <- readSparseCounts(cell.rna, row.names=1)
+dim(cell.rna.mat)
+cell.hto.mat <- t(as.matrix(read.csv(cell.hto, row.names=1)))
+dim(cell.hto.mat)
+```
+
+# Sanity checks
+
+Somehow, none of the matrices have the same set of columns!
+Incredible.
+This will need to be filtered out before use.
+
+```{r}
+length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.adt1.mat)))
+length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.adt2.mat)))
+length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.rna.mat)))
+length(intersect(colnames(cell.hto.mat), colnames(cell.rna.mat)))
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "stoeckius-hashing", "2.4.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+
+saveRDS(pbmc.rna.mat, file=file.path(path, "pbmc_rna_counts.rds"))
+saveRDS(pbmc.adt1.mat, file=file.path(path, "pbmc_adt1_counts.rds"))
+saveRDS(pbmc.adt2.mat, file=file.path(path, "pbmc_adt2_counts.rds"))
+saveRDS(pbmc.hto.mat, file=file.path(path, "pbmc_hto_counts.rds"))
+
+saveRDS(cell.rna.mat, file=file.path(path, "cell_rna_counts.rds"))
+saveRDS(cell.hto.mat, file=file.path(path, "cell_hto_counts.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
