@@ -73,6 +73,29 @@ length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.rna.mat)))
 length(intersect(colnames(cell.hto.mat), colnames(cell.rna.mat)))
 ```
 
+Even more fun is the fact that the PBMC dataset contains both human and mouse transcripts.
+Let's try to figure out which is which based on capitalization and the fact that the cell line data is human-only.
+Even this is not straightforward because the cell line data does not have the full set of human features!
+
+```{r}
+probably.human <- !grepl("[a-z]+", rownames(pbmc.rna.mat)) |
+    grepl("^hsa-", rownames(pbmc.rna.mat)) |
+    rownames(pbmc.rna.mat) %in% rownames(cell.rna.mat)
+summary(probably.human)
+head(rownames(pbmc.rna.mat)[probably.human])
+tail(rownames(pbmc.rna.mat)[probably.human])
+
+head(rownames(pbmc.rna.mat)[!probably.human])
+tail(rownames(pbmc.rna.mat)[!probably.human])
+```
+
+Well, whatever.
+
+```{r}
+pbmc.human.mat <- pbmc.rna.mat[probably.human,]
+pbmc.mouse.mat <- pbmc.rna.mat[!probably.human,]
+```
+
 # Saving to file 
 
 We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
@@ -81,7 +104,8 @@ We now save all of the relevant components to file for upload to `r Biocpkg("Exp
 path <- file.path("scRNAseq", "stoeckius-hashing", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 
-saveRDS(pbmc.rna.mat, file=file.path(path, "pbmc_rna_counts.rds"))
+saveRDS(pbmc.human.mat, file=file.path(path, "pbmc_human_counts.rds"))
+saveRDS(pbmc.mouse.mat, file=file.path(path, "pbmc_mouse_counts.rds"))
 saveRDS(pbmc.adt1.mat, file=file.path(path, "pbmc_adt1_counts.rds"))
 saveRDS(pbmc.adt2.mat, file=file.path(path, "pbmc_adt2_counts.rds"))
 saveRDS(pbmc.hto.mat, file=file.path(path, "pbmc_hto_counts.rds"))
