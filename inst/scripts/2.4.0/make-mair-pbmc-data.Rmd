@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Download the data
 
-We obtain a single-cell RNA sequencing dataset of the human haematopoietic stem cells from @mair2020targeted.
+We obtain a single-cell RNA sequencing dataset of the human PBMCs from @mair2020targeted.
 Counts for endogenous genes and antibody-derived tags are available from the Gene Expression Omnibus
 using the accession number [GSE13525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135325).
 Of particular interest are the `*Combined_PBMC_AbSeq*.csv.gz` files that contain the data for Figure 3A.
