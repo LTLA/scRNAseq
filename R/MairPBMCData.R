@@ -42,10 +42,11 @@ MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
     mode <- match.arg(mode, c("rna", "adt"), several.ok=TRUE)
     version <- "2.4.0"
     tag <- "mair-pbmc"
+    hub <- ExperimentHub()
 
     collated <- list()
     for (x in mode) {
-        collated[[x]] <- .create_sce(file.path(tag, version), 
+        collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
             has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
     }
 
@@ -59,8 +60,6 @@ MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
 
     sce <- collated[[1]]
     altExps(sce) <- collated[-1]
-
-    hub <- ExperimentHub()
     colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, "coldata.rds")][[1]] 
 
     sce
