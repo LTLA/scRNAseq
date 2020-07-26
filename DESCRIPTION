@@ -8,7 +8,8 @@ Authors@R: c(
     person("Aaron", "Lun", role=c("ctb", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
     person("Alan", "O'Callaghan", role="ctb"),
     person("Jens", "Preussner", role="ctb"),
-    person("Charlotte", "Soneson", role="ctb"))
+    person("Charlotte", "Soneson", role="ctb"),
+    person("Stephany", "Orjuela", role="ctb"))
 Description: Gene-level counts for a collection of public scRNA-seq datasets,
     provided as SingleCellExperiment objects with cell- and gene-level metadata.
 License: CC0
