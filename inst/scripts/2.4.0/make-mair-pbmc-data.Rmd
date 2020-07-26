@@ -128,11 +128,11 @@ repath <- file.path("scRNAseq", "mair-pbmc", "2.4.0")
 dir.create(repath, showWarnings=FALSE, recursive=TRUE)
 saveRDS(final.coldata, file=file.path(repath, "coldata.rds"))
 
-saveRDS(ingested1$rna.rowdata, file=file.path(repath, "rna_rowdata.rds"))
-saveRDS(final.rna.mat, file=file.path(repath, "rna_counts.rds"))
+saveRDS(ingested1$rna.rowdata, file=file.path(repath, "rowdata-rna.rds"))
+saveRDS(final.rna.mat, file=file.path(repath, "counts-rna.rds"))
 
-saveRDS(ingested1$p.rowdata, file=file.path(repath, "adt_rowdata.rds"))
-saveRDS(final.p.mat, file=file.path(repath, "adt_counts.rds"))
+saveRDS(ingested1$p.rowdata, file=file.path(repath, "rowdata-adt.rds"))
+saveRDS(final.p.mat, file=file.path(repath, "counts-adt.rds"))
 ```
 
 # Session info
