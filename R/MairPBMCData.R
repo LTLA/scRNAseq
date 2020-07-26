@@ -2,49 +2,66 @@
 #'
 #' Obtain the Mair PBMC targeted CITE-seq data from Mair et al. (2020).
 #'
-#' @details
-#' Samples are flow sorted Live CD45+ PBMCs from three different healthy donors.
-#' RNA counts correspond to 499 genes from the BD Rhapsody T Cell Expression Panel Hs
-#' (see Table S1 in paper for more details).
-#' Column metadata comes directly from the count tables in GSE135325, since there is no separate metadata.
-#' This contains information of the Donor, hashtag debarcoding classification, and cartridge of origin.
+#' @param mode Character vector specifying whether to return either or both the RNA and ADT counts.
+#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
+#' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
+#' @details
+#' Column metadata contains the donor identity and cartridge of origin.
+#' Some libraries may also be classified as multiplets or have undeterminate origins after hash tag debarcoding.
 #'
+#' If \code{ensembl=TRUE}, the gene symbols in the RNA data are converted to Ensembl IDs in the row names of the output object.
+#' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
+#'
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} for the RNA data.
+#' Note that this is only performed if \code{ensembl=TRUE}.
+#' 
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/mair-pbmc}.
 #' 
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts corresponding to the first \code{mode},
+#' with an optional alternative Experiment if there is a second \code{mode}.
 #'
-#' @author Aaron Lun
+#' @author
+#' Stephany Orjuela,
+#' with modifications from Aaron Lun
 #'
 #' @references
 #' Mair C et al. (2020).
-#' A Targeted Multi-omic Analysis Approach Measures Protein Expression and 
-#' Low-Abundance Transcripts on the Single-Cell Level.
-#' \emph{Cell Reports} 31(1), 107499
+#' A targeted multi-omic analysis approach measures protein expression and low-abundance transcripts on the single-cell level.
+#' \emph{Cell Rep.} 31, 107499
 #'
 #' @examples
 #' sce <- MairPBMCData()
 #' 
 #' @export
-#' @importFrom SingleCellExperiment splitAltExps reducedDim<- 
-#' @importFrom SummarizedExperiment colData colData<-
-#' @importFrom SingleCellExperiment SingleCellExperiment altExp altExpNames
-MairPBMCData <- function() {
-  version <- "2.4.0"
-  
-  ##Something like this...
-  path <- file.path("mair-pbmc", "2.4.0") #?
-  
-  rna_counts <- readRDS(file.path(path, "rna_counts.rds"))
-  adt_counts <- readRDS(file.path(path, "adt_counts.rds"))
-  meta <- readRDS(file.path(path, "coldata.rds"))
-  
-  sce <- SingleCellExperiment(list(counts = rna_counts))
-  colData(sce) <- meta
-  altExp(sce) <- SingleCellExperiment(list(counts=adt_counts))
-  colData(altExp(sce)) <- meta
-  altExpNames(sce) <- "ADT" 
-  
-  sce
+#' @importFrom ExperimentHub ExperimentHub
+#' @importFrom SummarizedExperiment colData<-
+#' @importFrom SingleCellExperiment SingleCellExperiment altExps 
+MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
+    mode <- match.arg(mode, c("rna", "adt"), several.ok=TRUE)
+    version <- "2.4.0"
+    tag <- "mair-pbmc"
+
+    collated <- list()
+    for (x in mode) {
+        collated[[x]] <- .create_sce(file.path(tag, version), 
+            has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
+    }
+
+    if ("rna" %in% names(collated)) {
+        collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
+            symbols=rowData(sce)$SYMBOL,
+            species="Hs",
+            ensembl=ensembl,
+            location=location)
+    }
+
+    sce <- collated[[1]]
+    altExps(sce) <- collated[-1]
+
+    hub <- ExperimentHub()
+    colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, "coldata.rds")][[1]] 
+
+    sce
 }
