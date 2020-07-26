@@ -1,0 +1,144 @@
+---
+title: "Processing Mair-2020 CITEseq data (One-SENSE paper)"
+author: "Stephany Orjuela"
+date: "June 24, 2020"
+output: 
+ BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r setup, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Download the data
+
+We obtain a single-cell RNA sequencing dataset of the human PBMCs from @mair2020targeted.
+Counts for endogenous genes and antibody-derived tags are available from the Gene Expression Omnibus
+using the accession number [GSE13525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135325).
+Of particular interest are the `*Combined_PBMC_AbSeq*.csv.gz` files that contain the data for Figure 3A.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/samples/",
+    "GSM4005nnn/GSM4005486/suppl/")
+Abseq_1 <- count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSM4005486_Combined_PBMC_AbSeq_1_DBEC_MolsPerCell_with_SampleTag.csv.gz"))
+
+base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/samples/",
+    "GSM4005nnn/GSM4005487/suppl/")
+Abseq_2 <- count.file <- bfcrpath(bfc, file.path(base.url,
+    "GSM4005487_Combined_PBMC_AbSeq_2_DBEC_MolsPerCell_with_SampleTag.csv.gz"))
+```
+
+# Processing the data
+
+We set up a function to process each of these files.
+This breaks up the data frame into the two matrices (RNA and ADT) as well as the sample-level metadata;
+it also harvests some row-level metadata from the feature names.
+
+```{r}
+library(S4Vectors)
+ingester <- function(fname) {
+    df <- read.csv(fname, row.names = 1, check.names = FALSE)
+    meta <- df[,tail(colnames(df), 2)]
+    mat <- t(as.matrix(df[,head(colnames(df), -2)]))
+
+    is.protein <- grepl("pAbO", rownames(mat))
+    P <- mat[is.protein,]
+    RNA <- mat[!is.protein,]
+
+    rna.rowdata <- strsplit(rownames(RNA), "\\|")
+    rna.rowdata <- DataFrame(do.call(rbind, rna.rowdata))
+    colnames(rna.rowdata) <- c("Symbol", "RefSeq", "Type")
+    rownames(RNA) <- with(rna.rowdata, paste0(Symbol, "_", ifelse(Type=="PolyA_1", Type, "RNA")))
+
+    p.rowdata <- strsplit(rownames(P), "\\|")
+    p.rowdata <- DataFrame(do.call(rbind, p.rowdata))[,1:3]
+    colnames(p.rowdata) <- c("Symbol", "Alternative", "ID")
+    rownames(P) <- with(p.rowdata, paste0(Symbol, "_", Alternative))
+
+    list(rna.mat=RNA, rna.rowdata=rna.rowdata, 
+        p.mat=P, p.rowdata=p.rowdata, 
+        coldata=DataFrame(meta))
+}
+```
+
+We run the ingester on each of the two files.
+
+```{r}
+ingested1 <- ingester(Abseq_1)
+dim(ingested1$rna.mat)
+dim(ingested1$p.mat)
+ingested1$coldata
+
+ingested2 <- ingester(Abseq_2)
+dim(ingested2$rna.mat)
+dim(ingested2$p.mat)
+ingested2$coldata
+```
+
+We check that the row metadata is consistent across both files.
+
+```{r}
+stopifnot(identical(ingested1$rna.rowdata, ingested2$rna.rowdata))
+stopifnot(identical(ingested1$p.rowdata, ingested2$p.rowdata))
+stopifnot(identical(colnames(ingested1$coldata), colnames(ingested2$coldata)))
+ingested1$p.rowdata
+ingested1$rna.rowdata
+```
+
+We then combine all of the pieces of information into one matrix per set of features and a common sample metadata dataframe.
+
+```{r}
+final.p.mat <- cbind(ingested1$p.mat, ingested2$p.mat)
+dim(final.p.mat)
+
+final.rna.mat <- cbind(ingested1$rna.mat, ingested2$rna.mat)
+dim(final.rna.mat)
+
+final.coldata <- rbind(ingested1$coldata, ingested2$coldata)
+final.coldata$Cartridge <- rep(as.character(1:2), 
+    c(nrow(ingested1$coldata), nrow(ingested2$coldata)))
+final.coldata
+
+stopifnot(identical(nrow(final.coldata), ncol(final.p.mat)))
+stopifnot(identical(nrow(final.coldata), ncol(final.rna.mat)))
+```
+
+We also coerce all sample names to the same set of values to avoid later confusion.
+
+```{r}
+final.names <- paste0(colnames(final.p.mat), "-", final.coldata$Cartridge)
+rownames(final.coldata) <- colnames(final.p.mat) <- colnames(final.rna.mat) <- final.names
+head(final.names)
+```
+
+# Save for upload
+ 
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+Note that it doesn't matter which row data we use, as they should be the same.
+
+```{r}
+repath <- file.path("scRNAseq", "mair-pbmc", "2.4.0")
+dir.create(repath, showWarnings=FALSE, recursive=TRUE)
+saveRDS(final.coldata, file=file.path(repath, "coldata.rds"))
+
+saveRDS(ingested1$rna.rowdata, file=file.path(repath, "rowdata-rna.rds"))
+saveRDS(final.rna.mat, file=file.path(repath, "counts-rna.rds"))
+
+saveRDS(ingested1$p.rowdata, file=file.path(repath, "rowdata-adt.rds"))
+saveRDS(final.p.mat, file=file.path(repath, "counts-adt.rds"))
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+# References
