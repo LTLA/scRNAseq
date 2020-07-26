@@ -77,7 +77,7 @@ StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
     collated <- list()
     for (m in mode) {
         collated[[m]] <- .create_sce(file.path("stoeckius-hashing", version), 
-            suffix=paste0(type, "_", m), has.coldata=FALSE)
+            suffix=paste0(type, "-", m), has.coldata=FALSE)
     }
 
     if (length(collated) > 1) {

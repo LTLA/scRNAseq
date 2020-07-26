@@ -104,14 +104,14 @@ We now save all of the relevant components to file for upload to `r Biocpkg("Exp
 path <- file.path("scRNAseq", "stoeckius-hashing", "2.4.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 
-saveRDS(pbmc.human.mat, file=file.path(path, "counts_pbmc_human.rds"))
-saveRDS(pbmc.mouse.mat, file=file.path(path, "counts_pbmc_mouse.rds"))
-saveRDS(pbmc.adt1.mat, file=file.path(path, "counts_pbmc_adt1.rds"))
-saveRDS(pbmc.adt2.mat, file=file.path(path, "counts_pbmc_adt2.rds"))
-saveRDS(pbmc.hto.mat, file=file.path(path, "counts_pbmc_hto.rds"))
+saveRDS(pbmc.human.mat, file=file.path(path, "counts-pbmc-human.rds"))
+saveRDS(pbmc.mouse.mat, file=file.path(path, "counts-pbmc-mouse.rds"))
+saveRDS(pbmc.adt1.mat, file=file.path(path, "counts-pbmc-adt1.rds"))
+saveRDS(pbmc.adt2.mat, file=file.path(path, "counts-pbmc-adt2.rds"))
+saveRDS(pbmc.hto.mat, file=file.path(path, "counts-pbmc-hto.rds"))
 
-saveRDS(cell.rna.mat, file=file.path(path, "counts_mixed_rna.rds"))
-saveRDS(cell.hto.mat, file=file.path(path, "counts_mixed_hto.rds"))
+saveRDS(cell.rna.mat, file=file.path(path, "counts-mixed-rna.rds"))
+saveRDS(cell.hto.mat, file=file.path(path, "counts-mixed-hto.rds"))
 ```
 
 # Session information
