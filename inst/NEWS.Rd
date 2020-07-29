@@ -7,6 +7,10 @@
 
 \item Added the Hermann Spermatogenesis dataset (Charlotte Soneson).
 
+\item Added the Mair PBMC dataset (Stephany Orjuela).
+
+\item Added the Stoeckius cell hashing dataset.
+
 \item Added spike-in concentrations to the \code{altExp} \code{rowData} for various datasets (Alan O'Callaghan).
 }}
 
