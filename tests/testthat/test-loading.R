@@ -135,6 +135,35 @@ test_that("HermannSpermatogenesisData works", {
     CHECK(HermannSpermatogenesisData(strip=TRUE, location=TRUE))
 })
 
+test_that("StoeckiusHashingData works", {
+    CHECK(StoeckiusHashingData(ensembl=TRUE))
+
+    CHECK(StoeckiusHashingData(mode=c("adt1", "hto"), ensembl=TRUE))
+
+    CHECK(out <- StoeckiusHashingData(mode=c("adt1", "adt2"), strip.metrics=FALSE))
+    expect_true("no_match" %in% rownames(out))
+
+    # Handles the human or mouse as a non-primary experiment.
+    CHECK(out <- StoeckiusHashingData(mode=c("hto", "human"), ensembl=TRUE))
+    expect_true(all(grepl("ENSG", rownames(altExp(out, "human")))))
+
+    CHECK(out <- StoeckiusHashingData(mode=c("adt1", "mouse"), ensembl=TRUE))
+    expect_true(all(grepl("ENSMUSG", rownames(altExp(out, "mouse")))))
+
+    # Repeating this for the cell line mixtures.
+    CHECK(StoeckiusHashingData(type="mixed", strip.metrics=FALSE))
+
+    CHECK(StoeckiusHashingData(type="mixed", ensembl=TRUE))
+})
+
+test_that("MairPBMCData works", {
+    CHECK(MairPBMCData(ensembl=TRUE))
+
+    CHECK(MairPBMCData(mode=c("adt", "rna"), ensembl=TRUE))
+
+    CHECK(MairPBMCData(mode="adt"))
+})
+
 test_that("ERCCSpikeInConcentrations works", {
     table <- ERCCSpikeInConcentrations()
     expect_s4_class(table, "DFrame")

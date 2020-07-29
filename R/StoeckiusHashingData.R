@@ -49,9 +49,14 @@
 #' \emph{Genome Biol.} 19, 224.
 #'
 #' @examples
-#' sce <- StoeckiusHashingData()
+#' sce.pbmc <- StoeckiusHashingData()
+#' sce.pbmc
+#'
+#' sce.mixed <- StoeckiusHashingData(type="mixed")
+#' sce.mixed
 #' 
 #' @export
+#' @importFrom utils head
 #' @importFrom SingleCellExperiment altExps<- 
 StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
     ensembl=FALSE, location=TRUE, strip.metrics=TRUE) 
@@ -59,25 +64,22 @@ StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
     version <- "2.4.0"
 
     type <- match.arg(type)
-    if (is.null(mode)) {
-        if (type=="pbmc") {
-            mode <- c("human", "mouse", "hto")
-        } else {
-            mode <- c("rna", "hto")
-        }
-    }
-
     if (type=="pbmc") {
         acceptable <- c("human", "mouse", "hto", "adt1", "adt2")
     } else {
         acceptable <- c("rna", "hto")
     }
-    mode <- match.arg(mode, acceptable, several.ok=TRUE)
+
+    if (is.null(mode)) {
+        mode <- head(acceptable, 3)
+    } else {
+        mode <- match.arg(mode, acceptable, several.ok=TRUE)
+    }
 
     collated <- list()
     for (m in mode) {
         collated[[m]] <- .create_sce(file.path("stoeckius-hashing", version), 
-            suffix=paste0(type, "-", m), has.coldata=FALSE)
+            suffix=paste0(type, "-", m), has.rowdata=FALSE, has.coldata=FALSE)
     }
 
     if (length(collated) > 1) {
@@ -96,7 +98,7 @@ StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
 
     for (i in intersect(names(convertible), names(collated))) {
         collated[[i]] <- .convert_to_ensembl(collated[[i]],
-            species=converted[i],
+            species=convertible[i],
             symbols=rownames(collated[[i]]),
             ensembl=ensembl,
             location=location)
