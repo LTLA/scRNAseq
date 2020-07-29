@@ -8,7 +8,7 @@ Reference,Taxonomy,Part,Number,Call
 @chen2017singlecell,10090,brain,14437,ChenBrainData()
 @grun2016denovo,10090,haematopoietic stem cells,1915,GrunHSCData()
 @grun2016denovo,9606,pancreas,1728,GrunPancreasData()
-@hermann2018spermatogenesis,10090,spermatogenic cells,HermannSpermatogenesisData()
+@hermann2018spermatogenesis,10090,spermatogenic cells,2325,HermannSpermatogenesisData()
 @kolodziejczyk2015singlecell,10090,embryonic stem cells,704,KolodziejczykESCData()
 @lamanno2016molecular,9606,embryonic stem cells,1715,LaMannoBrainData('human-es')
 @lamanno2016molecular,9606,embryonic midbrain,1977,LaMannoBrainData('human-embryo')
