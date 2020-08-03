@@ -3,13 +3,17 @@
 \encoding{UTF-8}
 
 \section{Version 2.4.0}{\itemize{
-\item Added the Zilionis Lung dataset (Jens Preussner).
+\item Added the Zilionis lung dataset (Jens Preussner).
 
-\item Added the Hermann Spermatogenesis dataset (Charlotte Soneson).
+\item Added the Hermann spermatogenesis dataset (Charlotte Soneson).
 
 \item Added the Mair PBMC dataset (Stephany Orjuela).
 
 \item Added the Stoeckius cell hashing dataset.
+
+\item Added the Wu kidney snRNA-seq dataset.
+
+\item Added the Hu cortex snRNA-seq dataset.
 
 \item Added spike-in concentrations to the \code{altExp} \code{rowData} for various datasets (Alan O'Callaghan).
 }}

@@ -164,6 +164,18 @@ test_that("MairPBMCData works", {
     CHECK(MairPBMCData(mode="adt"))
 })
 
+test_that("HuCortexData works", {
+    CHECK(HuCortexData(ensembl=TRUE))
+
+    CHECK(HuCortexData(samples=c("cell-3T3")))
+
+    CHECK(HuCortexData(samples=c("cell-3T3", "nuclei-ctx-1")))
+})
+
+test_that("WuKidneyData works", {
+    CHECK(WuKidneyData(ensembl=TRUE))
+})
+
 test_that("ERCCSpikeInConcentrations works", {
     table <- ERCCSpikeInConcentrations()
     expect_s4_class(table, "DFrame")
