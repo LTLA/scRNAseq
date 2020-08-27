@@ -32,7 +32,7 @@
 #' @importFrom SingleCellExperiment splitAltExps
 KolodziejczykESCData <- function(remove.htseq=TRUE, location=TRUE) {
     version <- "2.0.0"
-    sce <- .create_sce(file.path("messmer-esc", version), has.rowdata=FALSE, has.coldata=FALSE)
+    sce <- .create_sce(file.path("kolodziejczyk-esc", version), has.rowdata=FALSE, has.coldata=FALSE)
 
     sce$culture <- sub(".*mES_([^_]+)_.*", "\\1", colnames(sce))
     sce$plate <- sub(".*mES_[^_]+_([^_]+)_.*", "\\1", colnames(sce))

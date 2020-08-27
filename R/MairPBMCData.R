@@ -36,7 +36,7 @@
 #' 
 #' @export
 #' @importFrom ExperimentHub ExperimentHub
-#' @importFrom SummarizedExperiment colData<-
+#' @importFrom SummarizedExperiment colData<- rowData
 #' @importFrom SingleCellExperiment SingleCellExperiment altExps 
 MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
     mode <- match.arg(mode, c("rna", "adt"), several.ok=TRUE)
@@ -52,7 +52,7 @@ MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
 
     if ("rna" %in% names(collated)) {
         collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
-            symbols=rowData(sce)$SYMBOL,
+            symbols=rowData(collated[["rna"]])$Symbol,
             species="Hs",
             ensembl=ensembl,
             location=location)
@@ -60,7 +60,7 @@ MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
 
     sce <- collated[[1]]
     altExps(sce) <- collated[-1]
-    colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, "coldata.rds")][[1]] 
+    colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, version, "coldata.rds")][[1]] 
 
     sce
 }
