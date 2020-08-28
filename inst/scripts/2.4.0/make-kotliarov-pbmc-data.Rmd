@@ -21,7 +21,7 @@ Counts for endogenous genes and antibody-derived tags (ADTs) are available from 
 
 Code used to analyze the data is available in the same link.
 
-Of particular interest is the `H1_day0_demultilexed_singlets.RDS` file, which is a Seurat object that contains demultiplexed counts (filtered for singlets). Demultiplexing was performed with hashtag-oligo counts, and verified with demuxlet. Counts available have not been normalized.
+Of particular interest is the `H1_day0_demultilexed_singlets.RDS` file, which is a Seurat object that contains demultiplexed counts (filtered for singlets). Demultiplexing was performed with hashtag-oligo counts, and verified with demuxlet. Counts available have not been filtered by QC or normalized.
 
 ```{r}
 library(BiocFileCache)
