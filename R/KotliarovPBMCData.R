@@ -61,24 +61,24 @@ KotliarovPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE
     version <- "2.4.0"
     tag <- "kotliarov-pbmc"
     hub <- ExperimentHub()
-  
+    
     collated <- list()
     for (x in mode) {
       collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
                                    has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
     }
-  
+    
     if ("rna" %in% names(collated)) {
       collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
-                                               symbols=rowData(sce)$SYMBOL,
+                                               symbols=rowData(collated[["rna"]])$Symbol,
                                                species="Hs",
                                                ensembl=ensembl,
                                                location=location)
     }
-  
+    
     sce <- collated[[1]]
     altExps(sce) <- collated[-1]
-    colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, "coldata.rds")][[1]] 
-  
+    colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, version, "coldata.rds")][[1]] 
+    
     sce
 }
