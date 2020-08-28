@@ -14,9 +14,6 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Load required package
-
-
 # Download the data
 
 We obtain a single-cell RNA sequencing dataset of the human PBMCs from @kotliarov2020citeseq.
