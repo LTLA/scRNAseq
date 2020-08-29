@@ -7,26 +7,24 @@
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
 #' @details
+#' This dataset contains 20 samples from 2 experimental batches, where each batch contains 5 high and 5 low responders. 
+#' The 10 samples per batch were mixed and distributed across the 6 lanes using a cell hashing approach.
 #' 
-#' 20 samples classified as high and low responders were divided into 2 experimental batches.
-#' Each batch contains 5 high and 5 low responders. 
-#' The 10 samples per batch are mixed and distributed across the 6 lanes in the plate.
-#' 
-#' Relevant column metadata contains the following columns: 
-#' * sample: Sample identifier with _d0.
-#' * sample_id: Sample identifier.
-#' * adjmfc.time: type of responder.
-#' * tenx_lane: for each batch (H1B) there are 6 lanes (e.g. H1B1ln1, ln2, ln3...).
-#' * batch: one of 1:2.
-#' * barcode_check: barcode identifier.
-#' * hash_ and hto_ columns: HTOdemux outputs.
-#' * DEMUXLET. columns: demuxlet outputs.
-#' * joint_classification_global: HTOdemux and demuxlet joint classification.
-#' * nGene: number of genes as defined in Seurat's CreateSeuratObject().
-#' * nUMI: number of UMIs, same as above.
-#' * pctMT: percent of mitocondrial reads. 
-#' Counts have not been filtered using the above 3 columns.
-#'  
+#' The column metadata contains the following fields:
+#' \itemize{
+#' \item \code{sample*}: identifiers for the sample of origin for each cell.
+#' \item \code{adjmfc.time}: type of responder for each sample.
+#' \item \code{tenx_lane}: 10X lane from which each cell was collected.
+#' \item \code{batch}: the batch of origin.
+#' \item \code{barcode_check}: barcode identifier.
+#' \item \code{hash_*} and \code{hto_*} columns: \pkg{HTOdemux} outputs.
+#' \item \code{DEMUXLET.*} columns: \pkg{demuxlet} outputs.
+#' \item \code{joint_classification_global}: \pkg{HTOdemux} and \pkg{demuxlet} joint classification.
+#' \item \code{nGene}: number of genes as defined from \pkg{Seurat}'s \code{CreateSeuratObject}.
+#' \item \code{nUMI}: number of UMIs as defined from \pkg{Seurat}'s \code{CreateSeuratObject}.
+#' \item \code{pctMT}: percent of mitochondrial reads as defined from \pkg{Seurat}'s \code{CreateSeuratObject}.
+#' }
+#' Note, no filtering has been performed based on the quality control metrics.
 #'
 #' If \code{ensembl=TRUE}, the gene symbols in the RNA data are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
@@ -64,21 +62,21 @@ KotliarovPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE
     
     collated <- list()
     for (x in mode) {
-      collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
-                                   has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
+        collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
+            has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
     }
     
     if ("rna" %in% names(collated)) {
-      collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
-                                               symbols=rowData(collated[["rna"]])$Symbol,
-                                               species="Hs",
-                                               ensembl=ensembl,
-                                               location=location)
+        collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
+            symbols=rowData(collated[["rna"]])$Symbol,
+            species="Hs",
+            ensembl=ensembl,
+            location=location)
     }
     
     sce <- collated[[1]]
     altExps(sce) <- collated[-1]
     colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, version, "coldata.rds")][[1]] 
-    
+
     sce
 }

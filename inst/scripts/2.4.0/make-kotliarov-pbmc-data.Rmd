@@ -21,13 +21,14 @@ Counts for endogenous genes and antibody-derived tags (ADTs) are available from 
 
 Code used to analyze the data is available in the same link.
 
-Of particular interest is the `H1_day0_demultilexed_singlets.RDS` file, which is a Seurat object that contains demultiplexed counts (filtered for singlets). Demultiplexing was performed with hashtag-oligo counts, and verified with demuxlet. Counts available have not been filtered by QC or normalized.
+Of particular interest is the `H1_day0_demultilexed_singlets.RDS` file, 
+which is a Seurat object that contains demultiplexed counts (filtered for singlets). 
+Demultiplexing was performed with HTO counts and verified with demuxlet. 
+Counts available have not been filtered by QC or normalized.
 
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-
-library(Seurat)
 contents <- bfcrpath(bfc,
     "https://nih.figshare.com/ndownloader/files/20706642")
 
@@ -36,21 +37,30 @@ seuratObj <- readRDS(contents)
 
 # Extract elements from Seurat object
 
-First we extract the RNA counts
+First we extract the RNA counts:
+
 ```{r}
 library(S4Vectors)
 rna.mat <- seuratObj@data
-coldata <- DataFrame(seuratObj@meta.data)
-rna.rowdata <- DataFrame(Symbol = rownames(rna.mat))
+dim(rna.mat)
 
+coldata <- DataFrame(seuratObj@meta.data)
+nrow(coldata)
+colnames(coldata)
+
+rna.rowdata <- DataFrame(Symbol = rownames(rna.mat))
+head(rna.rowdata)
 ```
 
-Then the ADT counts
+Then the ADT counts:
+
 ```{r}
 adt.mat <- seuratObj@assay$CITE@raw.data
-adt.rowdata <- DataFrame(Symbol = rownames(rna.mat))
-```
+dim(adt.mat)
 
+adt.rowdata <- DataFrame(Symbol = rownames(rna.mat))
+head(adt.rowdata)
+```
 
 # Save for upload
  
