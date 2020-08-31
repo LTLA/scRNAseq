@@ -23,6 +23,7 @@ Reference,Taxonomy,Part,Number,Call
 @macosko2015highly,10090,retina,49300,MacoskoRetinaData()
 @mahata2014singlecell,10090,T helper cells,96,ReprocessedTh2Data()
 @mair2020citeseq,9606,peripheral blood mononuclear cells,29033,MairPBMCData()
+@kotliarov2020citeseq,9606,peripheral blood mononuclear cells,58654,KotliarovPBMCData()
 @marques2016oligodendrocyte,10090,brain,5069,MarquesBrainData()
 @messmer2019transcriptional,9606,embryonic stem cells,1344,MessmerESCData()
 @muraro2016singlecell,9606,pancreas,3072,MuraroPancreasData()

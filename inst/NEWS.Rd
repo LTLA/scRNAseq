@@ -7,7 +7,7 @@
 
 \item Added the Hermann spermatogenesis dataset (Charlotte Soneson).
 
-\item Added the Mair PBMC dataset (Stephany Orjuela).
+\item Added the Mair and Kotliarov PBMC datasets (Stephany Orjuela).
 
 \item Added the Stoeckius cell hashing dataset.
 

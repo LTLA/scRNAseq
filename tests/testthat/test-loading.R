@@ -164,6 +164,14 @@ test_that("MairPBMCData works", {
     CHECK(MairPBMCData(mode="adt"))
 })
 
+test_that("KotliarovPBMCData works", {
+    CHECK(KotliarovPBMCData(ensembl=TRUE))
+
+    CHECK(KotliarovPBMCData(mode=c("adt", "rna"), ensembl=TRUE))
+
+    CHECK(KotliarovPBMCData(mode="adt"))
+})
+
 test_that("HuCortexData works", {
     CHECK(HuCortexData(ensembl=TRUE))
 
