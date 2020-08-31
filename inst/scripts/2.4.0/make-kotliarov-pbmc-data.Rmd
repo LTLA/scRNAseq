@@ -47,9 +47,6 @@ dim(rna.mat)
 coldata <- DataFrame(seuratObj@meta.data)
 nrow(coldata)
 colnames(coldata)
-
-rna.rowdata <- DataFrame(Symbol = rownames(rna.mat))
-head(rna.rowdata)
 ```
 
 Then the ADT counts:
@@ -57,9 +54,6 @@ Then the ADT counts:
 ```{r}
 adt.mat <- seuratObj@assay$CITE@raw.data
 dim(adt.mat)
-
-adt.rowdata <- DataFrame(Symbol = rownames(rna.mat))
-head(adt.rowdata)
 ```
 
 # Save for upload
@@ -70,11 +64,7 @@ We now save all of the relevant components to file for upload to `r Biocpkg("Exp
 repath <- file.path("scRNAseq", "kotliarov-pbmc", "2.4.0")
 dir.create(repath, showWarnings=FALSE, recursive=TRUE)
 saveRDS(coldata, file=file.path(repath, "coldata.rds"))
-
-saveRDS(rna.rowdata, file=file.path(repath, "rowdata-rna.rds"))
 saveRDS(rna.mat, file=file.path(repath, "counts-rna.rds"))
-
-saveRDS(adt.rowdata, file=file.path(repath, "rowdata-adt.rds"))
 saveRDS(adt.mat, file=file.path(repath, "counts-adt.rds"))
 ```
 

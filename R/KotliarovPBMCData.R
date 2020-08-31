@@ -63,12 +63,12 @@ KotliarovPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE
     collated <- list()
     for (x in mode) {
         collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
-            has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
+            has.rowdata=FALSE, has.coldata=FALSE, suffix=x)
     }
-    
+
     if ("rna" %in% names(collated)) {
         collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
-            symbols=rowData(collated[["rna"]])$Symbol,
+            symbols=rownames(collated[["rna"]]),
             species="Hs",
             ensembl=ensembl,
             location=location)
