@@ -173,6 +173,8 @@ test_that("KotliarovPBMCData works", {
 })
 
 test_that("HuCortexData works", {
+    skip_on_os("windows") # because 32-bit Windows CAN'T HANDLE THE TRUTH!
+
     CHECK(HuCortexData(ensembl=TRUE))
 
     CHECK(HuCortexData(samples=c("cell-3T3")))
