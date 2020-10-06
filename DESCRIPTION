@@ -23,13 +23,13 @@ Imports:
     S4Vectors,
     GenomicRanges,
     SummarizedExperiment,
-    ExperimentHub
-Suggests: 
-    BiocStyle, 
+    ExperimentHub,
     AnnotationHub,
     AnnotationDbi,
     ensembldb,
-    GenomicFeatures,
+    GenomicFeatures
+Suggests: 
+    BiocStyle, 
     knitr, 
     rmarkdown,
     BiocFileCache,
