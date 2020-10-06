@@ -4,6 +4,9 @@
     }
 
     edb <- .pull_down_ensdb(species, ahub.id=ahub.id)
+    if (is.null(edb)) {
+        return(sce)
+    }
 
     ensid <- AnnotationDbi::mapIds(edb, keys=symbols, keytype=keytype, column="GENEID")
     keep <- !is.na(ensid) & !duplicated(ensid)
@@ -30,6 +33,15 @@
 
     if (is.null(edb)) {
         edb <- .pull_down_ensdb(species, ahub.id=ahub.id)
+        if (is.null(edb)) {
+            return(sce)
+        }
+    }
+
+    installed <- requireNamespace("GenomicFeatures", quietly=TRUE)
+    if (!all(installed)) {
+        warning("need to install 'GenomicFeatures' to retrieve genomic locations")
+        return(sce)
     }
 
     # Need to switch between a GRL and a GR, depending on whether
@@ -54,6 +66,12 @@
 }
 
 .pull_down_ensdb <- function(species, ahub.id) {
+    installed <- requireNamespace("ensembldb", quietly=TRUE) && requireNamespace("AnnotationHub", quietly=TRUE)
+    if (!all(installed)) {
+        warning("need to install 'ensembldb' and 'AnnotationHub' to retrieve Ensembl annotations")
+        return(NULL)
+    }
+
     if (is.null(ahub.id)) {
         if (species=="Mm") {
             ahub.id <- "AH73905"
