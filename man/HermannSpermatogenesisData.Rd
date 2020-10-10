@@ -4,7 +4,7 @@
 \alias{HermannSpermatogenesisData}
 \title{Obtain the Hermann spermatogenesis data}
 \usage{
-HermannSpermatogenesisData(strip = FALSE, location = FALSE)
+HermannSpermatogenesisData(strip = FALSE, location = TRUE)
 }
 \arguments{
 \item{strip}{Logical scalar indicating whether to strip the \code{.X} notation from the row names.}

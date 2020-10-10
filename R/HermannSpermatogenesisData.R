@@ -26,7 +26,7 @@
 #' sce <- HermannSpermatogenesisData()
 #' 
 #' @export
-HermannSpermatogenesisData <- function(strip=FALSE, location=FALSE) {
+HermannSpermatogenesisData <- function(strip=FALSE, location=TRUE) {
     version <- "2.4.0"
     sce <- .create_sce(file.path("hermann-spermatogenesis", version), 
         assays = c("spliced", "unspliced"), has.rowdata=FALSE)

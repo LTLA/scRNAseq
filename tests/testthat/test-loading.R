@@ -132,7 +132,7 @@ test_that("ZilionisBrianData works", {
 })
 
 test_that("HermannSpermatogenesisData works", {
-    CHECK(HermannSpermatogenesisData(strip=TRUE, location=TRUE))
+    CHECK(HermannSpermatogenesisData(strip=TRUE))
 })
 
 test_that("StoeckiusHashingData works", {

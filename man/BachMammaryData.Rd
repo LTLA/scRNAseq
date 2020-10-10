@@ -33,7 +33,7 @@ All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/bach-mammary}.
 }
 \examples{
-sce <- BachMammaryData()
+sce <- BachMammaryData(samples="NP_1")
 
 }
 \references{

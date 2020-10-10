@@ -27,7 +27,7 @@
 #' \emph{Nat Commun.} 8(1), 2128
 #'
 #' @examples
-#' sce <- BachMammaryData()
+#' sce <- BachMammaryData(samples="NP_1")
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData<- rowData
