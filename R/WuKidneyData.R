@@ -32,7 +32,7 @@
 #' \emph{J. Am. Soc. Nephrol.} 30, 23-32.
 #'
 #' @examples
-#' sce <- WuKidneyData()
+#' sce <- WuKidneyData("disease")
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
@@ -54,7 +54,7 @@ WuKidneyData <- function(mode=c("healthy", "disease"), ensembl=FALSE, location=T
         all.sce[[m]] <- current
     }
 
-    if (length(mode) > 1) {
+    if (length(all.sce) > 1) {
         common <- Reduce(intersect, lapply(all.sce, rownames))
         for (i in seq_along(all.sce)) {
             all.sce[[i]] <- all.sce[[i]][common,]

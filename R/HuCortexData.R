@@ -40,7 +40,7 @@
 #' \emph{Mol. cell} 68, 1006-1015.
 #'
 #' @examples
-#' sce <- HuCortexData()
+#' sce <- HuCortexData("3T3")
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
@@ -75,7 +75,7 @@ HuCortexData <- function(mode=c("ctx", "3T3"), samples=NULL, ensembl=FALSE, loca
         all.sce <- c(all.sce, list(current))
     }
 
-    if (length(mode) > 1) {
+    if (length(all.sce) > 1) {
         common <- Reduce(intersect, lapply(all.sce, rownames))
         for (i in seq_along(all.sce)) {
             all.sce[[i]] <- all.sce[[i]][common,]

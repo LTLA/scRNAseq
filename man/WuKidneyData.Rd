@@ -36,7 +36,7 @@ All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/wu-kidney}.
 }
 \examples{
-sce <- WuKidneyData()
+sce <- WuKidneyData("disease")
 
 }
 \references{
