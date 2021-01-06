@@ -2,6 +2,7 @@
 
 export(AztekinTailData)
 export(BachMammaryData)
+export(BacherTCellData)
 export(BaronPancreasData)
 export(BuettnerESCData)
 export(CampbellBrainData)
