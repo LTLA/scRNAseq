@@ -1,0 +1,132 @@
+---
+title: Processing the Giladi HSC dataset
+author: Aaron Lun
+date: 6 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data (RNA-seq)
+
+We obtain a single-cell RNA sequencing dataset of haematopoietic stem cells from @giladi2018singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE92575](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE92575).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+collected <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file")
+
+dir <- tempfile()
+untar(collected, exdir=dir)
+all.files <- list.files(dir, full=TRUE)
+length(all.files)
+```
+
+Loading them all into memory.
+
+```{r}
+library(scuttle)
+library(BiocParallel)
+out <- bplapply(all.files, readSparseCounts)
+stopifnot(length(unique(lapply(out, rownames)))==1)
+combined <- do.call(cbind, out)
+```
+
+Constructing a `SingleCellExperiment` object.
+
+```{r}
+sce <- SingleCellExperiment(list(counts=combined))
+sce
+```
+
+Filling in the metadata as well.
+
+```{r}
+meta.path <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file&file=GSE92575%5Fmetadata%2Etxt%2Egz")
+meta <- read.delim(meta.path, skip=14)
+
+# Expanding to cover all cells in the SCE.
+true.samples <- sub(".*_", "", sub(".txt.gz", "", basename(all.files)))
+true.samples <- rep(true.samples, vapply(out, ncol, 0L))
+ref <- DataFrame(well=colnames(combined), sample=true.samples)
+obs <- DataFrame(well=meta$well, sample=meta$Amp_batch_ID)
+stopifnot(all(obs %in% ref))
+
+m <- match(ref, obs)
+meta <- meta[m,]
+meta$retained <- !is.na(m)
+meta$well <- colnames(combined)
+meta$sample <- true.samples
+
+rownames(meta) <- meta$well
+colData(sce) <- DataFrame(meta)
+colData(sce)
+```
+
+# Downloading the data (CRISPR-seq)
+
+Counts for CRISPR barcodes are also available from the Gene Expression Omnibus
+using the accession number [GSE113494](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113494).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+crisp.path <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113494&format=file&file=GSE113494%5Fcrispseq%5Fcount%2Etxt%2Egz")
+crisp.df <- read.delim(crisp.path, skip=9)
+head(crisp.df)
+```
+
+For some bizarre reason, this is not actually a count matrix, but rather, a molecule information file.
+So we convert this into counts in the simplest way - counting the number of unique UMIs for each cell in each barcode.
+
+```{r}
+library(DropletUtils)
+crisp.mat <- makeCountMatrix(crisp.df$grna, crisp.df$well)
+dim(crisp.mat)
+
+crisp.cd <- DataFrame(crisp.df[,c("well", "amplification.batch")])
+crisp.cd <- crisp.cd[match(colnames(crisp.mat), crisp.cd$well),]
+rownames(crisp.cd) <- crisp.cd$well
+crisp.cd <- crisp.cd[,2,drop=FALSE]
+head(crisp.cd)
+
+crisp.rd <- DataFrame(crisp.df[,c("grna", "ugi")])
+crisp.rd <- crisp.rd[match(rownames(crisp.mat), crisp.rd$grna),]
+rownames(crisp.rd) <- crisp.rd$grna
+crisp.rd <- crisp.rd[,2,drop=FALSE]
+head(crisp.rd)
+```
+
+# Saving to file
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "giladi-hsc", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(assay(sce), file=file.path(path, "counts-rna.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata-rna.rds"))
+
+saveRDS(crisp.mat, file=file.path(path, "counts-crispr.rds"))
+saveRDS(crisp.cd, file=file.path(path, "coldata-crispr.rds"))
+saveRDS(crisp.rd, file=file.path(path, "rowdata-crispr.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
