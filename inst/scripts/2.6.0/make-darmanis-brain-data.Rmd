@@ -46,6 +46,7 @@ stopifnot(length(unique(gene.ids))==1L)
 
 combined <- as.matrix(do.call(cbind, counts))
 colnames(combined) <- sub("_.*", "\\1", basename(all.files))
+str(combined)
 ```
 
 We pull down some metadata in SOFT format.
@@ -62,6 +63,7 @@ df <- rbind(
 stopifnot(anyDuplicated(rownames(df))==0)
 stopifnot(identical(sort(rownames(df)), sort(colnames(combined))))
 
+# Getting rid of fields that are either too specific or too general.
 keep <- vapply(df, function(x) {
     n <- length(unique(x))
     n > 1 & n < length(x)
@@ -71,10 +73,11 @@ df <- df[,keep]
 keep <- grep(":ch1$", colnames(df))
 df <- df[,keep]
 
+library(S4Vectors)
 colnames(df) <- sub(":ch1$", "", colnames(df))
 df <- DataFrame(df)
 
-df <- df[colnames(combined),]
+df <- df[colnames(combined),] # already know that rownames are valid.
 df 
 ```
 

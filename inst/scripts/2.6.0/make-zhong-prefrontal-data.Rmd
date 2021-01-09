@@ -74,6 +74,7 @@ out <- lapply(all.files, function(x) {
     strsplit(readLines(x, n=1), "\t")[[1]]
 })
 
+# So many errors in their sample names...
 samples <- sub("\\..*", "", basename(all.files))
 samples <- sub("GSM[0-9]+_", "", samples)
 samples <- sub("GW8", "GW08", samples)
@@ -106,6 +107,7 @@ head(more.data)
 
 m <- match(rownames(coldata), more.data[,1])
 coldata <- cbind(coldata, more.data[m,c(-1, -ncol(more.data))])
+colnames(coldata)
 ```
 
 # Saving to file 

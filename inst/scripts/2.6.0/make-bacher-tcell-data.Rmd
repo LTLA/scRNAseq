@@ -70,6 +70,10 @@ counts <- bplapply(counts, readSparseCounts, quote="\"", BPPARAM=MulticoreParam(
 gene.ids <- lapply(counts, rownames)
 stopifnot(length(unique(gene.ids))==1L)
 
+# Checking that the names are unique after combining.
+all.cn <- unlist(lapply(counts, colnames))
+stopifnot(anyDuplicated(all.cn)==0)
+
 combined <- do.call(cbind, counts)
 ```
 
@@ -96,7 +100,8 @@ meta <- meta[m,]
 rownames(meta) <- ref
 meta$retained <- !is.na(m)
 
-# Filling in some of the patient-level attributes.
+# Filling in some of the patient-level attributes for missing cells.
+# This is done by extrapolating from cells in the same patient. 
 meta$sample <- sub(".*-", "", ref)
 meta$barcode <- sub("-.*", "", ref)
 
@@ -109,6 +114,7 @@ for (field in c("batch", "seq_run", "diagnosis")) {
 }
 
 m <- match(meta$sample,samples[,2])
+stopifnot(all(!is.na(m)))
 meta$who_class <- samples[m,3]
 meta$severity <- samples[m,4]
 

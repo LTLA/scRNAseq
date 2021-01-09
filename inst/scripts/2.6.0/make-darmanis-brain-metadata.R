@@ -7,7 +7,7 @@ write.csv(file="../../extdata/2.6.0/metadata-darmanis-brain.csv",
             c("counts.rds", "coldata.rds")),
         BiocVersion="3.13",
         Genome="hg38",
-        SourceType=c("TSV", "SOFT"),
+        SourceType=c("TSV", "TXT"),
         SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086",
         SourceVersion=c(
             "GSE67835_RAW.tar",

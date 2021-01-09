@@ -38,7 +38,14 @@ Loading them all into memory.
 library(scuttle)
 library(BiocParallel)
 out <- bplapply(all.files, readSparseCounts)
+
+# Sanity check:
 stopifnot(length(unique(lapply(out, rownames)))==1)
+
+# Checking that the names are unique after combining.
+all.cn <- unlist(lapply(out, colnames))
+stopifnot(anyDuplicated(all.cn)==0)
+
 combined <- do.call(cbind, out)
 ```
 
@@ -66,10 +73,12 @@ stopifnot(all(obs %in% ref))
 m <- match(ref, obs)
 meta <- meta[m,]
 meta$retained <- !is.na(m)
-meta$well <- colnames(combined)
 meta$sample <- true.samples
 
+stopifnot(all(meta$well == colnames(combined) | !meta$retained))
+meta$well <- colnames(combined)
 rownames(meta) <- meta$well
+
 colData(sce) <- DataFrame(meta)
 colData(sce)
 ```
@@ -88,7 +97,7 @@ head(crisp.df)
 ```
 
 For some bizarre reason, this is not actually a count matrix, but rather, a molecule information file.
-So we convert this into counts in the simplest way - counting the number of unique UMIs for each cell in each barcode.
+So we convert this into a count matrix in the simplest way - namely, counting the number of unique UMIs for each cell in each barcode.
 
 ```{r}
 library(DropletUtils)
