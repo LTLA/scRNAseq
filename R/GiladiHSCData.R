@@ -26,7 +26,7 @@
 #' If \code{mode} contains only one modality, all cells for that modality are returned.
 #' 
 #' All data are downloaded from ExperimentHub and cached for local re-use.
-#' Specific resources can be retrieved by searching for \code{scRNAseq/bacher-tcell}.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/giladi-hsc}.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object with a matrix of UMI counts for the scRNA-seq or CRISPR-seq data.
 #' Alternatively, an object with both count matrices, where the second modality is stored as an alternative Experiment.
@@ -71,6 +71,13 @@ GiladiHSCData <- function(mode=c("rna", "crispr"), filtered=TRUE, ensembl=FALSE,
     if ("crispr" %in% mode) {
         sce <- .create_sce(file.path("giladi-hsc", version), suffix="crispr")
         collated$crispr <- sce
+    }
+
+    if (length(collated) > 1) {
+        keep <- Reduce(intersect, lapply(collated, colnames))
+        for (i in seq_along(collated)) {
+            collated[[i]] <- collated[[i]][,keep]
+        }
     }
 
     primary <- collated[[1]]
