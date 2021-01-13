@@ -30,7 +30,7 @@
 #' sce <- ZhongPrefrontalData()
 #' 
 #' @export
-ZhongBrainData <- function(ensembl=FALSE, location=TRUE) {
+ZhongPrefrontalData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.6.0"
 
     sce <- .create_sce(file.path("zhong-prefrontal", version), has.rowdata=FALSE)
