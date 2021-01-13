@@ -45,6 +45,7 @@ gene.ids <- lapply(counts, rownames)
 stopifnot(length(unique(gene.ids))==1L)
 
 combined <- as.matrix(do.call(cbind, counts))
+rownames(combined) <- sub(" +$", "", rownames(combined))
 colnames(combined) <- sub("_.*", "\\1", basename(all.files))
 str(combined)
 ```

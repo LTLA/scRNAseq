@@ -4,6 +4,7 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param remove.htseq Logical scalar indicating whether HT-seq alignment statistics should be removed.
 #' 
 #' @details
 #' Column metadata is scraped from GEO and includes patient information, tissue of origin and likely cell type. 
@@ -15,14 +16,14 @@
 #' This is only performed when \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
-#' Specific resources can be retrieved by searching for \code{scRNAseq/bacher-tcell}.
+#' Specific resources can be retrieved by searching for \code{scRNAseq/darmanis-brain}.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'
 #' @references
-#' Darmanis S et al. (2020). 
+#' Darmanis S et al. (2015). 
 #' A survey of human brain transcriptome diversity at the single cell level. 
 #' \emph{Proc Natl Acad Sci USA} 112, 7285-90.
 #'
@@ -30,10 +31,15 @@
 #' sce <- DarmanisBrainData()
 #' 
 #' @export
-DarmanisBrainData <- function(ensembl=FALSE, location=TRUE) {
+DarmanisBrainData <- function(ensembl=FALSE, location=TRUE, remove.htseq=TRUE) {
     version <- "2.6.0"
 
     sce <- .create_sce(file.path("darmanis-brain", version), has.rowdata=FALSE)
+
+    if (remove.htseq) {
+        to.drop <- c("no_feature", "ambiguous", "alignment_not_unique")
+        sce <- sce[!rownames(sce) %in% to.drop,]
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
