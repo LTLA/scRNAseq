@@ -1,0 +1,72 @@
+---
+title: Processing the Pollen radial glia dataset
+author: Aaron Lun
+date: 11 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of human radial glial cells from @pollen2015molecular.
+Counts for endogenous genes are available from Dropbox (why would you do that!?) via https://www.pollenlab.org/datasets.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+exprs.path <- bfcrpath(bfc, "https://www.dropbox.com/s/rjrkq96li4j4rvn/oRG%20paper%20-%20counts.txt?dl=1")
+
+library(scuttle)
+mat <- readSparseCounts(exprs.path, row.names=1)
+dim(mat)
+str(dimnames(mat))
+```
+
+We also read in the per-cell metadata from an Excel file (why!?).
+
+```{r}
+meta.path <- bfcrpath(bfc, "https://www.dropbox.com/s/rb9tl4gjswrxfy9/Pollen%20et%20al%202015%20updated%20metadata.xlsx?dl=1")
+
+library(readxl)
+meta <- DataFrame(read_excel(meta.path), check.names=FALSE)
+meta$`AlignmentRate, Pairs` <- as.numeric(sub("%$", "", meta$`AlignmentRate, Pairs`))/100
+rownames(meta) <- meta$Cell
+stopifnot(all(colnames(mat) %in% sort(meta$Cell)))
+
+meta <- meta[colnames(mat),]
+meta
+```
+
+Making sure we can assemble the final SCE:
+
+```{r}
+sce <- SingleCellExperiment(list(counts=mat), colData=meta)
+sce 
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "pollen-glia", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(mat, file=file.path(path, "counts.rds"))
+saveRDS(meta, file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
