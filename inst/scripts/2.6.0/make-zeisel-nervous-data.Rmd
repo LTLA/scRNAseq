@@ -1,0 +1,178 @@
+---
+title: Processing the Zeisel nervous system dataset
+author: Aaron Lun
+date: 5 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the mouse nervous system from @zeisel2018molecular.
+Counts for endogenous genes are available from http://mousebrain.org/downloads.html as a `loom` file.
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+loom.path <- bfcrpath(bfc, "https://storage.googleapis.com/linnarsson-lab-loom/l5_all.loom")
+```
+
+We load this into our R session using the `r Biocpkg("LoomExperiment")` package.
+
+```{r}
+library(LoomExperiment)
+scle <- import(loom.path, type="SingleCellLoomExperiment")
+scle 
+```
+
+Then it's just a matter of peeling apart the bits that we need.
+We do need to clean up the `rowData`:
+
+```{r}
+rd <- rowData(scle)
+colnames(rd) <- sub("^X_", "", colnames(rd))
+rownames(rd) <- rd$Accession
+rd
+```
+
+We also need to clean up the `colData` considerably more:
+
+```{r}
+cd <- colData(scle)
+
+# Useless pieces of information, or pieces that are obvious from the experimental design.
+cd$Bucket <- NULL
+cd$Species <- NULL
+cd$AnalysisProject <- NULL
+cd$Transcriptome <- NULL
+cd$TimepointPool <- NULL
+cd$NGI_PlateWell <- NULL
+cd$PlugDate <- NULL
+cd$Plug_Date <- NULL
+cd$Project <- NULL
+
+# Removing fields with double quotes in the strings, because these are irrecoverable gibberish.
+broken <- NULL
+for (i in colnames(cd)) {
+    current <- cd[[i]]
+    if (is.character(current) && any(has.quote <- grepl('"', current))) {
+        cd[[i]][has.quote] <- NA
+    }
+}
+broken
+
+cd <- cd[,!colnames(cd) %in% broken]
+
+# Coercions to numeric.
+cd$NumPooledAnimals <- as.integer(cd$NumPooledAnimals)
+
+# Redundant fields.
+cd$Cell_Conc <- NULL
+cd$ngperul_cDNA <- NULL
+cd$cDNA_Lib_Ok <- NULL
+cd$Target_Num_Cells <- NULL
+cd$Date_Captured <- NULL
+cd$Num_Pooled_Animals <- NULL
+cd$PCR_Cycles <- NULL
+cd$Sample_Index <- NULL
+cd$Seq_Comment <- NULL
+cd$Seq_Lib_Date <- NULL
+cd$Seq_Lib_Ok <- NULL
+
+# Converting various character fields into numbers.
+for (i in colnames(cd)) {
+    current <- cd[[i]]
+    if (is.character(current)) {
+        if (any(grepl("%$", current))) {
+            converted <- sub("%$", "", current)
+            cd[[i]] <- as.numeric(converted)/100
+        } else {
+            # Strip out commas. These can either be interpreted as separators:
+            converted <- gsub(",([0-9]{3})", "\\1", current)
+
+            # Or as dots:
+            converted <- gsub(",", ".", converted)
+
+            converted <- as.numeric(converted)
+            if (identical(is.na(converted), current=="" | is.na(current))) {
+                cd[[i]] <- converted 
+            }
+        }
+    }
+}
+
+# Stripping out the class probabilities into a nested matrix.
+clcols <- grep("ClassProbability", colnames(cd))
+clprobs <- cd[,clcols]
+clprobs <- as.matrix(clprobs)
+colnames(clprobs) <- sub("ClassProbability_", "", colnames(clprobs))
+cd <- cd[,-clcols]
+cd$ClassProbability <- clprobs
+
+# Hacking out the reduced dimensions.
+pca.cols <- c("X_PC1", "X_PC2")
+tsne.cols <- c("X_tSNE1", "X_tSNE2")
+other.cols <- c("X_X", "X_Y")
+reddim <- list(
+    PCA=as.matrix(cd[,pca.cols]),
+    tSNE=as.matrix(cd[,tsne.cols]),
+    unnamed=as.matrix(cd[,other.cols])
+)
+cd <- cd[,!colnames(cd) %in% c(pca.cols, tsne.cols, other.cols)]
+
+# Replacing the 'nan's with NA's.
+for (i in colnames(cd)) {
+    current <- cd[[i]]
+    if (is.character(current) && any(current=="nan")) {
+        current[current=="nan"] <- NA_character_
+        cd[[i]] <- current
+    }    
+}
+
+# Why the prefixing with X_? Well, whatever.
+colnames(cd) <- sub("X_", "", colnames(cd))
+
+cd
+```
+
+# Saving to file
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "zeisel-nervous", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(rd, file=file.path(path, "rowdata.rds"))
+saveRDS(cd, file=file.path(path, "coldata.rds"))
+saveRDS(reddim, file=file.path(path, "reddims.rds"))
+```
+
+The column pairs are a bit tricky, but we just coerce them into `SelfHits` objects and save that.
+
+```{r}
+colpairs <- lapply(colGraphs(scle), function(x) as(x, "SelfHits"))
+saveRDS(colpairs, file=file.path(path, "colpairs.rds"))
+```
+
+The trickiest part is resaving the HDF5 file as a sparse matrix.
+
+```{r}
+saveRDS(as(assay(scle), 'dgCMatrix'), file=file.path(path, "counts.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
