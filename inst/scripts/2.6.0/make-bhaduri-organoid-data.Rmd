@@ -1,0 +1,150 @@
+---
+title: Processing the Bhaduri cortical organoid dataset
+author: Aaron Lun
+date: 14 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of human cortical organoids from @bhaduri2020cell.
+Counts for endogenous genes are available from GEO using the accession [GSE132672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132672). 
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+fname <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE132672&format=file&file=GSE132672%5Fallorganoids%5Fwithnew%5Fmatrix%2Etxt%2Egz")
+```
+
+Reading the counts in as a sparse matrix - this may take some time.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(fname)
+sce <- SingleCellExperiment(list(counts=counts))
+sce
+```
+
+# Grabbing the metadata
+
+We use `r Biocpkg("GEOquery")` to scrape the relevant sample-level metadata.
+
+```{r}
+library(GEOquery)
+out <- getGEO("GSE132672")
+meta <- as(phenoData(out[[1]]), "data.frame")
+meta <- meta[,c(1L, grep(":ch1$", colnames(meta)))]
+colnames(meta) <- sub(":ch1$", "", colnames(meta))
+meta <- DataFrame(meta, check.names=FALSE)
+meta
+```
+
+Then it's just a simple matter to expand it.
+
+```{r}
+observed.donor <- sub("_.*", "", colnames(sce))
+
+# Well, not so simple, because these authors couldn't 
+# keep their names straight if their lives depended on it.
+mappings <- c(
+    H1SWeek24="wk24H1S_S2",
+    L13234PWeek24="wk2413234P",
+    L13234SWeek15="L13234controlweek15",
+    L13234SWeek24="wk2413234S",
+    Week10P="Week10P_1323_4",
+    Week10S="Week10S_1323_4",
+    Week5P="Week5P_1323_4",
+    Week5S="Week5S_1323_4",
+    Week8P="Week8P_1323_4",
+    Week8S="Week8S_1323_4"
+)
+
+failed <- observed.donor %in% names(mappings)
+observed.donor[failed] <- unname(mappings[observed.donor[failed]])
+table(observed.donor)
+
+m <- match(observed.donor, meta$title)
+stopifnot(all(!is.na(m)))
+coldata <- meta[m,,drop=FALSE]
+rownames(coldata) <- colnames(sce)
+colData(sce) <- coldata
+```
+
+# Further notes
+
+There is, in fact, another version of this dataset, available at https://cells.ucsc.edu/organoidreportcard.
+Briefly put: this was hell.
+The column names of the count matrix simply do not match with the cell names in the metadata table.
+Attempts to reconstruct the cell names failed to yield an unambiguous mapping, and so this was abandoned.
+The code used is reported below as a warning to future generations.
+
+```{r, eval=FALSE}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+fname <- bfcrpath(bfc, "https://cells.ucsc.edu/organoidreportcard/primary10X/primarymatrix_nonorm.txt.gz")
+
+library(scuttle)
+counts <- readSparseCounts(fname)
+sce <- SingleCellExperiment(list(counts=counts))
+
+meta.path <- bfcrpath(bfc, "https://cells.ucsc.edu/organoidreportcard/primary10X/meta.tsv")
+meta <- read.delim(meta.path)
+meta <- DataFrame(meta)
+table(meta$Area)
+
+ids <- colnames(sce)
+ids <- sub("Central", "Central cortex", ids)
+ids <- sub("Frontal", "Frontal cortex", ids)
+ids <- sub("Occipital", "Occipital cortex", ids)
+ids <- sub("Hippocampus", "hippocampus", ids)
+ids <- sub("Motor", "motor", ids)
+ids <- sub("motordeeper", "motor", ids)
+ids <- sub("PFCdeeper", "PFC", ids)
+ids <- sub("LPFC", "PFC", ids)
+ids <- sub("parietaldeeper", "parietal", ids)
+ids <- sub("Parietal", "parietal", ids)
+ids <- sub("(S|s)omato", "somatosensory", ids)
+ids <- sub("Temporal", "temporal", ids)
+
+converted <- sub(".* ([A-Z]{2}[0-9]{2})","", ids)
+table(converted)
+
+idx <- sub(".*_", "", meta$Cell)
+
+cell <- sub("([ACGT]+)_[^_]+$", "\\1", meta$Cell)
+cell <- sub("^[^_]+_([ACTG]+)", "\\1", cell)
+ids2 <- paste0(cell, " ", meta$Individual, meta$Area)
+
+# Really poor matches here, but whatever. 
+m <- match(ids, ids2)
+table(converted, is.na(m))
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "bhaduri-organoid", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(assay(sce), file=file.path(path, "counts.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
