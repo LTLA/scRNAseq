@@ -12,7 +12,7 @@ NowakowskiCortexData(ensembl = FALSE, location = TRUE)
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of TPM counts.
+A \linkS4class{SingleCellExperiment} object with a single matrix of TPMs.
 The \code{\link{reducedDims}} contains an assortment of dimensionality reduction results.
 }
 \description{

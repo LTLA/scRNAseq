@@ -18,7 +18,7 @@
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/nowakowski-cortex}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of TPM counts.
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of TPMs.
 #' The \code{\link{reducedDims}} contains an assortment of dimensionality reduction results.
 #'
 #' @author Aaron Lun
@@ -35,7 +35,7 @@
 NowakowskiCortexData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.6.0"
 
-    sce <- .create_sce(file.path("nowakowski-cortex", version), has.rowdata=FALSE)
+    sce <- .create_sce(file.path("nowakowski-cortex", version), has.rowdata=FALSE, assays="tpm")
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

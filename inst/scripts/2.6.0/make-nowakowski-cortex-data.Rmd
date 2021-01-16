@@ -17,7 +17,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Downloading the data
 
 We obtain a single-cell RNA sequencing dataset of the human cotex from @nowakowski2017spatiotemporal.
-Counts for endogenous genes are available from the the UCSC cell browser at http://cells.ucsc.edu/?ds=cortex-dev.
+TPMs for endogenous genes are available from the the UCSC cell browser at http://cells.ucsc.edu/?ds=cortex-dev.
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
@@ -69,7 +69,7 @@ for (i in red.dim.list) {
 Making sure we can assemble the final SCE:
 
 ```{r}
-sce <- SingleCellExperiment(list(counts=mat), colData=meta, reducedDims=reddims)
+sce <- SingleCellExperiment(list(tpm=mat), colData=meta, reducedDims=reddims)
 sce 
 ```
 
@@ -80,7 +80,7 @@ We now save all of the relevant components to file for upload to `r Biocpkg("Exp
 ```{r}
 path <- file.path("scRNAseq", "nowakowski-cortex", "2.6.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(mat, file=file.path(path, "counts.rds"))
+saveRDS(mat, file=file.path(path, "tpm.rds"))
 saveRDS(meta, file=file.path(path, "coldata.rds"))
 saveRDS(reddims, file=file.path(path, "reddims.rds"))
 ```

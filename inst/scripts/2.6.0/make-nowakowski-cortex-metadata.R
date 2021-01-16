@@ -1,10 +1,10 @@
 write.csv(file="../../extdata/2.6.0/metadata-nowakowski-cortex.csv",
     data.frame(
-        Title = sprintf("Nowakowski cortex %s", c("counts", "colData", "reducedDims")),
+        Title = sprintf("Nowakowski cortex %s", c("TPMs", "colData", "reducedDims")),
         Description = sprintf("%s for the Nowakowski cortex single-cell RNA-seq dataset", 
-            c("Count matrix", "Per-cell metadata", "Reduced dimensions")),
+            c("TPM matrix", "Per-cell metadata", "Reduced dimensions")),
         RDataPath = file.path("scRNAseq", "nowakowski-cortex", "2.6.0", 
-            c("counts.rds", "coldata.rds", "reddims.rds")),
+            c("tpm.rds", "coldata.rds", "reddims.rds")),
         BiocVersion="3.13",
         Genome="hg38",
         SourceType="TSV",
