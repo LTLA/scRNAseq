@@ -44,7 +44,8 @@ rownames(rd) <- rd$Accession
 rd
 ```
 
-We also need to clean up the `colData` considerably more:
+We also need to clean up the `colData`.
+This is, sadly, a gargantuan effort - so much for `loom` being a ready-to-use file format!
 
 ```{r}
 cd <- colData(scle)
@@ -60,21 +61,6 @@ cd$PlugDate <- NULL
 cd$Plug_Date <- NULL
 cd$Project <- NULL
 
-# Removing fields with double quotes in the strings, because these are irrecoverable gibberish.
-broken <- NULL
-for (i in colnames(cd)) {
-    current <- cd[[i]]
-    if (is.character(current) && any(has.quote <- grepl('"', current))) {
-        cd[[i]][has.quote] <- NA
-    }
-}
-broken
-
-cd <- cd[,!colnames(cd) %in% broken]
-
-# Coercions to numeric.
-cd$NumPooledAnimals <- as.integer(cd$NumPooledAnimals)
-
 # Redundant fields.
 cd$Cell_Conc <- NULL
 cd$ngperul_cDNA <- NULL
@@ -88,26 +74,56 @@ cd$Seq_Comment <- NULL
 cd$Seq_Lib_Date <- NULL
 cd$Seq_Lib_Ok <- NULL
 
-# Converting various character fields into numbers.
+# Converting various character fields into numbers, where applicable.
+# On occassion, we have to get rid of some nonsense fields with quotation marks;
+# something probably got corrupted when the file was saved.
+options(warn=2)
 for (i in colnames(cd)) {
     current <- cd[[i]]
+
     if (is.character(current)) {
-        if (any(grepl("%$", current))) {
-            converted <- sub("%$", "", current)
-            cd[[i]] <- as.numeric(converted)/100
-        } else {
-            # Strip out commas. These can either be interpreted as separators:
-            converted <- gsub(",([0-9]{3})", "\\1", current)
+        converted <- current
+        is.bad <- converted=="" | grepl('"', converted)
+        converted[is.bad] <- NA
+        changed <- TRUE
 
-            # Or as dots:
-            converted <- gsub(",", ".", converted)
-
+        if (any(has.pct <- grepl("%$", current))) {
+            converted[!has.pct] <- NA
+            converted <- sub("%$", "", converted)
+            converted <- as.numeric(converted)/100
+            cd[[i]] <- converted
+        } else if (any(has.comma <- grepl(",[0-9]{3}", current))) {
+            converted[!has.comma] <- NA # these are probably corruptions of some sort.
+            converted <- gsub(",([0-9]{3})", "\\1", converted)
             converted <- as.numeric(converted)
-            if (identical(is.na(converted), current=="" | is.na(current))) {
-                cd[[i]] <- converted 
-            }
+            cd[[i]] <- converted
+        } else if (any(grepl("^[0-9]+,[0-9]+$", current))){
+            converted <- sub(",", ".", converted)
+            converted <- as.numeric(converted)
+            cd[[i]] <- converted
+        } else if (any(grepl("^[0-9]+(\\.[0-9]+)?$", current))) {
+            cd[[i]] <- as.numeric(converted)
+        } else {
+            changed <- FALSE
         }
+
+#        # For debugging purposes, to check that the corruptions are purged correctly.
+#        if (changed) {
+#            print(i)
+#            print(names(table(current)))
+#            print(names(table(converted)))
+#        }
     }
+}
+options(warn=1)
+
+# Replacing the 'nan's with NA's.
+for (i in colnames(cd)) {
+    current <- cd[[i]]
+    if (is.character(current) && any(lost <- current=="nan")) {
+        current[lost] <- NA_character_
+        cd[[i]] <- current
+    }    
 }
 
 # Stripping out the class probabilities into a nested matrix.
@@ -128,15 +144,6 @@ reddim <- list(
     unnamed=as.matrix(cd[,other.cols])
 )
 cd <- cd[,!colnames(cd) %in% c(pca.cols, tsne.cols, other.cols)]
-
-# Replacing the 'nan's with NA's.
-for (i in colnames(cd)) {
-    current <- cd[[i]]
-    if (is.character(current) && any(current=="nan")) {
-        current[current=="nan"] <- NA_character_
-        cd[[i]] <- current
-    }    
-}
 
 # Why the prefixing with X_? Well, whatever.
 colnames(cd) <- sub("X_", "", colnames(cd))
