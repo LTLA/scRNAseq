@@ -1,0 +1,25 @@
+write.csv(file="../../extdata/2.6.0/metadata-zhao-immune-liver.csv",
+    data.frame(
+        Title = sprintf("Zhao immune liver %s", c("counts", "colData", "rowData")),
+        Description = sprintf("%s for the Zhao immune liver single-cell RNA-seq dataset", 
+            c("Count matrix", "Per-cell metadata", "Per-gene metadata")),
+        RDataPath = file.path("scRNAseq", "zhao-immune-liver", "2.6.0", 
+            c("counts.rds", "coldata.rds", "rowdata.rds")),
+        BiocVersion="3.13",
+        Genome="hg38",
+        SourceType=c("MTX", "TSV", "TSV"),
+        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125188",
+        SourceVersion=c(
+            "GSE125188_CD45+_matrix.mtx.gz",
+            "GSE125188_CD45+_barcodes.tsv.gz;GSE125188_CD45+_cell_identities.tsv.gz;GSE125188_ASC_cell_identities.tsv.gz;GSE125188_B_cell_identities.tsv.gz;GSE125188_Mo_cell_identities.tsv.gz;GSE125188_NKT_cell_identities.tsv.gz",
+            "GSE125188_CD45+_genes.tsv.gz"),
+        Species="Homo sapiens",
+        TaxonomyId="9606",
+        Coordinate_1_based=NA,
+        DataProvider="GEO",
+        Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        RDataClass=c("dgCMatrix", "DFrame", "DFrame"),
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)
