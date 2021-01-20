@@ -23,7 +23,7 @@
 #'
 #' @references
 #' Pollen A et al. (2017). 
-#' Molecular Identity of Human Outer Radial Glia during Cortical Development
+#' Molecular identity of human outer radial glia during cortical development.
 #' \emph{Cell} 163, 55-67.
 #'
 #' @examples

@@ -32,10 +32,14 @@
 #' sce <- NowakowskiCortexData()
 #' 
 #' @export
+#' @importFrom SingleCellExperiment reducedDims<-
 NowakowskiCortexData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.6.0"
 
-    sce <- .create_sce(file.path("nowakowski-cortex", version), has.rowdata=FALSE, assays="tpm")
+    hub <- ExperimentHub()
+    sce <- .create_sce(file.path("nowakowski-cortex", version), hub=hub, has.rowdata=FALSE, assays="tpm")
+
+    reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/nowakowski-cortex", version, "reddims.rds"))]]
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
