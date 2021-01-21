@@ -1,0 +1,87 @@
+---
+title: Processing the Bunis HSPC dataset
+author: Aaron Lun
+date: 20 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of naive haematopoietic stem-progenitor cells from @bunis2021singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE158490](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE158490).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+mat.path <- bfcrpath(bfc,
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fmatrix%2Emtx%2Egz")
+mat <- Matrix::readMM(mat.path)
+dim(mat)
+```
+
+Creating a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=mat))
+
+cd.path <- bfcrpath(bfc,
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fbarcodes%2Etsv%2Egz")
+colnames(sce) <- readLines(cd.path)
+
+rd.path <- bfcrpath(bfc,
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fgenes%2Etsv%2Egz")
+rd <- read.table(rd.path)
+colnames(rd) <- c("ID", "Symbol")
+rowData(sce) <- rd
+rownames(sce) <- rowData(sce)$ID
+
+sce
+```
+
+# Pulling down the metadat
+
+Attaching some metadata.
+The `SNG.1ST` column specifies the sample for each cell, ranging from adult bone marrow (`APB`), fetal bone marrow (`FS`) and newborn umbilical cord (`UCB`).
+Various other _demuxlet_ statistics are also reported here.
+We won't expand this out to all 720k columns of `mat` to save some space, given that most downstream applications will only care about the observed cells.
+
+```{r}
+meta.path <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5FHSPC%2Ebest%2Etxt%2Egz")
+meta <- read.delim(meta.path, check.names=FALSE)
+meta <- DataFrame(meta, check.names=FALSE)
+stopifnot(all(meta$BARCODE %in% colnames(sce)))
+meta
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "bunis-hspc", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(assay(sce), file=file.path(path, "counts.rds"))
+saveRDS(meta, file=file.path(path, "coldata.rds"))
+saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
