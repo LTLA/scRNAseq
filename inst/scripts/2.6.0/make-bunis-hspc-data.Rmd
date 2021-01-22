@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of naive haematopoietic stem-progenitor cells from @bunis2021singlecell.
+We obtain a single-cell RNA sequencing dataset of haematopoietic stem-progenitor cells from @bunis2021singlecell.
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE158490](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE158490).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
