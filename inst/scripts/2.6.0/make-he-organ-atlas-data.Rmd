@@ -1,0 +1,125 @@
+---
+title: Processing the He organ atlas dataset
+author: Aaron Lun
+date: 22 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of human organs from @he2020singlecell.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE159929](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE159929).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+mat.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE159929&format=file")
+```
+
+We load this into memory.
+Sadly, each matrix does not contain the same set of features.
+This is because they filtered out low-expressing genes - it would not be correct to zero-fill.
+
+```{r}
+tmp <- tempfile()
+untar(mat.path, exdir=tmp)
+all.files <- list.files(tmp)
+
+library(BiocParallel)
+library(scuttle)
+all.counts <- bplapply(file.path(tmp, all.files), readSparseCounts, sep=",", row.names=1, quote='"')
+names(all.counts) <- sub(".*_([^_]+)_Counts.csv.gz", "\\1", all.files)
+do.call(rbind, lapply(all.counts, dim))
+```
+
+# Downloading the metadata
+
+We obtain the metadata from the GitHub repository accompanying the study 
+(see [here](https://github.com/bei-lab/scRNA-AHCA/tree/master/Cell_barcode_and_corresponding_cell_types_of_AHCA)).
+
+```{r}
+meta.path <- bfcrpath(bfc,
+    "https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/Annotation_AHCA_alltissues_meta.data_84363_cell.txt")
+meta <- read.delim(meta.path)
+meta <- DataFrame(meta, check.names=FALSE)
+meta
+
+rownames(meta) <- meta$X
+meta <- meta[,-1]
+colnames(meta)[1] <- "Tissue"
+meta$Tissue <- sub("_cDNA", "", meta$Tissue)
+
+ref.names <- lapply(all.counts, colnames)
+ref.names <- paste0(
+    rep(names(all.counts), vapply(all.counts, ncol, 0L)),
+    "_cDNA_", 
+    unlist(ref.names)
+)
+stopifnot(identical(sort(ref.names), sort(rownames(meta))))
+
+# Don't need this crap.
+meta$Color_of_tissues <- NULL
+
+reddims <- list(tSNE=cbind(meta$tSNE_1, meta$tSNE_2))
+rownames(reddims[[1]]) <- rownames(meta)
+meta <- meta[,setdiff(colnames(meta), c("tSNE_1", "tSNE_2"))]
+```
+
+We also obtain finer cell types from reclustering.
+
+```{r}
+all.anno <- rep(NA_character_, nrow(meta))
+
+for (sub in c("B_and_plasma.meta.data.txt", "CD4_meta.data.txt", "CD8_meta.data.txt",
+    "Endothelial_cell.meta.data.txt", "Epithelial_cells.meta.data.txt", 
+    "FibSmo.meta.data.txt", "Myeloid.meta.data.txt")) 
+{
+    sub.path <- bfcrpath(bfc,
+        file.path("https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA", sub))
+    sub.df <- read.delim(sub.path)
+
+    m <- match(sub.df$X, rownames(meta))
+    stopifnot(all(is.na(all.anno[m])))
+    all.anno[m] <- sub.df$annotation
+}
+
+meta$annotation <- all.anno
+```
+
+# Saving to file
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "he-organ-atlas", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+for (tissue in names(all.counts)) {
+    current <- all.counts[[tissue]]
+    colnames(current) <- paste0(tissue, "_cDNA_", colnames(current))
+    saveRDS(current, file=file.path(path, paste0("counts-", tissue, ".rds")))
+
+    m <- match(colnames(current), rownames(meta))
+    stopifnot(all(!is.na(m)))
+    saveRDS(meta[m,], file=file.path(path, paste0("coldata-", tissue, ".rds")))
+}
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
+
