@@ -1,7 +1,7 @@
 ---
 title: Processing the Bunis HSPC dataset
-author: Aaron Lun
-date: 20 January 2021
+author: Aaron Lun and Daniel Bunis
+date: 21 January 2021
 output:
   BiocStyle::html_document:
     titlecaps: false
@@ -57,13 +57,53 @@ The `SNG.1ST` column specifies the sample for each cell, ranging from adult bone
 Various other _demuxlet_ statistics are also reported here.
 We won't expand this out to all 720k columns of `mat` to save some space, given that most downstream applications will only care about the observed cells.
 
+We can import this data into our sce, with selected metadata, with the importDemux function of dittoSeq. (Indeed, yes it is an odd placement for this function which should be split off into some other demultiplexing-focused package.)
+
+We can then convert the ABM/UCB/FBM of Samples into age groups of samples.
+
 ```{r}
-meta.path <- bfcrpath(bfc, 
+demux.path <- bfcrpath(bfc, 
     "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5FHSPC%2Ebest%2Etxt%2Egz")
-meta <- read.delim(meta.path, check.names=FALSE)
-meta <- DataFrame(meta, check.names=FALSE)
-stopifnot(all(meta$BARCODE %in% colnames(sce)))
-meta
+demux <- read.delim(demux.path, check.names=FALSE)
+stopifnot(all(demux$BARCODE %in% colnames(sce)))
+
+sce <- dittoSeq::importDemux(sce, demuxlet.best = demux, verbose = FALSE)
+
+# Remove the unnecessary (single-value here) Lane metadata
+sce$Lane <- NULL
+
+# Remove the "CD4_" from start of sample names, and replace "APB" and "FS"
+# with "ABM" and "FBM" which reflect the cells put through bulk RNAseq to
+# generate genotyping for Demuxlet, rather than these cells.
+sce$Sample <- gsub("^CD4_", "", sce$Sample)
+sce$Sample <- gsub("^FS", "FBM", sce$Sample)
+sce$Sample <- gsub("^APB", "ABM", sce$Sample)
+
+# Add age metadata
+sce$age <- NA
+sce$age[grep("^F", sce$Sample)] <- "fetal"
+sce$age[grep("^U", sce$Sample)] <- "newborn"
+sce$age[grep("^A", sce$Sample)] <- "adult"
+
+sce
+```
+
+# Trimming low quality cells as the original authors did
+
+We can now trim cells based on hard cutoffs, remove Demuxlet-identified doublets, and any impossibly annotated cells as the original authors did.
+Counts minimum = 1500
+Genes minimum = 750
+Reads from mitochondrial genes maximum = 7%
+Called singlet, "SNG", by Demuxlet
+Among samples below
+
+```{r}
+sce <- sce[, colSums2(counts(sce))>1500]
+sce <- sce[, colSums2(counts(sce)>0)>750]
+percent.mito <- colSums2(counts(sce)[grep("^MT-", rowData(sce)$Symbol),]) / colSums2(counts(sce))
+sce <- sce[, percent.mito < .7]
+sce <- sce[, sce$demux.doublet.call %in% "SNG",]
+sce <- sce[, sce$Sample %in% c("ABM3","ABM4", "FBM3","FBM4","FBM5", "UCB1", "UCB5")]
 ```
 
 # Saving to file 
