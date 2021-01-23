@@ -26,8 +26,9 @@
 #' \emph{Cell} 174(4), 999-1014.
 #'
 #' @examples
-#' sce <- ZeiselNervousData()
-#' 
+#' if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+#'     sce <- ZeiselNervousData()
+#' }
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<- reducedDims<- colPairs<-
 #' @importFrom SummarizedExperiment rowData rowData<-

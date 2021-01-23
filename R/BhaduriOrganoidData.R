@@ -28,8 +28,9 @@
 #' \emph{Nature} 578(7793), 142-148.
 #'
 #' @examples
-#' sce <- BhaduriOrganoidData()
-#' 
+#' if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+#'     sce <- BhaduriOrganoidData()
+#' }
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<- reducedDims<- colPairs<-
 #' @importFrom SummarizedExperiment rowData rowData<-

@@ -31,7 +31,9 @@
 #' \emph{Immunity} 53, 1258-1271
 #'
 #' @examples
-#' sce <- BacherTCellData()
+#' if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+#'     sce <- BacherTCellData()
+#' }
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<-

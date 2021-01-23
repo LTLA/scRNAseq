@@ -28,8 +28,9 @@ All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-nervous}.
 }
 \examples{
-sce <- ZeiselNervousData()
-
+if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+    sce <- ZeiselNervousData()
+}
 }
 \references{
 Zeisel A et al. (2018). 

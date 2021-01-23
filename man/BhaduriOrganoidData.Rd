@@ -31,8 +31,9 @@ All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/bhaduri-organoid}.
 }
 \examples{
-sce <- BhaduriOrganoidData()
-
+if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+    sce <- BhaduriOrganoidData()
+}
 }
 \references{
 Bhaduri A et al. (2020). 
