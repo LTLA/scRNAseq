@@ -88,23 +88,45 @@ sce$age[grep("^A", sce$Sample)] <- "adult"
 sce
 ```
 
-# Trimming low quality cells as the original authors did
+# Adding additional metadata
 
-We can now trim cells based on hard cutoffs, remove Demuxlet-identified doublets, and any impossibly annotated cells as the original authors did.
-Counts minimum = 1500
-Genes minimum = 750
-Reads from mitochondrial genes maximum = 7%
-Called singlet, "SNG", by Demuxlet
-Among samples below
+From the fully processed objects shared on figshare, we will obtain cell type annotations and developmental stage scores.
 
 ```{r}
-sce <- sce[, colSums2(counts(sce))>1500]
-sce <- sce[, colSums2(counts(sce)>0)>750]
-percent.mito <- colSums2(counts(sce)[grep("^MT-", rowData(sce)$Symbol),]) / colSums2(counts(sce))
-sce <- sce[, percent.mito < .7]
-sce <- sce[, sce$demux.doublet.call %in% "SNG",]
-sce <- sce[, sce$Sample %in% c("ABM3","ABM4", "FBM3","FBM4","FBM5", "UCB1", "UCB5")]
+full.path <- bfcrpath(bfc,
+    "https://ndownloader.figshare.com/files/25953740")
+authors_meta <- readRDS(full.path)@meta.data
+
+# Add 'retained' metadata representing barcodes retained by authors.
+sce$retained <- colnames(sce) %in% rownames(authors_meta)
+
+# Now add NAs to this metadata to account for all the missing "cells"
+NAadd <- matrix(NA, ncol = ncol(authors_meta), nrow = sum(!sce$retained))
+colnames(NAadd) <- colnames(authors_meta)
+rownames(NAadd) <- colnames(sce)[!sce$retained]
+authors_meta <- rbind(authors_meta, NAadd)
+# Rearrange to be in same order
+authors_meta <- authors_meta[colnames(sce),]
+
+# Add celltypes
+sce$labels <- authors_meta$trajectory_calls
+
+### Removable
+
+# Add Developmental Stage Scoring as a DataFrame
+# Retrieve and rename a bit better
+DevStageScores <- DataFrame(
+  HSCMPP_scores = authors_meta$MPP.RFScore,
+  HSCMPP_inTraining = authors_meta$MPP.inTraining,
+  GMP_scores = authors_meta$GMP.RFScore,
+  GMP_inTraining = authors_meta$GMP.inTraining,
+  MEP_scores = authors_meta$MEP.RFScore,
+  MEP_inTraining = authors_meta$MEP.inTraining,
+  row.names = rownames(authors_meta)
+)
+sce$DevStageScoring <- DevStageScores
 ```
+
 
 # Saving to file 
 
@@ -114,7 +136,7 @@ We now save all of the relevant components to file for upload to `r Biocpkg("Exp
 path <- file.path("scRNAseq", "bunis-hspc", "2.6.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(assay(sce), file=file.path(path, "counts.rds"))
-saveRDS(meta, file=file.path(path, "coldata.rds"))
+saveRDS(coldata(sce), file=file.path(path, "coldata.rds"))
 saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
 ```
 
