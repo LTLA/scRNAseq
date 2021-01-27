@@ -107,6 +107,7 @@ summary(sce$retained)
 
 # Add celltypes
 authors_meta <- raw_meta[colnames(sce),]
+rownames(authors_meta) <- colnames(sce)
 sce$labels <- authors_meta$trajectory_calls
 table(sce$labels)
 
@@ -122,7 +123,7 @@ DevStageScores <- DataFrame(
   row.names = rownames(authors_meta)
 )
 sce$DevStageScoring <- DevStageScores
-sce$DevStageScoring
+sce$DevStageScoring[sce$retained,]
 ```
 
 To save space, we only save the `colData` for non-`NA` rows.

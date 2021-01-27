@@ -29,5 +29,25 @@ for (tissue in c("Bladder", "Blood", "Common.bile.duct", "Esophagus", "Heart",
         )
 }
 
-write.csv(file="../../extdata/2.6.0/metadata-he-organ-atlas.csv", do.call(rbind, collected), row.names=FALSE)
+collected <- do.call(rbind, collected)
 
+extra <- data.frame(
+    Title = "He human organ atlas reducedDims",
+    Description = "Reduced dimensions for the He human organ atlas single-cell RNA-seq dataset",
+    RDataPath = file.path("scRNAseq", "he-organ-atlas", "2.6.0", "reddim.rds"),
+    BiocVersion="3.13",
+    Genome="hg38",
+    SourceType="TSV",
+    SourceUrl="https://github.com/bei-lab/scRNA-AHCA/tree/master/Cell_barcode_and_corresponding_cell_types_of_AHCA",
+    SourceVersion="Annotation_AHCA_alltissues_meta.data_84363_cell.txt",
+    Species="Homo sapiens",
+    TaxonomyId="9606",
+    Coordinate_1_based=NA,
+    DataProvider="GEO",
+    Maintainer="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+    RDataClass="list",
+    DispatchClass="Rds",
+    stringsAsFactors = FALSE
+)
+
+write.csv(file="../../extdata/2.6.0/metadata-he-organ-atlas.csv", rbind(collected, extra), row.names=FALSE)

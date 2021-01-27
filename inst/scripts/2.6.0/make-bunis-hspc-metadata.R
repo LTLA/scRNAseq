@@ -8,7 +8,10 @@ write.csv(file="../../extdata/2.6.0/metadata-bunis-hspc.csv",
         BiocVersion="3.13",
         Genome="hg38",
         SourceType=c("MTX", "TSV", "TSV"),
-        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086",
+        SourceUrl=c(
+            "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086",
+            "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086;https://ndownloader.figshare.com/files/25953740",
+            "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086"),
         SourceVersion=c(
             "GSE158490_matrix.mtx.gz",
             "GSE158490_HSPC.best.txt.gz;GSE158490_barcodes.tsv.gz",	

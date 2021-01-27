@@ -113,6 +113,7 @@ for (tissue in names(all.counts)) {
     stopifnot(all(!is.na(m)))
     saveRDS(meta[m,], file=file.path(path, paste0("coldata-", tissue, ".rds")))
 }
+saveRDS(reddims, file=file.path(path, "reddim.rds"))
 ```
 
 # Session information
