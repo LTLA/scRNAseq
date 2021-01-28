@@ -1,0 +1,81 @@
+---
+title: Processing the Kannan heart field dataset
+author: Aaron Lun
+date: 28 January 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of mouse heart fields from an unpublished study.
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE165300](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE165300).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+mat.path <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE165300&format=file&file=GSE165300%5Fcombined%5Fdata%5Fsparse%2Emtx%2Egz")
+
+library(Matrix)
+mat <- readMM(mat.path)
+dim(mat)
+```
+
+Slapping together a `SingleCellExperiment`.
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=mat))
+
+cell.path <- bfcrpath(bfc,
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE165300&format=file&file=GSE165300%5Fcombined%5Fdata%5Fsparse%5Fcells%2Etxt%2Egz")
+colnames(sce) <- readLines(cell.path)
+
+gene.path <- bfcrpath(bfc,
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE165300&format=file&file=GSE165300%5Fcombined%5Fdata%5Fsparse%5Fgenes%2Etxt%2Egz")
+rownames(sce) <- readLines(gene.path)
+```
+
+# Adding metadata
+
+Slapping down some column annotations:
+
+```{r}
+meta.path <- bfcrpath(bfc,
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE165300&format=file&file=GSE165300%5Fcombined%5Fpheno%2Etxt%2Egz")
+df <- read.table(meta.path)
+head(df)
+stopifnot(identical(rownames(df), colnames(sce)))
+colData(sce) <- cbind(colData(sce), df)
+```
+
+# Saving to file
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "kannan-heart", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(assay(sce), file=file.path(path, "counts.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
