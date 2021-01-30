@@ -12,6 +12,7 @@ Reference,Taxonomy,Part,Number,Call
 @grun2016denovo,10090,haematopoietic stem cells,1915,GrunHSCData()
 @grun2016denovo,9606,pancreas,1728,GrunPancreasData()
 @giladi2018singlecell,10090,haematopoietic stem cells,81024,GiladiHSCData(mode='rna')
+@he2020singlecell,9606,various organs,84363,HeOrganAtlasData()
 @hermann2018spermatogenesis,10090,spermatogenic cells,2325,HermannSpermatogenesisData()
 @hu2017dissecting,10090,cortex,48000,HuCortexData()
 @kolodziejczyk2015singlecell,10090,embryonic stem cells,704,KolodziejczykESCData()

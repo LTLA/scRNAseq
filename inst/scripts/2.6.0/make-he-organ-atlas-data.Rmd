@@ -79,7 +79,7 @@ meta <- meta[,setdiff(colnames(meta), c("tSNE_1", "tSNE_2"))]
 We also obtain finer cell types from reclustering.
 
 ```{r}
-all.anno <- rep(NA_character_, nrow(meta))
+fine.anno <- broad.anno <- rep(NA_character_, nrow(meta))
 
 for (sub in c("B_and_plasma.meta.data.txt", "CD4_meta.data.txt", "CD8_meta.data.txt",
     "Endothelial_cell.meta.data.txt", "Epithelial_cells.meta.data.txt", 
@@ -90,11 +90,14 @@ for (sub in c("B_and_plasma.meta.data.txt", "CD4_meta.data.txt", "CD8_meta.data.
     sub.df <- read.delim(sub.path)
 
     m <- match(sub.df$X, rownames(meta))
-    stopifnot(all(is.na(all.anno[m])))
-    all.anno[m] <- sub.df$annotation
+    stopifnot(all(is.na(fine.anno[m])))
+    stopifnot(all(is.na(broad.anno[m])))
+    broad.anno[m] <- sub(".meta\\.data.txt", "", sub)
+    fine.anno[m] <- sub.df$annotation
 }
 
-meta$annotation <- all.anno
+meta$reclustered.broad <- broad.anno
+meta$reclustered.fine <- fine.anno
 ```
 
 # Saving to file
@@ -111,6 +114,7 @@ for (tissue in names(all.counts)) {
 
     m <- match(colnames(current), rownames(meta))
     stopifnot(all(!is.na(m)))
+    stopifnot(all(meta$Tissue[m]==tissue))
     saveRDS(meta[m,], file=file.path(path, paste0("coldata-", tissue, ".rds")))
 }
 saveRDS(reddims, file=file.path(path, "reddim.rds"))
