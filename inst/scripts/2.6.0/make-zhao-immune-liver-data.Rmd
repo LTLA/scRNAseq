@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of T cells from multiple patients from @zhao2020singlecell.
+We obtain a single-cell RNA sequencing dataset of liver-resident immune cells from multiple donors from @zhao2020singlecell.
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE125188](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125188).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
