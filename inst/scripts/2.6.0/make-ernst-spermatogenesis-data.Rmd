@@ -16,7 +16,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of human organs from @he2020singlecell.
+We obtain a single-cell RNA sequencing dataset of mouse spermatogenesis from @ernst2019staged.
 Counts for endogenous genes are available from ArrayExpress using the accession number [E-MTAB-6946](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6946/).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
