@@ -1,0 +1,116 @@
+---
+title: Processing the Fletcher Olfactory Epithelium (OE) dataset
+author: Davide Risso
+date: 9 February 2021
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of Olfactory Epithelium cells from multiple mice from @fletcher2017deconstructing.
+Counts for the endogenous genes, spike-ins, and gene constructs are available from the Gene Expression Omnibus using the accession number [GSE95601](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE95601).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+fname <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE95601&format=file&file=GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5Fcounts%5Ftable%2Etxt%2Egz")
+
+protocol_data_file <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE95601&format=file&file=GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FprotocolData%2Etxt%2Egz")
+
+pheno_data_file <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE95601&format=file&file=GSE95601%5FoeHBCdiff%5FphenoData%2Etxt%2Egz")
+
+rowdata_file <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE95601&format=file&file=GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FfeatureData%2Etxt%2Egz")
+```
+
+Reading the counts in a matrix and the row and column data in dataframes:
+
+```{r}
+library(dplyr)
+
+counts <- read.table(fname)
+counts <- as.matrix(counts)
+
+protocol_data <- read.table(protocol_data_file, header = TRUE)
+pheno_data <- read.table(pheno_data_file, header = TRUE)
+coldata <- inner_join(pheno_data, protocol_data, by = "sample_sequencing_id")
+
+rowdata <- read.table(rowdata_file, header = TRUE)
+```
+
+Attaching the cluster results from the original analysis (cluster labels available [here](https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/clusterKey.md)):
+
+```{r}
+cluster_file <- bfcrpath(bfc, "https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/oeHBCdiff_clusterLabels.txt")
+cluster_id <- read.table(cluster_file, col.names = c("sample_id", "cluster_id"))
+
+cluster_labels <- data.frame(cluster_id = c(1:5, 7:12, 14, 15),
+                             cluster_label = c("HBC", 
+                                       "INP1", 
+                                       "GBC", 
+                                       "mSUS", 
+                                       "HBC2", 
+                                       "iSUS", 
+                                       "HBC1", 
+                                       "iOSN", 
+                                       "INP3", 
+                                       "MVC1", 
+                                       "mOSN", 
+                                       "INP2", 
+                                       "MVC2"),
+                             cluster_description = c("Resting Horizontal Basal Cells", 
+                                             "Immediate Neuronal Precursor 1", 
+                                             "Globose Basal Cells", 
+                                             "Mature Sustentacular Cells", 
+                                             "Transitional HBC 2", 
+                                             "Immature Sustentacular Cells", 
+                                             "Transitional HBC 1", 
+                                             "Immature Olfactory Sensory Neurons", 
+                                             "Immediate Neuronal Precursor 3", 
+                                             "Microvillous Cells, type 1", 
+                                             "Mature Olfactory Sensory Neurons", 
+                                             "Immediate Neuronal Precursor 2", 
+                                             "Microvillous Cells, type 2"))
+
+cluster_anno <- left_join(cluster_id, cluster_labels, by = "cluster_id")
+full_coldata <- left_join(coldata, cluster_anno, 
+                          by = c("sample_sequencing_id"="sample_id"))
+```
+
+Creating a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts),
+                            colData = full_coldata, rowData = rowdata)
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+path <- file.path("scRNAseq", "fletcher-oe", "2.6.0")
+dir.create(path, showWarnings=FALSE, recursive=TRUE)
+saveRDS(assay(sce), file=file.path(path, "counts.rds"))
+saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
