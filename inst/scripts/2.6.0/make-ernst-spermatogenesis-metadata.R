@@ -4,7 +4,7 @@ for (analysis in c("Cellranger", "emptyDrops")) {
             Title = sprintf("Ernst spermatogenesis %s (%s cell calls)", c("counts", "colData", "rowData"), analysis),
             Description = sprintf("%s for Ernst mouse spermatogenesis single-cell RNA-seq dataset with the %s-derived cell calls", 
                 c("Count matrix", "Per-cell metadata", "Per-gene metadata"), analysis),
-            RDataPath = file.path("scRNAseq", "he-organ-atlas", "2.6.0", 
+            RDataPath = file.path("scRNAseq", "ernst-spermatogenesis", "2.6.0", 
                 paste0(c("counts", "coldata", "rowdata"), "-", tolower(analysis), ".rds")),
             BiocVersion="3.13",
             Genome="mm10",
