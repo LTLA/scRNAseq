@@ -39,7 +39,7 @@
 #'
 #' @references
 #' Fletcher et al. (2017). Deconstructing Olfactory Stem
-#' Cell Trajectories at Single-Cell Resolution. \textit{Cell Stem Cell} 20(6):
+#' Cell Trajectories at Single-Cell Resolution. \emph{Cell Stem Cell} 20(6):
 #' 817–30.
 #'
 #' @examples
