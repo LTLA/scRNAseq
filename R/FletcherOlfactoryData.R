@@ -1,4 +1,4 @@
-#' Obtain the Fletcher OE data
+#' Obtain the Fletcher Olfactory data
 #'
 #' Obtain the mouse olfactory epithelial HBC stem cell differentiation dataset
 #' from Fletcher et al. (2017).
@@ -30,7 +30,7 @@
 #' 
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for
-#' \code{scRNAseq/fletcher-oe}.
+#' \code{scRNAseq/fletcher-olfactory}.
 #'
 #' @return A \linkS4class{SingleCellExperiment} object with a single matrix of
 #'   read counts.
@@ -43,15 +43,15 @@
 #' 817–30.
 #'
 #' @examples
-#' sce <- FletcherOEData()
+#' sce <- FletcherOlfactoryData()
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<-
 #' @importFrom SummarizedExperiment rowData rowData<-
-FletcherOEData <- function(filtered=TRUE, ensembl=FALSE, location=TRUE) {
+FletcherOlfactoryData <- function(filtered=TRUE, ensembl=FALSE, location=TRUE) {
     version <- "2.6.0"
 
-    sce <- .create_sce(file.path("fletcher-oe", version), has.rowdata=TRUE)
+    sce <- .create_sce(file.path("fletcher-olfactory", version), has.rowdata=TRUE)
 
     if (filtered) {
         sce <- sce[,!is.na(sce$cluster_id)]

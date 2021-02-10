@@ -1,9 +1,9 @@
-write.csv(file="../../extdata/2.6.0/metadata-fletcher-oe.csv",
+write.csv(file="../../extdata/2.6.0/metadata-fletcher-olfactory.csv",
     data.frame(
         Title = sprintf("Fletcher olfactory epithelial HBC stem cell differentiation %s", c("counts", "colData", "rowData")),
         Description = sprintf("%s for the Fletcher olfactory epithelial HBC stem cell differentiation dataset", 
             c("Count matrix", "Per-cell metadata", "Per-gene metadata")),
-        RDataPath = file.path("scRNAseq", "fletcher-oe", "2.6.0", 
+        RDataPath = file.path("scRNAseq", "fletcher-olfactory", "2.6.0", 
             c("counts.rds", "coldata.rds", "rowdata.rds")),
         BiocVersion="3.12",
         Genome="GRCm38.3",

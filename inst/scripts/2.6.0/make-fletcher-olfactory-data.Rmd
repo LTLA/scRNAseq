@@ -100,7 +100,7 @@ sce <- SingleCellExperiment(list(counts=counts),
 We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
 
 ```{r}
-path <- file.path("scRNAseq", "fletcher-oe", "2.6.0")
+path <- file.path("scRNAseq", "fletcher-olfactory", "2.6.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(assay(sce), file=file.path(path, "counts.rds"))
 saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
