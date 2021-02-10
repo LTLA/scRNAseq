@@ -9,17 +9,17 @@
 #'   contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should
 #'   be returned.
-#' @details
-#' Column metadata is scraped from GEO, using both the author-supplied
-#' "phenoData" per-cell annotations and the author-supplied "protocolData"
-#' per-cell annotations. The former includes information about the animals and
-#' the instruments, while the latter contains QC statistics.
+#' @details Column metadata is scraped from GEO, using both the author-supplied
+#' \dQuote{phenoData} per-cell annotations and the author-supplied
+#' \dQuote{protocolData} per-cell annotations. The former includes information
+#' about the animals and the instruments, while the latter contains QC
+#' statistics.
 #' 
 #' We also included the clustering results from the authors' analysis.
 #'
 #' If \code{filtered=TRUE}, only the cells used by the authors in their cluster
 #' analysis are returned. Otherwise, the cells not used by the authors will have
-#' NA in the clustering columns of the \code{\link{colData}}.
+#' \code{NA} in the clustering columns of the \code{\link{colData}}.
 #'
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the
 #' row names of the output object. Rows with missing Ensembl IDs are discarded,
