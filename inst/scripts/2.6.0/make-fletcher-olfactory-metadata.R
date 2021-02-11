@@ -1,0 +1,25 @@
+write.csv(file="../../extdata/2.6.0/metadata-fletcher-olfactory.csv",
+    data.frame(
+        Title = sprintf("Fletcher olfactory epithelial HBC stem cell differentiation %s", c("counts", "colData", "rowData")),
+        Description = sprintf("%s for the Fletcher olfactory epithelial HBC stem cell differentiation dataset", 
+            c("Count matrix", "Per-cell metadata", "Per-gene metadata")),
+        RDataPath = file.path("scRNAseq", "fletcher-olfactory", "2.6.0", 
+            c("counts.rds", "coldata.rds", "rowdata.rds")),
+        BiocVersion="3.13",
+        Genome="GRCm38.3",
+        SourceType="TSV",
+        SourceUrl="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE95601",
+        SourceVersion=c(
+            "GSE95601_oeHBCdiff_Cufflinks_eSet_counts_table.txt.gz",
+            "GSE95601_oeHBCdiff_phenoData.txt.gz",
+            "GSE95601_oeHBCdiff_Cufflinks_eSet_featureData.txt.gz"),
+        Species="Mus Musculus",
+        TaxonomyId="10090",
+        Coordinate_1_based=NA,
+        DataProvider="GEO",
+        Maintainer="Davide Risso <risso.davide@gmail.com>",
+        RDataClass=c("matrix", "DFrame", "DFrame"),
+        DispatchClass="Rds",
+        stringsAsFactors = FALSE
+    ),
+    row.names=FALSE)
