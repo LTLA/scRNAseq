@@ -39,8 +39,9 @@
 #' \emph{Nat Cell Biol} 20, 836-846
 #'
 #' @examples
-#' sce <- GiladiHSCData()
-#' 
+#' if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+#'     sce <- GiladiHSCData()
+#' }
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<-
 #' @importFrom SummarizedExperiment rowData rowData<-
