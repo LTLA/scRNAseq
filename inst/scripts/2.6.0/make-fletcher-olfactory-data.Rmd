@@ -46,6 +46,19 @@ counts <- as.matrix(counts)
 dim(counts)
 ```
 
+For some reason there are many `NA` values. 
+Author response here:
+
+> NA is equivalent to 0 in these matrices. I always produced matrices that had all the annotated genes in the reference transcriptome, and if no reads were detected than it was set to NA. Originally, I thought that distinguishing NAs and 0s for two slightly different cases (no reads in the current sample / no reads in any of the samples) could be useful, but this turned out not to be the case. So in the downstream analyses, I just overwrote the NA's with 0's right after reading the matrix.
+
+So we'll just replace them as well.
+
+```{r}
+lost <- is.na(counts)
+mean(lost)
+counts[lost] <- 0L
+```
+
 # Adding metadata
 
 Reading in the column data in dataframes:
