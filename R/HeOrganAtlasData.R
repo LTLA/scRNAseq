@@ -36,7 +36,9 @@
 #' \emph{Genome Biol} 21, 1:294.
 #'
 #' @examples
-#' sce <- HeOrganAtlasData()
+#' if (.Machine$sizeof.pointer > 4) { # too large for 32-bit machines!
+#'     sce <- HeOrganAtlasData()
+#' }
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
