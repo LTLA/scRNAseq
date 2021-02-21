@@ -1,7 +1,7 @@
 write.csv(file="../../extdata/2.6.0/metadata-bunis-hspc.csv",
     data.frame(
         Title = sprintf("Bunis human HSPC %s", c("counts", "colData", "rowData")),
-        Description = sprintf("%s for the Bunis human haematopoietic stem-progenitor single-cell RNA-seq dataset", 
+        Description = sprintf("%s for the Bunis human haematopoietic stem and progenitor single-cell RNA-seq dataset", 
             c("Count matrix", "Per-cell metadata", "Per-gene metadata")),
         RDataPath = file.path("scRNAseq", "bunis-hspc", "2.6.0", 
             c("counts.rds", "coldata.rds", "rowdata.rds")),
