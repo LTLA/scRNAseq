@@ -34,6 +34,6 @@ BunisHSPCData <- function(filtered=TRUE, rowdata=TRUE) {
 
     if (filtered) {
         sce <- sce[,sce$retained]
-        sce$filtered <- NULL
+        sce$retained <- NULL
     }
 }
