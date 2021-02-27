@@ -30,10 +30,22 @@
 BunisHSPCData <- function(filtered=TRUE, rowdata=TRUE) {
     version <- "2.6.0"
 
-    sce <- .create_sce(file.path("bunis-hspc", version))
+    sce <- .create_sce(file.path("bunis-hspc", version), has.rowdata = TRUE, has.coldata = FALSE)
+    
+    hub <- ExperimentHub()
+    colData.path <- file.path("scRNAseq", "bunis-hspc", version, "coldata.rds")
+    colData <- hub[hub$rdatapath==colData.path][[1]]
 
-    if (filtered) {
-        sce <- sce[,sce$retained]
-        sce$retained <- NULL
+    if (isTRUE(filtered)) {
+        keep <- colnames(sce) %in% rownames(colData)[colData$retained]
+        sce <- sce[, colnames(sce)[keep]]
+        colData$retained <- NULL
+    } else if (identical(filtered,"cells")) {
+        keep <- colnames(sce) %in% rownames(colData)
+        sce <- sce[, colnames(sce)[keep]]
     }
+    
+    colData(sce) <- colData[colnames(sce),, drop = FALSE]
+    
+    sce
 }
