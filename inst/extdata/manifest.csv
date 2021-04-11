@@ -10,7 +10,7 @@ Reference,Taxonomy,Part,Number,Call
 @chen2017singlecell,10090,brain,14437,ChenBrainData()
 @darmanis2015survey,9606,brain,466,DarmanisBrainData()
 @ernst2019staged,10090,testis,68937,ErnstSpermatogenesisData()
-@fletcher2017deconstructing,10090,olfactory epithelium,FletcherOlfactoryData()
+@fletcher2017deconstructing,10090,olfactory epithelium,616,FletcherOlfactoryData()
 @grun2016denovo,10090,haematopoietic stem cells,1915,GrunHSCData()
 @grun2016denovo,9606,pancreas,1728,GrunPancreasData()
 @giladi2018singlecell,10090,haematopoietic stem cells,81024,GiladiHSCData(mode='rna')
