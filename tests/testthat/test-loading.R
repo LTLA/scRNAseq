@@ -21,6 +21,21 @@ test_that("BuettnerESCData works", {
     expect_s4_class(rowRanges(out), "GRangesList")
 })
 
+test_that("BunisHSPCData works", {
+    out_filtered <- BunisHSPCData()
+    CHECK(out_filtered)
+    
+    out_cells <- BunisHSPCData(filtered = "cells")
+    CHECK(out_cells)
+    
+    out_all <- BunisHSPCData(filtered = FALSE)
+    CHECK(out_all)
+    
+    # Checks cell filtering and that colData is added all at once
+    expect_true( nrow(colData(out_filtered)) < nrow(colData(out_cells)) )
+    expect_true( nrow(colData(out_cells)) < nrow(colData(out_all)) )
+})
+
 test_that("CampbellBrainData works", {
     CHECK(CampbellBrainData(ensembl=TRUE))
 })
