@@ -21,6 +21,10 @@ test_that("BuettnerESCData works", {
     expect_s4_class(rowRanges(out), "GRangesList")
 })
 
+test_that("BunisHSPCData works", {
+    CHECK(BunisHSPCData())
+})
+
 test_that("CampbellBrainData works", {
     CHECK(CampbellBrainData(ensembl=TRUE))
 })

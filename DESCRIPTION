@@ -9,7 +9,8 @@ Authors@R: c(
     person("Alan", "O'Callaghan", role="ctb"),
     person("Jens", "Preussner", role="ctb"),
     person("Charlotte", "Soneson", role="ctb"),
-    person("Stephany", "Orjuela", role="ctb"))
+    person("Stephany", "Orjuela", role="ctb"),
+    person("Daniel", "Bunis", role="ctb"))
 Description: Gene-level counts for a collection of public scRNA-seq datasets,
     provided as SingleCellExperiment objects with cell- and gene-level metadata.
 License: CC0
