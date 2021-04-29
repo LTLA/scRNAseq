@@ -2,6 +2,36 @@
 \title{scRNAseq News}
 \encoding{UTF-8}
 
+\section{Version 2.6.0}{\itemize{
+\item Added the Bacher T cell dataset.
+
+\item Added the Bhaduri organoid dataset.
+
+\item Added the Darmanis brain dataset.
+
+\item Added the Ernst spermatogenesis dataset.
+
+\item Added the Fletcher olfactory dataset.
+
+\item Added the Giladi HSC dataset.
+
+\item Added the He organ atlas dataset.
+
+\item Added the Jessa brain dataset.
+
+\item Added the Nowakowski cortex dataset.
+
+\item Added the Pollen glia dataset.
+
+\item Added the Zeisel nervous system dataset.
+
+\item Added the Zhao immune liver dataset.
+
+\item Added the Zhong prefrontal cortex dataset.
+
+\item Added the Bunis HSPC dataset (Dan Bunis).
+})
+
 \section{Version 2.4.0}{\itemize{
 \item Added the Zilionis lung dataset (Jens Preussner).
 
