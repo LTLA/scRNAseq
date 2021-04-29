@@ -44,14 +44,19 @@ BunisHSPCData <- function(filtered=TRUE) {
 
     if (isTRUE(filtered)) {
         keep <- colnames(sce) %in% rownames(colData)[colData$retained]
-        sce <- sce[, colnames(sce)[keep]]
+        sce <- sce[,keep]
         colData$retained <- NULL
-    } else if (identical(filtered,"cells")) {
+    } else if (identical(filtered, "cells")) {
         keep <- colnames(sce) %in% rownames(colData)
-        sce <- sce[, colnames(sce)[keep]]
+        sce <- sce[,keep]
     }
-    
-    colData(sce) <- colData[colnames(sce),, drop = FALSE]
-    
+
+    # Weird performance issue when directly subsetting with rownames.
+    # Also, preserve names when filtered=FALSE, though this takes some time.
+    m <- match(colnames(sce), rownames(sce))
+    colData <- colData[m,, drop = FALSE]
+    rownames(colData) <- colnames(sce)
+    colData(sce) <- colData
+
     sce
 }
