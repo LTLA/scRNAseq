@@ -27,6 +27,7 @@ bfc <- BiocFileCache("raw_data", ask = FALSE)
 mat.path <- bfcrpath(bfc,
     "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fmatrix%2Emtx%2Egz")
 mat <- Matrix::readMM(mat.path)
+mat <- as(mat, "dgCMatrix")
 dim(mat)
 ```
 
