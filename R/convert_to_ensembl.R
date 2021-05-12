@@ -65,6 +65,10 @@
             ahub.id <- "AH73881"
         }
     }
-    AnnotationHub()[[ahub.id]]
+    .AnnotationHub()[[ahub.id]]
 }
 
+.AnnotationHub <- function() {
+    .move_cache("AnnotationHub", "ANNOTATION_HUB_CACHE")
+    AnnotationHub()
+}

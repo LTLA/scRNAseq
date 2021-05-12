@@ -41,7 +41,7 @@
 JessaBrainData <- function(filtered=TRUE, location=TRUE) {
     version <- "2.6.0"
 
-    hub <- ExperimentHub()
+    hub <- .ExperimentHub()
     sce <- .create_sce(file.path("jessa-brain", version), hub=hub)
 
     reddims <- hub[hub$rdatapath==file.path("scRNAseq", "jessa-brain", version, "reddims.rds")][[1]]

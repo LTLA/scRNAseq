@@ -48,7 +48,7 @@ HeOrganAtlasData <- function(tissue=c("Bladder", "Blood", "Common.bile.duct", "E
 {
     version <- "2.6.0"
     tissue <- match.arg(tissue, several.ok=TRUE)
-    hub <- ExperimentHub()
+    hub <- .ExperimentHub()
     host <- file.path("he-organ-atlas", version)
 
     all.sce <- lapply(tissue, function(x) .create_sce(host, has.rowdata=FALSE, suffix=x, hub=hub))

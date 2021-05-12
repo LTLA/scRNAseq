@@ -42,7 +42,7 @@ MacoskoRetinaData <- function(ensembl=FALSE, location=TRUE) {
         # For some bizarre reason, this dataset has all-caps symbols... for mice.
         # So we need to do some custom work to ensure that this converts properly.
         tag <- "AH73905"
-        edb <- AnnotationHub()[[tag]]
+        edb <- .AnnotationHub()[[tag]]
 
         anno <- select(edb, keys=keys(edb), keytype="GENEID", columns="SYMBOL")
         all.symbols <- tolower(anno$SYMBOL)
