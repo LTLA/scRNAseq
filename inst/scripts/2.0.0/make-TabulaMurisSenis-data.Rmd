@@ -1,0 +1,99 @@
+---
+title: "Processing Tabula Muris Senis datasets"
+author: Stefania Astrologo
+date: "May 18, 2021"
+output:
+  BiocStyle::html_document:
+    titlecaps: false
+    toc_float: true
+bibliography: ../ref.bib
+---
+
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Short intro to the datasets
+We obtain a single-cell RNA sequencing mouse datasets from @TabulaMurisSenis2020.
+This is a comprehensive analysis of the aging dynamics across the mouse lifespan.
+The sample in different stages have been processed using:
+1) droplet-based (10x Genomics) technology and 2) FACS sorting - Smart-seq2 technology.
+
+# Downloading the dataset as h5ad objects
+The data can be found in the following link: _Tabula Muris Senis_ ([figShare](https://figshare.com/articles/dataset/Tabula_Muris_Senis_Data_Objects/12654728)) as .h5ad files.
+
+```{r Setup Output folder}
+tms_folder = "TMS"
+
+# Setup Output folders
+folders_name <- c("Tabula-Muris-Senis-droplet", "Tabula-Muris-Senis-facs" )
+
+for (f_name in folders_name){
+        
+  cmd <- paste0("mkdir ", f_name)     
+  system(cmd, intern = FALSE)
+  
+}
+
+```
+
+```{r}
+
+library(tidyverse)
+library(Seurat)
+library(scater)
+library(sceasy)
+library(reticulate)
+use_condaenv('sceasy')
+
+
+technologies <- c('droplet', 'facs')
+
+for (type in technologies){
+
+  for (h5ad_file in dir(tms_folder, pattern = type)) {
+  
+  out_folder <- sprintf('Tabula-Muris-Senis-%s', type)
+
+  tissue <- str_remove(h5ad_file,sprintf('tabula-muris-senis-%s-processed-official-annotations-', type)) %>%
+            str_remove('.h5ad')                                      
+
+  H5AD_path <- file.path(tms_folder, h5ad_file)
+
+  so  <- sceasy::convertFormat(H5AD_path, from="anndata", to="seurat", main_layer = 'data')
+  sce <- as.SingleCellExperiment(so)
+
+  # Save counts-tissue.rds
+  counts <- assay(sce,1)
+  counts_path <- file.path(out_folder, sprintf("%s-%s.rds",'counts', tissue))
+  saveRDS(counts, counts_path)
+
+  # Save coldata-tissue.rds
+  coldata      <- colData(sce)
+  coldata_path <- file.path(out_folder, sprintf("%s-%s.rds",'coldata', tissue))
+  saveRDS(coldata, coldata_path)
+
+  # Save rowdata-tissue.rds
+  rowdata      <- rowData(sce)
+  rowdata_path <- file.path(out_folder, sprintf("%s-%s.rds",'rowdata', tissue))
+  saveRDS(rowdata, rowdata_path)
+
+  }
+}
+  
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
+
+[sceasy](https://github.com/cellgeni/sceasy) is a package that helps easy conversion of different single-cell data formats to each other.
+
+
+

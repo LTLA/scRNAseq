@@ -24,7 +24,7 @@ Reference,Taxonomy,Part,Number,Call
 @lamanno2016molecular,9606,embryonic midbrain,1977,LaMannoBrainData('human-embryo')
 @lamanno2016molecular,9606,induced pluripotent stem cells,337,LaMannoBrainData('human-ips')
 @lamanno2016molecular,10090,adult dopaminergic neurons,243,LaMannoBrainData('mouse-adult')
-@lamanno2016molecular,9606,embyronic midbrain,1907,LaMannoBrainData('mouse-embryo')
+@lamanno2016molecular,10090,embyronic midbrain,1907,LaMannoBrainData('mouse-embryo')
 @lawlor2017singlecell,9606,pancreas,638,LawlorPancreasData()
 @leng2015oscope,9606,embryonic stem cells,460,LengESCData()
 @lun2017assessing,10090,416B cells,192,LunSpikeInData('416b')
