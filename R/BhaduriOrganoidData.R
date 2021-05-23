@@ -18,7 +18,7 @@
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/bhaduri-organoid}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of normalized expression values.
 #'
 #' @author Aaron Lun
 #'
@@ -38,6 +38,7 @@
 BhaduriOrganoidData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.6.0"
     sce <- .create_sce(file.path("bhaduri-organoid", version), has.rowdata=FALSE)
+    assayNames(sce) <- "normalized"
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
