@@ -53,7 +53,7 @@ BunisHSPCData <- function(filtered=TRUE) {
 
     # Weird performance issue when directly subsetting with rownames.
     # Also, preserve names when filtered=FALSE, though this takes some time.
-    m <- match(colnames(sce), rownames(sce))
+    m <- match(colnames(sce), rownames(colData))
     colData <- colData[m,, drop = FALSE]
     rownames(colData) <- colnames(sce)
     colData(sce) <- colData
