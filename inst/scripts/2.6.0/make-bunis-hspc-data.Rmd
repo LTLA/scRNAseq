@@ -144,7 +144,6 @@ path <- file.path("scRNAseq", "bunis-hspc", "2.6.0")
 dir.create(path, showWarnings=FALSE, recursive=TRUE)
 saveRDS(assay(sce), file=file.path(path, "counts.rds"))
 saveRDS(colData(sce)[keep,], file=file.path(path, "coldata.rds"))
-saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
 ```
 
 # Session information
