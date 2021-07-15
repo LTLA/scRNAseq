@@ -26,6 +26,7 @@ Reference,Taxonomy,Part,Number,Call
 @lamanno2016molecular,10090,adult dopaminergic neurons,243,LaMannoBrainData('mouse-adult')
 @lamanno2016molecular,9606,embyronic midbrain,1907,LaMannoBrainData('mouse-embryo')
 @lawlor2017singlecell,9606,pancreas,638,LawlorPancreasData()
+@ledergor2018single,9606,bone marrow plasma cells,51840,LedergorMyelomaData()
 @leng2015oscope,9606,embryonic stem cells,460,LengESCData()
 @lun2017assessing,10090,416B cells,192,LunSpikeInData('416b')
 @lun2017assessing,10090,trophoblasts,192,LunSpikeInData('tropho')
