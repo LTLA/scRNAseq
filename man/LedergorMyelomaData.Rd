@@ -40,5 +40,5 @@ Single cell dissection of plasma cell heterogeneity in symptomatic and
 asymptomatic myeloma. \emph{Nat Med.} 24(12), 1867–1876.
 }
 \author{
-Aaron Lun, Milan Malfait
+Milan Malfait
 }

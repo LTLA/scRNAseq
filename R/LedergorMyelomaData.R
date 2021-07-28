@@ -20,7 +20,7 @@
 #'
 #' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
 #'
-#' @author Aaron Lun, Milan Malfait
+#' @author Milan Malfait
 #'
 #' @references
 #' Ledergor G et al. (2018)
