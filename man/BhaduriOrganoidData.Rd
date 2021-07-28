@@ -12,7 +12,7 @@ BhaduriOrganoidData(ensembl = FALSE, location = TRUE)
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \linkS4class{SingleCellExperiment} object with a single matrix of normalized expression values.
 }
 \description{
 Obtain the human cortical organoid single-cell RNA-seq dataset from Bhaduri et al. (2020).
