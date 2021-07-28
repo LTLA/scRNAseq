@@ -33,7 +33,7 @@
 #' }
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<- reducedDims<- colPairs<-
-#' @importFrom SummarizedExperiment rowData rowData<-
+#' @importFrom SummarizedExperiment rowData rowData<- assayNames<-
 #' @importFrom BiocGenerics cbind
 BhaduriOrganoidData <- function(ensembl=FALSE, location=TRUE) {
     version <- "2.6.0"

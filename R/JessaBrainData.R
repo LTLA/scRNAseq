@@ -3,7 +3,6 @@
 #' Obtain the mouse brain single-cell RNA-seq dataset from Jessa et al. (2019).
 #'
 #' @param filtered Logical scalar indicating whether to filter out cells that were not used by the authors.
-#' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' 
 #' @details

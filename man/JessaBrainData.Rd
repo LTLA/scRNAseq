@@ -10,8 +10,6 @@ JessaBrainData(filtered = TRUE, location = TRUE)
 \item{filtered}{Logical scalar indicating whether to filter out cells that were not used by the authors.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
-
-\item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
