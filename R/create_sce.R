@@ -1,26 +1,3 @@
-#' @import methods
-#' @importFrom BiocGenerics updateObject
-#' @importFrom S4Vectors mcols
-.get_hub_resource_by_rdatapath <- function(hub, rdata_dirname, rdata_basename) {
-    stopifnot(is(hub, "ExperimentHub"),
-              is.character(rdata_dirname),
-              length(rdata_dirname) == 1L,
-              !is.na(rdata_dirname),
-              is.character(rdata_basename),
-              length(rdata_basename) == 1L,
-              !is.na(rdata_basename)
-    )
-    rdatapath <- file.path(rdata_dirname, rdata_basename)
-    idx <- which(rdatapath == mcols(hub)$rdatapath)
-    if (length(idx) == 0L)
-        stop("rdatapath \"", rdatapath, "\" matches no ",
-             class(hub), " resource")
-    if (length(idx) > 1L)
-        warning("rdatapath \"", rdatapath, "\" matches\n  more than one ",
-                class(hub), " resource; picked the first one")
-    updateObject(hub[[idx]])
-}
-
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom SingleCellExperiment SingleCellExperiment
 .create_sce <- function(dataset, hub=.ExperimentHub(), assays="counts", has.rowdata=TRUE, has.coldata=TRUE, suffix=NULL) {
@@ -33,18 +10,15 @@
 
     all.assays <- list()
     for (a in assays) {
-        rdata_basename <- sprintf("%s%s.rds", a, suffix)
-        all.assays[[a]] <- .get_hub_resource_by_rdatapath(hub, host, rdata_basename)
+        all.assays[[a]] <- hub[hub$rdatapath==file.path(host, sprintf("%s%s.rds", a, suffix))][[1]]
     }
 
     args <- list()
     if (has.coldata) {
-        rdata_basename <- sprintf("coldata%s.rds", suffix)
-        args$colData <- .get_hub_resource_by_rdatapath(hub, host, rdata_basename)
+        args$colData <- hub[hub$rdatapath==file.path(host, sprintf("coldata%s.rds", suffix))][[1]]
     }
     if (has.rowdata) {
-        rdata_basename <- sprintf("rowdata%s.rds", suffix)
-        args$rowData <- .get_hub_resource_by_rdatapath(hub, host, rdata_basename)
+        args$rowData <- hub[hub$rdatapath==file.path(host, sprintf("rowdata%s.rds", suffix))][[1]]
     }
 
     do.call(SingleCellExperiment, c(list(assays=all.assays), args))
@@ -63,12 +37,12 @@
     host <- file.path("scRNAseq", dataset)
     all.assays <- list()
     for (i in assays) {
-        rdata_basename <- sprintf("%s.rds", i)
-        all.assays[[i]] <- .get_hub_resource_by_rdatapath(hub, host, rdata_basename)
+        path <- file.path(host, sprintf("%s.rds", i))
+        all.assays[[i]] <- hub[hub$rdatapath==path][[1]]
     }
 
-    coldata <- .get_hub_resource_by_rdatapath(hub, host, "coldata.rds")
-    metadata <- .get_hub_resource_by_rdatapath(hub, host, "metadata.rds")
+    coldata <- hub[hub$rdatapath==file.path(host, "coldata.rds")][[1]]
+    metadata <- hub[hub$rdatapath==file.path(host, "metadata.rds")][[1]]
     SingleCellExperiment(all.assays, colData=coldata, metadata=metadata)
 }
 

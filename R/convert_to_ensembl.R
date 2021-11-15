@@ -19,10 +19,10 @@
     .define_location_from_ensembl(sce, edb=edb, location=location)
 }
 
-#' @import methods
 #' @importFrom SummarizedExperiment rowRanges<- rowRanges rowData
 #' @importFrom S4Vectors mcols<-
 #' @importFrom BiocGenerics cbind
+#' @importFrom methods as
 #' @importClassesFrom GenomicRanges GRangesList
 #' @importFrom GenomicFeatures genes
 .define_location_from_ensembl <- function(sce, species, ahub.id=NULL, edb=NULL, location=TRUE) {
