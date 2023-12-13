@@ -37,7 +37,12 @@ Suggests:
     BiocFileCache,
     testthat,
     rappdirs,
-    tools
+    tools,
+    gypsum,
+    jsonvalidate,
+    digest,
+    alabaster.base,
+    alabaster.sce
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 
@@ -48,4 +53,4 @@ biocViews:
     RNASeqData,
     SingleCellData
 BuildResaveData: no
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
