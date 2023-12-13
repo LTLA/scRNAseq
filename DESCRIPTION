@@ -29,7 +29,11 @@ Imports:
     AnnotationHub,
     AnnotationDbi,
     ensembldb,
-    GenomicFeatures
+    GenomicFeatures,
+    alabaster.base,
+    alabaster.matrix,
+    DelayedArray,
+    alabaster.sce
 Suggests: 
     BiocStyle, 
     knitr, 
@@ -40,9 +44,7 @@ Suggests:
     tools,
     gypsum,
     jsonvalidate,
-    digest,
-    alabaster.base,
-    alabaster.sce
+    digest
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 

@@ -49,6 +49,8 @@
 #' alabaster.base::readObject(tmp)
 #' 
 #' @export
+#' @importFrom alabaster.base saveObject
+#' @importMethodsFrom alabaster.sce saveObject
 saveDataset <- function(x, path, title, description, taxonomy, genome, sources, maintainer.name, maintainer.email, version=NULL) {
     if (is.null(version)) {
         version <- BiocManager::version()
