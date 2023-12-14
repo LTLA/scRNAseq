@@ -1,7 +1,6 @@
 ---
 title: Processing the Zeisel brain dataset
 author: Aaron Lun
-date: 18 May 2019
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
