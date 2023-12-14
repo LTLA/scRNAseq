@@ -9,6 +9,7 @@ fetchDataset(
   version,
   subpath = NULL,
   package = "scRNAseq",
+  cache = NULL,
   overwrite = FALSE,
   ...
 )
@@ -21,6 +22,8 @@ fetchDataset(
 \item{subpath}{String containing the path to a subdataset, if \code{name} contains multiple datasets.}
 
 \item{package}{String containing the name of the package.}
+
+\item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.}
 
 \item{...}{Further arguments to pass to \code{\link{readObject}}.}
 }
@@ -42,7 +45,7 @@ fetchMetadata("zeisel-brain-2015", "2.17.1")
 
 \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
 
-\code{\link{listAvailableAssets}} and friends, to get options for \code{name} and \code{version}.
+\code{\link{listAvailableVersions}} and friends, to get options for \code{name} and \code{version}.
 }
 \author{
 Aaron Lun
