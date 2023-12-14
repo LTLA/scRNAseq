@@ -41,6 +41,11 @@ list.files(tmp, recursive=TRUE)
 alabaster.base::readObject(tmp)
 
 }
+\seealso{
+\code{\link{createMetadata}}, to create the meadata.
+
+\code{\link{uploadDirectory}}, to upload the saved contents.
+}
 \author{
 Aaron Lun
 }

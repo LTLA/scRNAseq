@@ -25,6 +25,16 @@ fetchDataset(name, version, subpath = NULL, package = "scRNAseq", ...)
 \description{
 Fetch a dataset (or its metadata) from the gypsum backend.
 }
+\examples{
+fetchDataset("zeisel-brain-2015", "2.17.1")
+fetchMetadata("zeisel-brain-2015", "2.17.1")
+
+}
+\seealso{
+\code{\link{createMetadata}}, on some of the metadata requirements.
+
+\code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
+}
 \author{
 Aaron Lun
 }

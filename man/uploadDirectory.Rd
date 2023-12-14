@@ -82,6 +82,11 @@ if (interactive()) {
 }
 
 }
+\seealso{
+\code{\link{saveDataset}}, to save data to a directory.
+
+\code{\link{fetchDataset}}, to download an existing dataset into the current sesssion.
+}
 \author{
 Aaron Lun
 }

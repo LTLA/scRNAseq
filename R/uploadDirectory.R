@@ -28,6 +28,11 @@
 #' and for the \pkg{scRNAseq} maintainers to review the content before approval.
 #' Note that uploads from untrusted users are automatically probational so setting \code{probation=FALSE} is not explicitly required in such cases.
 #'
+#' @seealso
+#' \code{\link{saveDataset}}, to save data to a directory.
+#'
+#' \code{\link{fetchDataset}}, to download an existing dataset into the current sesssion.
+#'
 #' @author Aaron Lun
 #' @examples
 #' library(SingleCellExperiment)

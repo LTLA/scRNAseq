@@ -8,6 +8,11 @@
 #'
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
 #'
+#' @seealso
+#' \code{\link{createMetadata}}, to create the meadata.
+#'
+#' \code{\link{uploadDirectory}}, to upload the saved contents.
+#' 
 #' @author Aaron Lun
 #' @examples
 #' library(SingleCellExperiment)

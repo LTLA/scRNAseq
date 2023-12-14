@@ -12,7 +12,15 @@
 #'
 #' \code{fetchMetadata} returns a named list of metadata for the specified dataset.
 #'
+#' @seealso
+#' \code{\link{createMetadata}}, on some of the metadata requirements.
+#'
+#' \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
+#' 
 #' @author Aaron Lun
+#' @examples
+#' fetchDataset("zeisel-brain-2015", "2.17.1")
+#' fetchMetadata("zeisel-brain-2015", "2.17.1")
 #'
 #' @export
 #' @importFrom alabaster.base altReadObjectFunction readObject
@@ -38,7 +46,7 @@ fetchMetadata <- function(name, version, path=NULL, package="scRNAseq") {
     } else {
         path <- paste0(path, "/_bioconductor.json")
     }
-    fromJSON(gypsum::saveFile(package, name, version, path), simplifyVector=FALSE)
+    jsonlite::fromJSON(gypsum::saveFile(package, name, version, path), simplifyVector=FALSE)
 }
 
 #' @importFrom alabaster.base readObjectFile
