@@ -2,11 +2,6 @@
 title: Processing the Zeisel brain dataset
 author: Aaron Lun
 date: 18 May 2019
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,7 +11,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of the mouse brain from @zeisel2015brain. 
+We obtain a single-cell RNA sequencing dataset of the mouse brain from [Zeisel et al. (2015)](https://doi.org/10.1126/science.aaa1934).
 Counts for endogenous genes, mitochondrial genes, repeats and spike-in transcripts are available from http://linnarssonlab.org/cortex.
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
@@ -65,9 +60,17 @@ readFormat <- function(infile) {
     counts <- read.delim(infile, stringsAsFactors=FALSE, 
         header=FALSE, row.names=1, skip=11)[,-1] 
     counts <- as.matrix(counts)
-    colnames(counts) <- metadata$cell_id
 
-    SingleCellExperiment(list(counts=counts), colData=metadata)
+    # Clearing out names so that they don't get saved (again) at the assay level.
+    rn <- rownames(counts)
+    rownames(counts) <- NULL
+    colnames(counts) <- NULL
+
+    sce <- SingleCellExperiment(list(counts=as(counts, "SVT_SparseMatrix")), colData=metadata)
+    rownames(sce) <- rn
+    colnames(sce) <- metadata$cell_id
+
+    sce
 }
 ```
 
@@ -105,12 +108,17 @@ We combine all components into a single `SingleCellExperiment` object.
 ```{r}
 sce <- rbind(endo.data, mito.data)
 rowData(sce)$featureType <- rep(c("endogenous", "mito"), c(nrow(endo.data), nrow(mito.data)))
+mainExpName(sce) <- "gene"
+
+# Removing the colData as it's duplicated with that of the main SCE.
+colData(rep.data) <- NULL
 altExp(sce, "repeat") <- rep.data
 
 # Adding some spike-in congcentrations to the pile.
 spike.conc <- scRNAseq::ERCCSpikeInConcentrations(volume = 9, dilution = 20000)
 spike.conc <- spike.conc[rownames(spike.data), ]
 rowData(spike.data) <- cbind(rowData(spike.data), spike.conc)
+colData(spike.data) <- NULL
 altExp(sce, "ERCC") <- spike.data
 ```
 
