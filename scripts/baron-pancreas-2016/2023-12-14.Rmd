@@ -1,12 +1,6 @@
 ---
 title: Processing the Baron pancreas dataset
 author: Aaron Lun
-date: "June 27, 2019"
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,7 +10,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of human pancreas from @baron2016singlecell.
+We obtain a single-cell RNA sequencing dataset of human pancreas from [Baron et al. (2016)](https://doi.org/10.1016/j.cels.2016.08.011).
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE84133](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE84133).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
@@ -84,13 +78,31 @@ coldata <- DataFrame(donor=donor, label=labels)
 coldata
 ```
 
-We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+We save all of the components to disk in preparation for upload.
 
 ```{r}
-path <- file.path("scRNAseq", "baron-pancreas", "2.0.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(counts, file=file.path(path, "counts-human.rds"))
-saveRDS(coldata, file=file.path(path, "coldata-human.rds"))
+library(DelayedArray)
+dn <- dimnames(counts)
+dimnames(counts) <- NULL
+y <- as(counts, "SVT_SparseMatrix")
+type(y) <- "integer"
+
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=y), colData=coldata)
+dimnames(sce) <- dn
+
+meta <- createMetadata(
+    title="A Single-Cell Transcriptomic Map of the Human and Mouse Pancreas Reveals Inter- and Intra-cell Population Structure",
+    description="Although the function of the mammalian pancreas hinges on complex interactions of distinct cell types, gene expression profiles have primarily been described with bulk mixtures. Here we implemented a droplet-based, single-cell RNA-seq method to determine the transcriptomes of over 12,000 individual pancreatic cells from four human donors and two mouse strains. Cells could be divided into 15 clusters that matched previously characterized cell types: all endocrine cell types, including rare epsilon-cells; exocrine cell types; vascular cells; Schwann cells; quiescent and activated stellate cells; and four types of immune cells. We detected subpopulations of ductal cells with distinct expression profiles and validated their existence with immuno-histochemistry stains. Moreover, among human beta- cells, we detected heterogeneity in the regulation of genes relating to functional maturation and levels of ER stress. Finally, we deconvolved bulk gene expression samples using the single-cell data to detect disease-associated differential expression. Our dataset provides a resource for the discovery of novel cell type-specific transcription factors, signaling receptors, and medically relevant genes.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(list(provider="GEO", id="GSE84133")),
+    maintainer.name="Aaron Lun",
+    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+library(scRNAseq)
+saveDataset(sce, "finished", meta)
 ```
 
 # Reading in mouse data
@@ -124,13 +136,23 @@ coldata <- DataFrame(strain=strain, label=labels)
 coldata
 ```
 
-We save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
+We save all of the components to disk in preparation for upload.
 
 ```{r}
-path <- file.path("scRNAseq", "baron-pancreas", "2.0.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(counts, file=file.path(path, "counts-mouse.rds"))
-saveRDS(coldata, file=file.path(path, "coldata-mouse.rds"))
+library(DelayedArray)
+dn <- dimnames(counts)
+dimnames(counts) <- NULL
+y <- as(counts, "SVT_SparseMatrix")
+type(y) <- "integer"
+
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=y), colData=coldata)
+dimnames(sce) <- dn
+
+library(scRNAseq)
+meta$taxonomy_id <- "10090"
+meta$genome <- "GRCm38"
+saveDataset(sce, "finished", meta)
 ```
 
 # Session information
@@ -138,5 +160,3 @@ saveRDS(coldata, file=file.path(path, "coldata-mouse.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
