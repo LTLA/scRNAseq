@@ -16,6 +16,8 @@
 #' \code{\link{createMetadata}}, on some of the metadata requirements.
 #'
 #' \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
+#'
+#' \code{\link{listAvailableVersions}} and friends, to get options for \code{name} and \code{version}.
 #' 
 #' @author Aaron Lun
 #' @examples
