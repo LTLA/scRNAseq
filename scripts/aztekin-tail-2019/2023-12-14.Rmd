@@ -77,6 +77,9 @@ dimnames(counts) <- NULL
 sce <- SingleCellExperiment(list(counts=counts), colData=meta)
 dimnames(sce) <- dn
 
+reducedDim(sce, "UMAP") <- as.matrix(colData(sce)[,c("X", "Y")])
+colData(sce) <- colData(sce)[,setdiff(colnames(colData(sce)), c("X", "Y"))]
+
 library(scRNAseq)
 unlink("finished", recursive=TRUE)
 saveDataset(sce, "finished",
