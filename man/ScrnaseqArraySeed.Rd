@@ -27,16 +27,16 @@ ScrnaseqArraySeed(
 ScrnaseqArray(path, seed = NULL, ...)
 }
 \arguments{
-\item{name}{String containing the name of the dataset containing the array.
+\item{name}{String containing the name of the asset containing the array.
 Alternatively an existing ScrnaseqArraySeed, which is returned without modification.}
 
-\item{version}{String containing the version of the dataset containing the array.}
+\item{version}{String containing the version of the asset containing the array.}
 
-\item{path}{String containing the path to the array inside the dataset.}
+\item{path}{String containing the path to the array inside the asset.}
 
 \item{cached}{String containing the path to the locally cached representation of the array.}
 
-\item{package}{String containing the name of the package containing the dataset.}
+\item{package}{String containing the name of the package containing the asset.}
 
 \item{seed}{Contents of the loaded array.
 If \code{NULL}, this is created by calling \code{\link{readObject}} on \code{cached}.}
@@ -47,7 +47,7 @@ If \code{NULL}, this is created by calling \code{\link{readObject}} on \code{cac
 For the constructors, an instance of the \linkS4class{ScrnaseqArraySeed} or \linkS4class{ScrnaseqArray}.
 }
 \description{
-An array that was loaded as part of a dataset from \code{\link{fetchDataset}}.
+A \linkS4class{DelayedArray} class that remembers its provenance, typically from \code{\link{fetchDataset}}.
 This allows methods to avoid re-saving the array and uploading a duplicate copy when, e.g., updating an existing dataset.
 }
 \details{

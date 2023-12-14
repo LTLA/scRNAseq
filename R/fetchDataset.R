@@ -50,7 +50,7 @@ scLoadObject <- function(path, metadata=NULL, scrnaseqmatrix.provenance=NULL, ..
 
     # Heuristic to determine whether something is array-like or not.
     if (is(ans, "DelayedArray") || metadata$type %in% c()) {
-        prov <- scrnaseq.provenance
+        prov <- scrnaseqmatrix.provenance
 
         # Need to figure out the path inside the version.
         relative.path <- character(0)

@@ -95,6 +95,6 @@ setMethod("saveObject", "ScrnaseqArray", function(x, path, reloadedarray.reuse.f
         }
     }
 
-    write(file=".link", toJSON(list(project=s@package, asset=s@name, version=s@version, path=s@path), auto_unbox=TRUE))
+    write(file=file.path(path, "_link"), jsonlite::toJSON(list(project=s@package, asset=s@name, version=s@version, path=s@path), auto_unbox=TRUE))
     invisible(NULL)
 })
