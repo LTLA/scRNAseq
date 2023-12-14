@@ -17,13 +17,13 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- file.path("https://storage.googleapis.com",
+base.url <- paste0("https://storage.googleapis.com/",
     "linnarsson-lab-www-blobs/blobs/cortex")
 
-mRNA.url <- file.path(base.url, "expression_mRNA_17-Aug-2014.txt")
-rep.url <- file.path(base.url, "expression_rep_17-Aug-2014.txt")
-mito.url <- file.path(base.url, "expression_mito_17-Aug-2014.txt")
-spike.url <- file.path(base.url, "expression_spikes_17-Aug-2014.txt")
+mRNA.url <- paste0(base.url, "/expression_mRNA_17-Aug-2014.txt")
+rep.url <- paste0(base.url, "/expression_rep_17-Aug-2014.txt")
+mito.url <- paste0(base.url, "/expression_mito_17-Aug-2014.txt")
+spike.url <- paste0(base.url, "/expression_spikes_17-Aug-2014.txt")
 
 mRNA.path <- bfcrpath(bfc, mRNA.url)
 rep.path <- bfcrpath(bfc, rep.url)
@@ -124,6 +124,8 @@ altExp(sce, "ERCC") <- spike.data
 We now save all of the relevant components of `sce` to file for upload.
 
 ```{r}
+library(scRNAseq)
+unlink("finished", recursive=TRUE)
 saveDataset(sce, "finished",
     createMetadata(
         title="Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq",
@@ -150,5 +152,3 @@ This dataset is represented as a `SingleCellExperiment` where the row data conta
 ```{r}
 sessionInfo()
 ```
-
-# References
