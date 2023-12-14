@@ -1,0 +1,124 @@
+---
+title: Processing the Bach mammary gland dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Specifying the samples
+
+We obtain a single-cell RNA sequencing dataset of the mouse mammary gland from [Bach et al. (2017)](https://doi.org/10.1038/s41467-017-02001-5).
+we define all of the samples to be pulled down.
+
+```{r}
+accessions <- c(
+    "GSM2834498", "GSM2834499", 
+    "GSM2834500", "GSM2834501", 
+    "GSM2834502", "GSM2834503", 
+    "GSM2834504", "GSM2834505")
+
+samples <- c(
+    "NP_1", "NP_2",
+    "G_1", "G_2",
+    "L_1", "L_2",
+    "PI_1", "PI_2")
+
+conditions <- c(NP="Nulliparous",
+    G="Gestation",
+    L="Lactation",
+    PI="Post-involution")[sub("_.*", "", samples)]
+
+data.frame(accessions, samples, conditions)
+```
+
+# Downloading the count data
+
+We then download and cache the assorted count matrices using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+library(Matrix)
+library(S4Vectors)
+library(DelayedArray)
+
+template.path <- "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/%snnn/%s/suppl"
+collected.counts <- collected.rowdata <- collected.coldata <- list()
+for (i in seq_along(accessions)) {
+    curacc <- accessions[i]
+    subacc <- substr(curacc, 1, 7)
+    base.path <- sprintf(template.path, subacc, curacc)
+    header <- paste0(curacc, "%5F", sub("_", "%5F", samples[i]), "%5F")
+
+    barcode.fname <- bfcrpath(bfc, file.path(base.path,
+        paste0(header, "barcodes%2Etsv%2Egz")))
+    gene.fname <- bfcrpath(bfc, file.path(base.path,
+        paste0(header, "genes%2Etsv%2Egz")))
+    counts.fname <- bfcrpath(bfc, file.path(base.path,
+        paste0(header, "matrix%2Emtx%2Egz")))
+
+    current.counts <- as(readMM(counts.fname), "dgCMatrix")
+    current.counts <- as(current.counts, "SVT_SparseMatrix")
+    type(current.counts) <- "integer"
+    collected.counts[[i]] <- current.counts
+
+    gene.info <- read.table(gene.fname, stringsAsFactors=FALSE)
+    colnames(gene.info) <- c("Ensembl", "Symbol")
+    collected.rowdata[[i]] <- DataFrame(gene.info)
+    collected.coldata[[i]] <- DataFrame(
+        Barcode=readLines(barcode.fname),
+        Sample=samples[i],
+        Condition=conditions[i])
+}
+```
+
+We verify that all of the row data matches up, and that all the dimensions are consistent.
+
+```{r}
+stopifnot(length(unique(collected.rowdata))==1L)
+
+X <- vapply(collected.coldata, nrow, 0L)
+Y <- vapply(collected.counts, ncol, 0L)
+stopifnot(identical(X, Y))
+X
+```
+
+# Saving for upload 
+
+We bind them all into one `SingleCellExperiment`:
+
+```{r}
+final.counts <- do.call(cbind, collected.counts)
+final.coldata <- do.call(rbind, collected.coldata)
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=final.counts), rowData=collected.rowdata[[1]], colData=final.coldata)
+rownames(sce) <- rowData(sce)$Ensembl
+```
+
+And we save them to disk in preparation for upload:
+
+```{r}
+library(scRNAseq)
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA sequencing",
+        description="Characterising the hierarchy of mammary epithelial cells (MECs) and how they are regulated during adult development is important for understanding how breast cancer arises. Here we report the use of single-cell RNA sequencing to determine the gene expression profile of MECs across four developmental stages; nulliparous, mid gestation, lactation and post involution. Our analysis of 23,184 cells identifies 15 clusters, few of which could be fully characterised by a single marker gene. We argue instead that the epithelial cells—especially in the luminal compartment—should rather be conceptualised as being part of a continuous spectrum of differentiation. Furthermore, our data support the existence of a common luminal progenitor cell giving rise to intermediate, restricted alveolar and hormone-sensing progenitors. This luminal progenitor compartment undergoes transcriptional changes in response to a full pregnancy, lactation and involution. In summary, our results provide a global, unbiased view of adult mammary gland development.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(list(provider="GEO", id="GSE106273")),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
