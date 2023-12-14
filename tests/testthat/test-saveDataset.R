@@ -7,8 +7,7 @@ rownames(sce) <- sprintf("GENE_%i", seq_len(nrow(sce)))
 colnames(sce) <- head(LETTERS, 10)
 
 test_that("saveDataset works as expected", {
-    tmp <- tempfile()
-    saveDataset(sce, tmp,
+    meta <- createMetadata(
         title="My dataset",
         description="This is my dataset",
         taxonomy="10090",
@@ -18,6 +17,8 @@ test_that("saveDataset works as expected", {
         maintainer.email="mogami.shizuka@765pro.com"
     )
 
+    tmp <- tempfile()
+    saveDataset(sce, tmp, meta)
     roundtrip <- alabaster.base::readObject(tmp)
     expect_identical(colData(roundtrip), colData(sce))
     expect_identical(as.matrix(counts(roundtrip)), assay(sce))
@@ -27,13 +28,6 @@ test_that("saveDataset works as expected", {
 
     # Validation fails as expected.
     tmp <- tempfile()
-    expect_error(saveDataset(sce, tmp,
-        title=1234,
-        description="This is my dataset",
-        taxonomy="10090",
-        genome="GRCh38",
-        sources=list(list(provider="GEO", id="GSE12345")),
-        maintainer.name="Shizuka Mogami",
-        maintainer.email="mogami.shizuka@765pro.com"
-    ), "title")
+    meta$title <- 1234
+    expect_error(saveDataset(sce, tmp, meta), "title")
 })

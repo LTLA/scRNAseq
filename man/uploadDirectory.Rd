@@ -54,12 +54,28 @@ and for the \pkg{scRNAseq} maintainers to review the content before approval.
 Note that uploads from untrusted users are automatically probational so setting \code{probation=FALSE} is not explicitly required in such cases.
 }
 \examples{
-example(saveDataset, echo=FALSE)
-if (interactive()) {
-    version <- as.character(Sys.Date())
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=matrix(rpois(1000, lambda=1), 100, 10)))
+rownames(sce) <- sprintf("GENE_\%i", seq_len(nrow(sce)))
+colnames(sce) <- head(LETTERS, 10)
 
+meta <- createMetadata(
+    title="My dataset",
+    description="This is my dataset",
+    taxonomy.id="10090",
+    genome="GRCh38",
+    sources=list(list(provider="GEO", id="GSE12345")),
+    maintainer.name="Shizuka Mogami",
+    maintainer.email="mogami.shizuka@765pro.com"
+)
+
+cache <- tempfile()
+saveDataset(sce, cache, meta)
+
+version <- as.character(Sys.Date())
+if (interactive()) {
     # Uploading a probational version for test purposes.
-    uploadDirectory(tmp, "test", version, probation=TRUE)
+    uploadDirectory(cache, "test", version, probation=TRUE)
 
     # Cleaning up after ourselves.
     gypsum::rejectProbation("scRNAseq", "test", version)
