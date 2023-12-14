@@ -4,7 +4,14 @@
 \alias{fetchDataset}
 \title{Fetch a dataset from the gypsum backend}
 \usage{
-fetchDataset(name, version, subpath = NULL, package = "scRNAseq", ...)
+fetchDataset(
+  name,
+  version,
+  subpath = NULL,
+  package = "scRNAseq",
+  overwrite = FALSE,
+  ...
+)
 }
 \arguments{
 \item{name}{String containing the name of the dataset.}

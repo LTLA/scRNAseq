@@ -24,8 +24,8 @@
 #'
 #' @export
 #' @importFrom alabaster.base altReadObjectFunction readObject
-fetchDataset <- function(name, version, subpath=NULL, package="scRNAseq", ...) {
-    vpath <- gypsum::saveVersion(package, name, version)
+fetchDataset <- function(name, version, subpath=NULL, package="scRNAseq", overwrite=FALSE, ...) {
+    vpath <- gypsum::saveVersion(package, name, version, overwrite=overwrite)
     provenance <- list(name=name, version=version, package=package, root=vpath)
 
     opath <- vpath
@@ -40,13 +40,14 @@ fetchDataset <- function(name, version, subpath=NULL, package="scRNAseq", ...) {
 }
 
 #' @export
-fetchMetadata <- function(name, version, path=NULL, package="scRNAseq") {
+fetchMetadata <- function(name, version, path=NULL, package="scRNAseq", overwrite=FALSE) {
     if (is.null(path)) {
         path <- "_bioconductor.json"
     } else {
         path <- paste0(path, "/_bioconductor.json")
     }
-    jsonlite::fromJSON(gypsum::saveFile(package, name, version, path), simplifyVector=FALSE)
+    mpath <- gypsum::saveFile(package, name, version, path, overwrite=overwrite)
+    jsonlite::fromJSON(mpath, simplifyVector=FALSE)
 }
 
 #' @importFrom alabaster.base readObjectFile
