@@ -25,14 +25,16 @@ library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
 base.url <- file.path("https://storage.googleapis.com",
     "linnarsson-lab-www-blobs/blobs/cortex")
-mRNA.path <- bfcrpath(bfc, file.path(base.url, 
-    "expression_mRNA_17-Aug-2014.txt"))
-rep.path <- bfcrpath(bfc, file.path(base.url, 
-    "expression_rep_17-Aug-2014.txt"))
-mito.path <- bfcrpath(bfc, file.path(base.url, 
-    "expression_mito_17-Aug-2014.txt"))
-spike.path <- bfcrpath(bfc, file.path(base.url, 
-    "expression_spikes_17-Aug-2014.txt"))
+
+mRNA.url <- file.path(base.url, "expression_mRNA_17-Aug-2014.txt")
+rep.url <- file.path(base.url, "expression_rep_17-Aug-2014.txt")
+mito.url <- file.path(base.url, "expression_mito_17-Aug-2014.txt")
+spike.url <- file.path(base.url, "expression_spikes_17-Aug-2014.txt")
+
+mRNA.path <- bfcrpath(bfc, mRNA.url)
+rep.path <- bfcrpath(bfc, rep.url)
+mito.path <- bfcrpath(bfc, mito.url)
+spike.path <- bfcrpath(bfc, spike.url)
 ```
 
 We define a simple utility function for loading data in from each file. 
@@ -101,20 +103,39 @@ stopifnot(identical(colData(endo.data), colData(mito.data)))
 We combine all components into a single `SingleCellExperiment` object.
 
 ```{r}
-sce <- rbind(endo.data, mito.data, spike.data, rep.data)
-rowData(sce)$featureType <- rep(c("endogenous", "mito", "ERCC", "repeat"),
-    c(nrow(endo.data), nrow(mito.data), nrow(spike.data), nrow(rep.data)))
-sce
+sce <- rbind(endo.data, mito.data)
+rowData(sce)$featureType <- rep(c("endogenous", "mito"), c(nrow(endo.data), nrow(mito.data)))
+altExp(sce, "repeat") <- rep.data
+
+# Adding some spike-in congcentrations to the pile.
+spike.conc <- scRNAseq::ERCCSpikeInConcentrations(volume = 9, dilution = 20000)
+spike.conc <- spike.conc[rownames(spike.data), ]
+rowData(spike.data) <- cbind(rowData(spike.data), spike.conc)
+altExp(sce, "ERCC") <- spike.data
 ```
 
-We now save all of the relevant components of `sce` to file for upload to `r Biocpkg("ExperimentHub")`.
+We now save all of the relevant components of `sce` to file for upload.
 
 ```{r}
-path <- file.path("scRNAseq", "zeisel-brain", "2.0.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(counts(sce), file=file.path(path, "counts.rds"))
-saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
-saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq",
+        description="The mammalian cerebral cortex supports cognitive functions such as sensorimotor integration, memory, and social behaviors. Normal brain function relies on a diverse set of differentiated cell types, including neurons, glia, and vasculature. Here, we have used large-scale single-cell RNA sequencing (RNA-seq) to classify cells in the mouse somatosensory cortex and hippocampal CA1 region. We found 47 molecularly distinct subclasses, comprising all known major cell types in the cortex. We identified numerous marker genes, which allowed alignment with known cell types, morphology, and location. We found a layer I interneuron expressing Pax6 and a distinct postmitotic oligodendrocyte subclass marked by Itpr2. Across the diversity of cortical cell types, transcription factors formed a complex, layered regulatory code, suggesting a mechanism for the maintenance of adult cell type identity.
+
+This dataset is represented as a `SingleCellExperiment` where the row data contains a single `featureType` field describing the type of each feature (endogenous genes or mitochondrial genes). Spike-ins and repeats are stored as separate entries in the `altExps`. Spike-in metadata is added using the ERCC concentrations, with molecule counts computed using a volume of 9 nL per cell at a dilution of 1:20000.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="other", id=mRNA.url),
+            list(provider="other", id=rep.url),
+            list(provider="other", id=spike.url),
+            list(provider="other", id=mito.url),
+            list(provider="PubMed", id="25700174")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
 ```
 
 # Session information
