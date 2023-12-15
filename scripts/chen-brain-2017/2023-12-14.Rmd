@@ -63,6 +63,7 @@ library(SparseArray)
 dn <- dimnames(counts)
 dimnames(counts) <- NULL
 y <- as(counts, "SVT_SparseMatrix")
+type(y) <- "integer"
 sce <- SingleCellExperiment(list(counts=y), colData=coldata)
 dimnames(sce) <- dn
 

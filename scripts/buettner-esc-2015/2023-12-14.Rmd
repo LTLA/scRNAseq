@@ -69,6 +69,7 @@ Finessing the counts:
 ```{r}
 library(DelayedArray)
 counts <- as(combined, "SVT_SparseMatrix")
+type(counts) <- "integer"
 dn <- dimnames(counts)
 dimnames(counts) <- NULL
 
