@@ -49,7 +49,7 @@ listAvailableDatasets <- function(cache=NULL, overwrite=FALSE) {
         description = bfree$description[m_free2core],
         taxonomy_id = splitAsList(btaxid$item, factor(btaxid$`_key`, keys)),
         genome = splitAsList(bgenome$item, factor(bgenome$`_key`, keys)),
-        sources = I(splitAsList(DataFrame(bsources[,c("provider", "id")]), factor(bsources$`_key`, keys))),
+        sources = S4Vectors::I(splitAsList(DataFrame(bsources[,c("provider", "id")]), factor(bsources$`_key`, keys))),
 
         nrow = score$nrow[m_s2core],
         ncol = score$ncol[m_s2core],
