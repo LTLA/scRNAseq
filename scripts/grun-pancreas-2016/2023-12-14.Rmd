@@ -18,7 +18,7 @@ We download it using `r Biocpkg("BiocFileCache")` to cache the results:
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask=FALSE)
-grun.fname <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+grun.fname <- bfcrpath(bfc, paste0("ftp://ftp.ncbi.nlm.nih.gov/geo/series/",
     "GSE81nnn/GSE81076/suppl/GSE81076%5FD2%5F3%5F7%5F10%5F17%2Etxt%2Egz"))
 ```
 
@@ -104,8 +104,8 @@ saveDataset(sce, "finished",
         description="Adult mitotic tissues like the intestine, skin, and blood undergo constant turnover throughout the life of an organism. Knowing the identity of the stem cell is crucial to understanding tissue homeostasis and its aberrations upon disease. Here we present a computational method for the derivation of a lineage tree from single-cell transcriptome data. By exploiting the tree topology and the transcriptome composition, we establish StemID, an algorithm for identifying stem cells among all detectable cell types within a population. We demonstrate that StemID recovers two known adult stem cell populations, Lgr5+ cells in the small intestine and hematopoietic stem cells in the bone marrow. We apply StemID to predict candidate multipotent cell populations in the human pancreas, a tissue with largely uncharacterized turnover dynamics. We hope that StemID will accelerate the search for novel stem cells by providing concrete markers for biological follow-up and validation.
 
 This dataset is represented by a `SingleCellExperiment` containing the pancreas cells from the study. The sorting protocol and donor identity for each cell is obtained from the sample annotations in the GEO entry. ERCC spike-ins are available in the alternative experiment.",
-        taxonomy.id="10090",
-        genome="GRCm38",
+        taxonomy.id="9606",
+        genome="GRCh37",
         sources=list(list(provider="GEO", id='GSE81076')),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
