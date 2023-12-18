@@ -23,6 +23,8 @@ Imports:
     methods,
     BiocGenerics,
     S4Vectors,
+    SparseArray,
+    DelayedArray,
     GenomicRanges,
     SummarizedExperiment,
     ExperimentHub,

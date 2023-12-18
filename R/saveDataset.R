@@ -9,7 +9,9 @@
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
 #'
 #' @seealso
-#' \code{\link{createMetadata}}, to create the meadata.
+#' \code{\link{createMetadata}}, to create the metadata.
+#'
+#' \code{\link{polishDataset}}, to polish \code{x} before saving it.
 #'
 #' \code{\link{uploadDirectory}}, to upload the saved contents.
 #' 
@@ -38,13 +40,24 @@
 #' @export
 #' @importFrom alabaster.base saveObject
 #' @importMethodsFrom alabaster.sce saveObject
-saveDataset <- function(x, path, metadata) { 
+saveDataset <- function(x, path, metadata, strip.names=TRUE, reformat.assay.by.density=0.3, attempt.integer.conversion=TRUE) { 
     metadata$taxonomy_id <- I(metadata$taxonomy_id)
     metadata$genome <- I(metadata$genome)
     contents <- jsonlite::toJSON(metadata, pretty=4, auto_unbox=TRUE)
     gypsum::validateMetadata(contents, schema=gypsum::fetchMetadataSchema())
 
-    alabaster.base::saveObject(x, path)
+    x <- .convert_se_assays(x, 
+        reformat.assay.by.density=reformat.assay.by.density, 
+        attempt.integer.conversion=attempt.integer.conversion
+    )
+
+    # Stripping out all the redundant names.
+    alabaster.base::saveObject(x, path,
+        summarizedexperiment.strip.assay.dimnames=strip.names,
+        summarizedexperiment.strip.reduceddim.rownames=strip.names,
+        summarizedexperiment.strip.altexp.colnames=strip.names
+    )
+
     write(contents, file=file.path(path, "_bioconductor.json"))
     invisible(NULL)
 }

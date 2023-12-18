@@ -4,7 +4,14 @@
 \alias{saveDataset}
 \title{Save a dataset to disk}
 \usage{
-saveDataset(x, path, metadata)
+saveDataset(
+  x,
+  path,
+  metadata,
+  strip.names = TRUE,
+  reformat.assay.by.density = 0.3,
+  attempt.integer.conversion = TRUE
+)
 }
 \arguments{
 \item{x}{A \linkS4class{SummarizedExperiment} or one of its subclasses.}
@@ -42,7 +49,9 @@ alabaster.base::readObject(tmp)
 
 }
 \seealso{
-\code{\link{createMetadata}}, to create the meadata.
+\code{\link{createMetadata}}, to create the metadata.
+
+\code{\link{polishDataset}}, to polish \code{x} before saving it.
 
 \code{\link{uploadDirectory}}, to upload the saved contents.
 }

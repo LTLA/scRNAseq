@@ -6,8 +6,12 @@
 \usage{
 listAvailableDatasets(cache = NULL, overwrite = FALSE)
 }
+\arguments{
+\item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{fetchMetadataDatabase}}.}
+}
 \value{
 A \linkS4class{DataFrame} where each row corresponds to a dataset, containing various pieces of metadata.
+Some columns may be lists to capture 1:many mappings.
 }
 \description{
 Summary information for all available datasets in the \pkg{scRNAseq} package.
