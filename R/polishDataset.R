@@ -10,6 +10,7 @@
 #' Assays with densities above this number are converted to ordinary dense arrays (if they are not already), while those with lower densities are converted to sparse matrices.
 #' This can be disabled by setting it to \code{NULL}.
 #' @param attempt.integer.conversion Logical scalar indicating whether to convert double-precision assays containing integer values to actually have the integer type.
+#' @param forbid.nested.altexp Logical scalar indicating whether nested alternative experiments (i.e., alternative experiments of alternative experiments) should be forbidden.
 #'
 #' @return A modified copy of \code{x}.
 #'
@@ -28,11 +29,21 @@
 #' str(assay(polished, withDimnames=FALSE))
 #'
 #' @export
+polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0.3, attempt.integer.conversion=TRUE, dedup.altexp.coldata=TRUE, forbid.nested.altexp=TRUE) {
+    .polish_dataset(x, 
+        strip.inner.names=strip.inner.names, 
+        reformat.assay.by.density=reformat.assay.by.density, 
+        attempt.integer.conversion=attempt.integer.conversion, 
+        dedup.altexp.coldata=dedup.altexp.coldata, 
+        forbid.nested.altexp=forbid.nested.altexp
+    )
+}
+
 #' @importFrom DelayedArray is_sparse type<- DelayedArray
 #' @importClassesFrom SparseArray SVT_SparseMatrix
 #' @importFrom SummarizedExperiment assay assayNames
 #' @importFrom SingleCellExperiment reducedDim reducedDimNames reducedDim<- altExp altExpNames altExp<-
-polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0.3, attempt.integer.conversion=TRUE) {
+.polish_dataset <- function(x, strip.inner.names, reformat.assay.by.density, attempt.integer.conversion, dedup.altexp.coldata, forbid.nested.altexp, level=0) {
     for (i in assayNames(x)) {
         ass <- assay(x, i, withDimnames=FALSE)
 
@@ -78,18 +89,33 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
         }
 
         for (i in altExpNames(x)) {
+            if (forbid.nested.altexp && level > 0) {
+                stop("nested alternative experiments are forbidden")
+            }
+
             alt <- altExp(x, i, withDimnames=FALSE)
+            alt <- .polish_dataset(alt, 
+                strip.inner.names=strip.inner.names,
+                reformat.assay.by.density=reformat.assay.by.density, 
+                attempt.integer.conversion=attempt.integer.conversion,
+                dedup.altexp.coldata=dedup.altexp.coldata,
+                forbid.nested.altexp=forbid.nested.altexp,
+                level=level + 1L
+            )
+
+            # Do this after .polish_dataset, so that we have already deduplicated the grandchildren.
+            if (dedup.altexp.coldata && identical(colData(x), colData(alt))) {
+                colData(alt) <- NULL
+            }
+
+            # Do this after removal of the colData, to avoid breaking the identical() with loss of colnames.
             if (strip.inner.names) {
                 colnames(alt) <- NULL
             }
-            altExp(x, i, withDimnames=FALSE) <- .convert_se_assays(alt, 
-                strip.inner.names=strip.inner.names,
-                reformat.assay.by.density=reformat.assay.by.density, 
-                attempt.integer.conversion=attempt.integer.conversion
-            )
+
+            altExp(x, i, withDimnames=FALSE) <- alt
         }
     }
 
     x
 }
-

@@ -8,7 +8,9 @@ polishDataset(
   x,
   strip.inner.names = TRUE,
   reformat.assay.by.density = 0.3,
-  attempt.integer.conversion = TRUE
+  attempt.integer.conversion = TRUE,
+  dedup.altexp.coldata = TRUE,
+  forbid.nested.altexp = TRUE
 )
 }
 \arguments{
@@ -19,6 +21,8 @@ Assays with densities above this number are converted to ordinary dense arrays (
 This can be disabled by setting it to \code{NULL}.}
 
 \item{attempt.integer.conversion}{Logical scalar indicating whether to convert double-precision assays containing integer values to actually have the integer type.}
+
+\item{forbid.nested.altexp}{Logical scalar indicating whether nested alternative experiments (i.e., alternative experiments of alternative experiments) should be forbidden.}
 
 \item{strip.names}{Logical scalar indicating whether to strip redundant names from internal objects, 
 e.g., dimnames of the assays, row names of reduced dimensions, column names of alternative experiments.}
