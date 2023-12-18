@@ -1,0 +1,88 @@
+---
+title: Processing the Leng ESC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of mouse ESCs from [Leng et al. (2015)](https://doi.org/10.1038/nmeth.3549).
+
+```{r}
+library(GEOquery)
+tmp <- "geo_cache"
+if (!file.exists(tmp)) {
+    out <- getGEOSuppFiles("GSE64016", baseDir=tmp)
+}
+rownames(out)
+```
+
+# Processing the read counts
+
+We read in the count matrix for cells in each cell cycle phase.
+
+```{r}
+count.file <- rownames(out)[1]
+hs.counts <- read.csv(count.file, header=TRUE, row.names=1)
+hs.counts <- as.matrix(hs.counts)
+dim(hs.counts)
+```
+
+# Creating column metadata
+
+Pulling information out of GSE64016's description.
+
+```{r}
+cellline <- rep(c("H1", "H1-Fucci"), c(213, 247))
+experiment <- sub(".*_Exp([0-9]+)\\..*", "\\1", colnames(hs.counts))
+phase <- sub("_Exp.*", "", colnames(hs.counts))
+phase[!phase %in% c("G1", "S", "G2M")] <- NA
+
+library(S4Vectors)
+coldata <- DataFrame(CellLine=cellline, Experiment=experiment, Phase=phase)
+coldata
+```
+
+# Saving for upload 
+
+Forming a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+dn <- dimnames(hs.counts)
+dimnames(hs.counts) <- NULL
+sce <- SingleCellExperiment(list(normalized=hs.counts), colData=coldata)
+dimnames(sce) <- dn
+sce
+```
+
+We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+library(scRNAseq)
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Oscope identifies oscillatory genes in unsynchronized single-cell RNA-seq experiments",
+        description="Oscillatory gene expression is fundamental to development, but technologies for monitoring expression oscillations are limited. We have developed a statistical approach called Oscope to identify and characterize the transcriptional dynamics of oscillating genes in single-cell RNA-seq data from an unsynchronized cell population. Applying Oscope to a number of data sets, we demonstrated its utility and also identified a potential artifact in the Fluidigm C1 platform.",
+        taxonomy.id="9606",
+        genome="GRCh37",
+        sources=list(
+            list(provider="GEO", id="GSE64016"),
+            list(provider="PubMed", id="26301841")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
