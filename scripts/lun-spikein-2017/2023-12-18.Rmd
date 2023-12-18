@@ -1,0 +1,186 @@
+---
+title: Processing the Lun spike-in dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of 416B cells and trophoblasts from [Lun et al. (2017)](https://doi.org/10.1101/gr.222877.117).
+Counts for endogenous genes and spike-in transcripts are available from ArrayExpress
+using the accession number [E-MTAB-5522](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-5522/).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-5522/"
+```
+
+# Reading in the metadata
+
+We read in the metadata from the SDRF file:
+
+```{r}
+lun.sdrf <- bfcrpath(bfc, paste0(base, "E-MTAB-5522.sdrf.txt"))
+coldata <- read.delim(lun.sdrf, check.names=FALSE, stringsAsFactors=FALSE)
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+colnames(coldata)
+```
+
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+
+```{r}
+keep <- grep("Characteristics|Factor", colnames(coldata))
+coldata <- coldata[,c(1, keep)] # keeping the cell IDs.
+
+new.colnames <- sub(".*\\[(.*)\\]", "\\1", colnames(coldata))
+u <- !duplicated(new.colnames)
+coldata <- coldata[,u]
+colnames(coldata) <- new.colnames[u]
+
+has.multi.levels <- vapply(coldata, FUN=function(x) length(unique(x))>1L, TRUE)
+coldata <- coldata[,has.multi.levels]
+head(coldata)
+```
+
+# Processing the 416B data
+
+We load the counts into memory for the 416B cells.
+
+```{r}
+path1 <- bfcrpath(bfc, paste0(base, "counts_Calero_20160113.tsv"))
+plate1.416b <- read.delim(path1, header=TRUE, row.names=1, check.names=FALSE)
+path2 <- bfcrpath(bfc, paste0(base, "counts_Calero_20160325.tsv"))
+plate2.416b <- read.delim(path2, header=TRUE, row.names=1, check.names=FALSE)
+stopifnot(identical(rownames(plate1.416b), rownames(plate2.416b)))
+```
+
+We extract the gene lengths and combine the matrices together:
+
+```{r}
+gene.lengths <- plate1.416b$Length 
+rowdata.416b <- DataFrame(Length=gene.lengths)
+stopifnot(identical(gene.lengths, plate2.416b$Length))
+
+plate1.416b <- as.matrix(plate1.416b[,-1])
+plate2.416b <- as.matrix(plate2.416b[,-1])
+counts.416b <- cbind(plate1.416b, plate2.416b)
+dim(counts.416b)
+```
+
+We extract the relevant column data.
+
+```{r}
+m <- match(colnames(counts.416b), coldata[,1])
+coldata.416b <- coldata[m,]
+stopifnot(identical(colnames(counts.416b), coldata.416b[,1]))
+```
+
+And we convert these into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+library(SparseArray)
+createSce <- function(counts, rowdata, coldata) {
+    dn <- dimnames(counts)
+    dimnames(counts) <- NULL
+    sce <- SingleCellExperiment(list(counts=counts), rowData=rowdata)
+    dimnames(sce) <- dn
+
+    spike.type <- rep("endogenous", nrow(sce))
+    spike.type[grep("ERCC", rownames(sce))] <- "ERCC"
+    spike.type[grep("SIRV", rownames(sce))] <- "SIRV"
+    sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+    library(scRNAseq)
+    spike.exp <- altExp(sce, "ERCC")
+    spikedata <- ERCCSpikeInConcentrations(volume = 100, dilution = 3e6)
+    spikedata <- spikedata[rownames(spike.exp), ]
+    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+    altExp(sce, "ERCC") <- spike.exp
+
+    colData(sce) <- cbind(colData(sce), coldata)
+    sce
+}
+
+sce.416b <- createSce(counts.416b, rowdata.416b, coldata.416b)
+```
+
+And saving it.
+
+```{r}
+library(scRNAseq)
+meta <- createMetadata(
+    title="Assessing the reliability of spike-in normalization for analyses of single-cell RNA sequencing data",
+    description="By profiling the transcriptomes of individual cells, single-cell RNA sequencing provides unparalleled resolution to study cellular heterogeneity. However, this comes at the cost of high technical noise, including cell-specific biases in capture efficiency and library generation. One strategy for removing these biases is to add a constant amount of spike-in RNA to each cell and to scale the observed expression values so that the coverage of spike-in transcripts is constant across cells. This approach has previously been criticized as its accuracy depends on the precise addition of spike-in RNA to each sample. Here, we perform mixture experiments using two different sets of spike-in RNA to quantify the variance in the amount of spike-in RNA added to each well in a plate-based protocol. We also obtain an upper bound on the variance due to differences in behavior between the two spike-in sets. We demonstrate that both factors are small contributors to the total technical variance and have only minor effects on downstream analyses, such as detection of highly variable genes and clustering. Our results suggest that scaling normalization using spike-in transcripts is reliable enough for routine use in single-cell RNA sequencing data analyses.",
+    taxonomy.id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-5522"),
+        list(provider="PubMed", id="29030468")
+    ),
+    maintainer.name="Aaron Lun",
+    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+copy <- meta
+copy$description <- paste0(copy$description, "\n\nThis dataset contains the 416B cells from this study.")
+saveDataset(sce.416b, "finished/416b", copy)
+```
+
+# Processing the trophoblast data
+
+We repeat this process for the trophoblasts.
+
+```{r}
+path1 <- bfcrpath(bfc, paste0(base, "counts_Liora_20160906.tsv"))
+plate1.tropho <- read.delim(path1, header=TRUE, row.names=1, check.names=FALSE)
+path2 <- bfcrpath(bfc, paste0(base, "counts_Liora_20170201.tsv"))
+plate2.tropho <- read.delim(path2, header=TRUE, row.names=1, check.names=FALSE)
+stopifnot(identical(rownames(plate1.tropho), rownames(plate2.tropho)))
+```
+
+We extract the gene lengths and combine the matrices together:
+
+```{r}
+gene.lengths <- plate1.tropho$Length 
+rowdata.tropho <- DataFrame(Length=gene.lengths)
+stopifnot(identical(gene.lengths, plate2.tropho$Length))
+
+plate1.tropho <- as.matrix(plate1.tropho[,-1])
+plate2.tropho <- as.matrix(plate2.tropho[,-1])
+counts.tropho <- cbind(plate1.tropho, plate2.tropho)
+dim(counts.tropho)
+```
+
+We extract the relevant column data.
+
+```{r}
+m <- match(colnames(counts.tropho), coldata[,1])
+coldata.tropho <- coldata[m,]
+stopifnot(identical(colnames(counts.tropho), coldata.tropho[,1]))
+```
+
+And we save these to file for upload.
+
+```{r}
+sce.tropho <- createSce(counts.tropho, rowdata.tropho, coldata.tropho)
+copy <- meta
+copy$description <- paste0(copy$description, "\n\nThis dataset contains the trophoblast cells from this study.")
+saveDataset(sce.tropho, "finished/tropho", copy)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
