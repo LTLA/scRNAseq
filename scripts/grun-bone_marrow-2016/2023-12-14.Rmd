@@ -75,7 +75,10 @@ saveDataset(sce, "finished",
 This dataset is represented by a `SingleCellExperiment` containing the bone marrow cells from the study. The protocol used to extract each cell is determined from the sample annotation in this study's GEO entry.",
         taxonomy.id="10090",
         genome="GRCm38",
-        sources=list(list(provider="GEO", id='GSE76983')),
+        sources=list(
+            list(provider="GEO", id='GSE76983'),
+            list(provider="PubMed", id='27345837')
+        ),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
     )

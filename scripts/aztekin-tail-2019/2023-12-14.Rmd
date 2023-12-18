@@ -86,7 +86,10 @@ saveDataset(sce, "finished",
     createMetadata(
         title="Identification of a regeneration-organizing cell in the Xenopus tail",
         description="Unlike mammals, Xenopus laevis tadpoles have a high regenerative potential. To characterize this regenerative response, we performed single-cell RNA sequencing after tail amputation. By comparing naturally occurring regeneration-competent and -incompetent tadpoles, we identified a previously unrecognized cell type, which we term the regeneration-organizing cell (ROC). ROCs are present in the epidermis during normal tail development and specifically relocalize to the amputation plane of regeneration-competent tadpoles, forming the wound epidermis. Genetic ablation or manual removal of ROCs blocks regeneration, whereas transplantation of ROC-containing grafts induces ectopic outgrowths in early embryos. Transcriptional profiling revealed that ROCs secrete ligands associated with key regenerative pathways, signaling to progenitors to reconstitute lost tissue. These findings reveal the cellular mechanism through which ROCs form the wound epidermis and ensure successful regeneration.",
-        sources=list(list(provider="ArrayExpress", id="E-MTAB-7716")),
+        sources=list(
+            list(provider="ArrayExpress", id="E-MTAB-7716"),
+            list(provider="PubMed", id="31097661")
+        ),
         taxonomy.id="8355",
         genome="Xenla9.1",
         maintainer.name="Aaron Lun",

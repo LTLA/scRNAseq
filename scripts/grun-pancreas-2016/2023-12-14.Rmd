@@ -106,7 +106,10 @@ saveDataset(sce, "finished",
 This dataset is represented by a `SingleCellExperiment` containing the pancreas cells from the study. The sorting protocol and donor identity for each cell is obtained from the sample annotations in the GEO entry. ERCC spike-ins are available in the alternative experiment.",
         taxonomy.id="9606",
         genome="GRCh37",
-        sources=list(list(provider="GEO", id='GSE81076')),
+        sources=list(
+            list(provider="GEO", id='GSE81076'),
+            list(provider="PubMed", id='27345837')
+        ),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
     )

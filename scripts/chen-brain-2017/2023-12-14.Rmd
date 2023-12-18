@@ -75,7 +75,10 @@ saveDataset(sce, "finished",
         description="The hypothalamus is one of the most complex brain structures involved in homeostatic regulation. Defining cell composition and identifying cell-type-specific transcriptional features of the hypothalamus is essential for understanding its functions and related disorders. Here, we report single-cell RNA sequencing results of adult mouse hypothalamus, which defines 11 non-neuronal and 34 neuronal cell clusters with distinct transcriptional signatures. Analyses of cell-type-specific transcriptomes reveal gene expression dynamics underlying oligodendrocyte differentiation and tanycyte subtypes. Additionally, data analysis provides a comprehensive view of neuropeptide expression across hypothalamic neuronal subtypes and uncover Crabp1+ and Pax6+ neuronal populations in specific hypothalamic sub-regions. Furthermore, we found food deprivation exhibited differential transcriptional effects among the different neuronal subtypes, suggesting functional specification of various neuronal subtypes. Thus, the work provides a comprehensive transcriptional perspective of adult hypothalamus, which serves as a valuable resource for dissecting cell-type-specific functions of this complex brain region.",
         taxonomy.id="10090",
         genome="GRCm38",
-        sources=list(list(provider="GEO", id='GSE87544')),
+        sources=list(
+            list(provider="GEO", id='GSE87544'),
+            list(provider="PubMed", id='28355573')
+        ),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
     )

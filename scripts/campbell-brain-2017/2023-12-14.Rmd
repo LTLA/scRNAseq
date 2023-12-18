@@ -78,7 +78,10 @@ saveDataset(sce, "finished",
         description="The hypothalamic arcuate-median eminence complex (Arc-ME) controls energy balance, fertility and growth through molecularly distinct cell types, many of which remain unknown. To catalog cell types in an unbiased way, we profiled gene expression in 20,921 individual cells in and around the adult mouse Arc-ME using Drop-seq. We identify 50 transcriptionally distinct Arc-ME cell populations, including a rare tanycyte population at the Arc-ME diffusion barrier, a new leptin-sensing neuron population, multiple agouti-related peptide (AgRP) and pro-opiomelanocortin (POMC) subtypes, and an orexigenic somatostatin neuron population. We extended Drop-seq to detect dynamic expression changes across relevant physiological perturbations, revealing cell type-specific responses to energy status, including distinct responses in AgRP and POMC neuron subtypes. Finally, integrating our data with human genome-wide association study data implicates two previously unknown neuron populations in the genetic control of obesity. This resource will accelerate biological discovery by providing insights into molecular and cell type diversity from which function can be inferred.",
         taxonomy.id="10090",
         genome="GRCm38",
-        sources=list(list(provider="GEO", id='GSE93374')),
+        sources=list(
+            list(provider="GEO", id='GSE93374'),
+            list(provider="PubMed", id="28166221")
+        ),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
     )

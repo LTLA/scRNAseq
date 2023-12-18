@@ -108,7 +108,10 @@ savePart <- function(sce, prefix, details, human=TRUE) {
         description=paste0(description, "\n\n", details),
         taxonomy.id=if (human) "9606" else "10090",
         genome=if (human) "GRCh38" else "GRCm38",
-        sources=list(list(provider="GEO", id="GSE76381")),
+        sources=list(
+            list(provider="GEO", id="GSE76381"),
+            list(provider="PubMed", id="27716510")
+        ),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
     ))

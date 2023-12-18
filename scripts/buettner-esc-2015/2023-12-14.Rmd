@@ -112,7 +112,10 @@ saveDataset(genes, "finished",
 This dataset is represented as a `SingleCellExperiment` containing the ERCC spike-in counts in an alternative experiment. The alignment and quantification metrics are stored in a nested `metrics` data frame in the column data.",
         taxonomy.id="10090",
         genome="GRCm38",
-        sources=list(list(provider="ArrayExpress", id="E-MTAB-2805")),
+        sources=list(
+            list(provider="ArrayExpress", id="E-MTAB-2805"),
+            list(provider="PubMed", id="25599176")
+        ),
         maintainer.name="Aaron Lun",
         maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
     )
