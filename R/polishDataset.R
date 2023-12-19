@@ -39,6 +39,7 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
     )
 }
 
+#' @importFrom BiocGenerics mean
 #' @importFrom DelayedArray is_sparse type<- DelayedArray
 #' @importClassesFrom SparseArray SVT_SparseMatrix
 #' @importFrom SummarizedExperiment assay assayNames
@@ -55,7 +56,7 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
                 }
             } else {
                 if (is_sparse(ass)) {
-                    ass <- as.assay(ass)
+                    ass <- as.array(ass)
                 }
             }
         }

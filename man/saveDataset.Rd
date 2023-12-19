@@ -4,14 +4,7 @@
 \alias{saveDataset}
 \title{Save a dataset to disk}
 \usage{
-saveDataset(
-  x,
-  path,
-  metadata,
-  strip.names = TRUE,
-  reformat.assay.by.density = 0.3,
-  attempt.integer.conversion = TRUE
-)
+saveDataset(x, path, metadata)
 }
 \arguments{
 \item{x}{A \linkS4class{SummarizedExperiment} or one of its subclasses.}

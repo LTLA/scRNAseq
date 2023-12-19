@@ -40,23 +40,14 @@
 #' @export
 #' @importFrom alabaster.base saveObject
 #' @importMethodsFrom alabaster.sce saveObject
-saveDataset <- function(x, path, metadata, strip.names=TRUE, reformat.assay.by.density=0.3, attempt.integer.conversion=TRUE) { 
+saveDataset <- function(x, path, metadata) {
     metadata$taxonomy_id <- I(metadata$taxonomy_id)
     metadata$genome <- I(metadata$genome)
     contents <- jsonlite::toJSON(metadata, pretty=4, auto_unbox=TRUE)
     gypsum::validateMetadata(contents, schema=gypsum::fetchMetadataSchema())
 
-    x <- .convert_se_assays(x, 
-        reformat.assay.by.density=reformat.assay.by.density, 
-        attempt.integer.conversion=attempt.integer.conversion
-    )
-
     # Stripping out all the redundant names.
-    alabaster.base::saveObject(x, path,
-        summarizedexperiment.strip.assay.dimnames=strip.names,
-        summarizedexperiment.strip.reduceddim.rownames=strip.names,
-        summarizedexperiment.strip.altexp.colnames=strip.names
-    )
+    alabaster.base::saveObject(x, path)
 
     write(contents, file=file.path(path, "_bioconductor.json"))
     invisible(NULL)
