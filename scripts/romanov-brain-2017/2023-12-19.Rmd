@@ -1,0 +1,116 @@
+---
+title: Processing the Romanov brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse hypothalamus from [Romanov et al. (2017)](https://doi.org/10.1038%2Fnn.4462).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE74672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE74672).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE74nnn/GSE74672/suppl/"
+count.file <- bfcrpath(bfc, paste0(base.url, "GSE74672_expressed_mols_with_classes.xlsx.gz"))
+```
+
+We load them into memory.
+
+```{r}
+library(R.utils)
+tmp.file <- tempfile(fileext=".xlsx")
+gunzip(count.file, destname=tmp.file, remove=FALSE)
+
+# WARNING: this requires >20 GB of memory!
+library(readxl)
+all.data <- read_xlsx(tmp.file, col_names=FALSE)
+dim(all.data)
+```
+
+# Extracting the metadata
+
+The first 9 rows correspond to metadata and need to be extracted.
+
+```{r}
+coldata <- all.data[1:9,]
+colfields <- coldata[,1,drop=TRUE]
+coldata <- coldata[,-1]
+
+coldata <- t(coldata)
+coldata <- data.frame(coldata, stringsAsFactors=FALSE)
+rownames(coldata) <- NULL
+
+library(S4Vectors)
+coldata <- DataFrame(coldata)
+colnames(coldata) <- colfields
+
+for (i in 4:9) {
+    coldata[,i] <- as.numeric(coldata[,i])
+}
+coldata
+```
+
+The next three rows are empty, so we just skip them.
+We convert the remaining counts into a sparse matrix.
+
+```{r}
+raw.counts <- all.data[-(1:12),]
+counts <- as.matrix(raw.counts[,-1])
+
+library(Matrix)
+counts <- as(counts, "dgCMatrix")
+rownames(counts) <- raw.counts[,1,drop=TRUE]
+colnames(counts) <- NULL
+dim(counts)
+```
+
+# Saving to file 
+
+Putting everything together into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+
+# Splitting off the ERCCs.
+status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
+sce <- splitAltExps(sce, status, ref="endogenous")
+
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save the object to disk in preparation for upload.
+
+```{r}
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished", 
+    createMetadata(
+        title="Molecular interrogation of hypothalamic organization reveals distinct dopamine neuronal subtypes",
+        description="The hypothalamus contains the highest diversity of neurons in the brain. Many of these neurons can co-release neurotransmitters and neuropeptides in a use-dependent manner. Investigators have hitherto relied on candidate protein-based tools to correlate behavioral, endocrine and gender traits with hypothalamic neuron identity. Here we map neuronal identities in the hypothalamus by single-cell RNA sequencing. We distinguished 62 neuronal subtypes producing glutamatergic, dopaminergic or GABAergic markers for synaptic neurotransmission and harboring the ability to engage in task-dependent neurotransmitter switching. We identified dopamine neurons that uniquely coexpress the Onecut3 and Nmur2 genes, and placed these in the periventricular nucleus with many synaptic afferents arising from neuromedin S+ neurons of the suprachiasmatic nucleus. These neuroendocrine dopamine cells may contribute to the dopaminergic inhibition of prolactin secretion diurnally, as their neuromedin S+ inputs originate from neurons expressing Per2 and Per3 and their tyrosine hydroxylase phosphorylation is regulated in a circadian fashion. Overall, our catalog of neuronal subclasses provides new understanding of hypothalamic organization and function.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="GEO", id="GSE74672"),
+            list(provider="PubMed", id="27991900")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
