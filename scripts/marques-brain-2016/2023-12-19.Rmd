@@ -1,12 +1,6 @@
 ---
 title: Processing the Marques brain dataset
 author: Aaron Lun
-date: "June 8, 2019"
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,7 +10,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from @marques2016oligodendrocyte.
+We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from [Marques et al. (2016)](https://doi.org/10.1126/science.aaf6463).
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE75330](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
@@ -24,16 +18,23 @@ We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-count.file <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
+count.file <- bfcrpath(bfc, paste0("ftp://ftp.ncbi.nlm.nih.gov/geo/series/",
     "GSE75nnn/GSE75330/suppl/GSE75330_Marques_et_al_mol_counts2.tab.gz"))
 ```
 
 We load them into memory.
 
 ```{r}
-library(scater)
+library(scuttle)
 counts <- readSparseCounts(count.file)
 dim(counts)
+```
+
+We also extract the pure symbols:
+
+```{r}
+rowdata <- DataFrame(symbol=sub("_loc[0-9]+$", "", rownames(counts)))
+rowdata
 ```
 
 # Extracting the metadata
@@ -87,14 +88,33 @@ coldata
 
 # Saving to file 
 
-We now save all of the components to file for upload to `r Biocpkg("ExperimentHub")`.
-These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
+We now assemble the components into a `SingleCellExperiment`.
 
 ```{r}
-path <- file.path("scRNAseq", "marques-brain", "2.0.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(counts, file=file.path(path, "counts.rds"))
-saveRDS(coldata, file=file.path(path, "coldata.rds"))
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=counts), rowData=rowdata, colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
+We then save it to disk:
+
+```{r}
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Oligodendrocyte heterogeneity in the mouse juvenile and adult central nervous system",
+        description="Oligodendrocytes have been considered as a functionally homogeneous population in the central nervous system (CNS). We performed single-cell RNA sequencing on 5072 cells of the oligodendrocyte lineage from 10 regions of the mouse juvenile and adult CNS. Thirteen distinct populations were identified, 12 of which represent a continuum from Pdgfra(+) oligodendrocyte precursor cells (OPCs) to distinct mature oligodendrocytes. Initial stages of differentiation were similar across the juvenile CNS, whereas subsets of mature oligodendrocytes were enriched in specific regions in the adult brain. Newly formed oligodendrocytes were detected in the adult CNS and were responsive to complex motor learning. A second Pdgfra(+) population, distinct from OPCs, was found along vessels. Our study reveals the dynamics of oligodendrocyte differentiation and maturation, uncoupling them at a transcriptional level and highlighting oligodendrocyte heterogeneity in the CNS.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="GEO", id="GSE75330"),
+            list(provider="PubMed", id="27284195")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
 ```
 
 # Session information
@@ -102,5 +122,3 @@ saveRDS(coldata, file=file.path(path, "coldata.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
