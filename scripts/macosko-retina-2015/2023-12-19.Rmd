@@ -1,0 +1,94 @@
+---
+title: Processing the Macosko retina dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse retina from [Macosko et al. (2015)](https://doi.org/10.1016/j.cell.2015.05.002).
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE63472](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE63472).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63472/suppl/"
+count.file <- bfcrpath(bfc, paste0(base.url,
+    "GSE63472_P14Retina_merged_digital_expression.txt.gz"))
+```
+
+We load them into memory.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Downloading the per-cell metadata
+
+We also download a file containing the metadata for each cell.
+
+```{r}
+meta.url <- "http://mccarrolllab.com/wp-content/uploads/2015/05/retina_clusteridentities.txt"
+meta.file <- bfcrpath(bfc, meta.url)
+coldata <- read.delim(meta.file, stringsAsFactors=FALSE, header=FALSE)
+colnames(coldata) <- c("cell.id", "cluster")
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+coldata
+```
+
+We match the metadata to the columns.
+
+```{r}
+m <- match(colnames(counts), coldata$cell.id)
+coldata <- coldata[m,]
+coldata$cell.id <- colnames(counts)
+summary(is.na(m))
+```
+
+# Saving to file 
+
+We now assemble the components into a `SingleCellExperiment`.
+
+```{r}
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
+This is saved in preparation for upload:
+
+```{r}
+unlink('finished', recursive=TRUE)
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets",
+        description="Cells, the basic units of biological structure and function, vary broadly in type and state. Single-cell genomics can characterize cell identity and function, but limitations of ease and scale have prevented its broad application. Here we describe Drop-seq, a strategy for quickly profiling thousands of individual cells by separating them into nanoliter-sized aqueous droplets, associating a different barcode with each cell's RNAs, and sequencing them all together. Drop-seq analyzes mRNA transcripts from thousands of individual cells simultaneously while remembering transcripts' cell of origin. We analyzed transcriptomes from 44,808 mouse retinal cells and identified 39 transcriptionally distinct cell populations, creating a molecular atlas of gene expression for known retinal cell classes and novel candidate cell subtypes. Drop-seq will accelerate biological discovery by enabling routine transcriptional profiling at single-cell resolution.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="GEO", id="GSE63472"),
+            list(provider="PubMed", id="26000488"),
+            list(provider="other", id=meta.url)
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
