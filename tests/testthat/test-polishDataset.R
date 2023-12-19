@@ -130,6 +130,16 @@ test_that("polishDataset attempts integer conversions", {
     expect_type(a, "double")
 })
 
+test_that("polishDataset works with NA values in the matrices", {
+    mat <- matrix(rpois(1000, lambda=0.1), ncol=10)
+    mat[sample(length(mat), 10)] <- NA
+    sce <- SingleCellExperiment(list(counts=as(mat, "dgCMatrix")))
+
+    y <- polishDataset(sce)
+    expect_true(is_sparse(assay(y)))
+    expect_identical(type(assay(y)), "integer")
+})
+
 test_that("polishDataset strips out alternative experiment's colData", {
     sce <- SingleCellExperiment(list(counts=mat))
     rownames(sce) <- sprintf("GENE_%i", seq_len(nrow(mat)))

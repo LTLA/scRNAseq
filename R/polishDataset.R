@@ -54,7 +54,7 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
         ass <- assay(x, i, withDimnames=FALSE)
 
         if (!is.null(reformat.assay.by.density)) {
-            density <- mean(ass != 0)
+            density <- mean(ass != 0 | is.na(ass)) # NAs are included as non-zero.
             if (density < reformat.assay.by.density) {
                 if (!is_sparse(ass)) {
                     ass <- as(ass, "SVT_SparseMatrix")
@@ -67,7 +67,7 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
         }
 
         if (attempt.integer.conversion) {
-            if (type(ass) == "double" && !any(ass %% 1 != 0)) {
+            if (type(ass) == "double" && !any(ass %% 1 != 0, na.rm=TRUE)) {
                 converter <- selectMethod(`type<-`, class(ass), optional=TRUE)
                 if (is.null(converter)) {
                     ass <- DelayedArray(ass)
