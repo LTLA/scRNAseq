@@ -52,21 +52,38 @@ library(S4Vectors)
 coldata <- DataFrame(coldata)
 colnames(coldata) <- colfields
 
-for (i in 4:9) {
+for (i in c("level2 cluster number (neurons only)", "total molecules")) {
+    coldata[,i] <- as.integer(coldata[,i])
+}
+for (i in c("age (days postnatal)", "cell diameter")) {
+    coldata[,i] <- as.numeric(coldata[,i])
+}
+
+is.sex <- colnames(coldata) == "sex (female=1,male=-1)"
+sex.status <- coldata[,is.sex]
+replacement.sex <- rep('unknown', nrow(coldata))
+replacement.sex[sex.status == "1"] <- "female"
+replacement.sex[sex.status == "-1"] <- "male"
+coldata[,is.sex] <- replacement.sex
+colnames(coldata)[is.sex] <- "sex"
+
+is.stress <- colnames(coldata) == "acute stress (true=1)"
+coldata[,is.stress] <- coldata[,is.stress] == "1"
+colnames(coldata)[is.stress] <- "acute stress"
+
+for (i in c("age (days postnatal)", "cell diameter")) {
     coldata[,i] <- as.numeric(coldata[,i])
 }
 coldata
 ```
 
 The next three rows are empty, so we just skip them.
-We convert the remaining counts into a sparse matrix.
+We convert the remaining counts into a matrix.
 
 ```{r}
 raw.counts <- all.data[-(1:12),]
 counts <- as.matrix(raw.counts[,-1])
-
-library(Matrix)
-counts <- as(counts, "dgCMatrix")
+storage.mode(counts) <- "double"
 rownames(counts) <- raw.counts[,1,drop=TRUE]
 colnames(counts) <- NULL
 dim(counts)
