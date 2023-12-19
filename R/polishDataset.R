@@ -10,7 +10,11 @@
 #' Assays with densities above this number are converted to ordinary dense arrays (if they are not already), while those with lower densities are converted to sparse matrices.
 #' This can be disabled by setting it to \code{NULL}.
 #' @param attempt.integer.conversion Logical scalar indicating whether to convert double-precision assays containing integer values to actually have the integer type.
+#' This can improve efficiency of downstream applications by avoiding the need to operate in double precision.
 #' @param forbid.nested.altexp Logical scalar indicating whether nested alternative experiments (i.e., alternative experiments of alternative experiments) should be forbidden.
+#' This defaults to \code{TRUE} as nested alternative experiments are usually the result of some mistake in \code{\link{altExp}} preparation.
+#' @param remove.altexp.coldata Logical scalar indicating whether column data for alternative experiments should be removed.
+#' This defaults to \code{TRUE} as the alternative experiment column data is usually redundant with that of the maiwn experiment.
 #'
 #' @return A modified copy of \code{x}.
 #'
@@ -29,12 +33,12 @@
 #' str(assay(polished, withDimnames=FALSE))
 #'
 #' @export
-polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0.3, attempt.integer.conversion=TRUE, dedup.altexp.coldata=TRUE, forbid.nested.altexp=TRUE) {
+polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0.3, attempt.integer.conversion=TRUE, remove.altexp.coldata=TRUE, forbid.nested.altexp=TRUE) {
     .polish_dataset(x, 
         strip.inner.names=strip.inner.names, 
         reformat.assay.by.density=reformat.assay.by.density, 
         attempt.integer.conversion=attempt.integer.conversion, 
-        dedup.altexp.coldata=dedup.altexp.coldata, 
+        remove.altexp.coldata=remove.altexp.coldata, 
         forbid.nested.altexp=forbid.nested.altexp
     )
 }
@@ -44,7 +48,7 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
 #' @importClassesFrom SparseArray SVT_SparseMatrix
 #' @importFrom SummarizedExperiment assay assayNames
 #' @importFrom SingleCellExperiment reducedDim reducedDimNames reducedDim<- altExp altExpNames altExp<-
-.polish_dataset <- function(x, strip.inner.names, reformat.assay.by.density, attempt.integer.conversion, dedup.altexp.coldata, forbid.nested.altexp, level=0) {
+.polish_dataset <- function(x, strip.inner.names, reformat.assay.by.density, attempt.integer.conversion, remove.altexp.coldata, forbid.nested.altexp, level=0) {
     for (i in assayNames(x)) {
         ass <- assay(x, i, withDimnames=FALSE)
 
@@ -90,29 +94,26 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
         }
 
         for (i in altExpNames(x)) {
-            if (forbid.nested.altexp && level > 0) {
+            if (forbid.nested.altexp && level > 0L) {
                 stop("nested alternative experiments are forbidden")
             }
 
             alt <- altExp(x, i, withDimnames=FALSE)
+            if (remove.altexp.coldata) {
+                colData(alt) <- colData(alt)[,0]
+            }
+            if (strip.inner.names) {
+                colnames(alt) <- NULL
+            }
+
             alt <- .polish_dataset(alt, 
                 strip.inner.names=strip.inner.names,
                 reformat.assay.by.density=reformat.assay.by.density, 
                 attempt.integer.conversion=attempt.integer.conversion,
-                dedup.altexp.coldata=dedup.altexp.coldata,
+                remove.altexp.coldata=remove.altexp.coldata,
                 forbid.nested.altexp=forbid.nested.altexp,
                 level=level + 1L
             )
-
-            # Do this after .polish_dataset, so that we have already deduplicated the grandchildren.
-            if (dedup.altexp.coldata && identical(colData(x), colData(alt))) {
-                colData(alt) <- NULL
-            }
-
-            # Do this after removal of the colData, to avoid breaking the identical() with loss of colnames.
-            if (strip.inner.names) {
-                colnames(alt) <- NULL
-            }
 
             altExp(x, i, withDimnames=FALSE) <- alt
         }
