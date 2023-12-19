@@ -1,14 +1,7 @@
 ---
 title: Processing the Messmer human ESC dataset
 author: Aaron Lun
-date: "September 6, 2019"
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
-
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
 library(BiocStyle)
@@ -17,7 +10,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the count data
 
-We obtain a single-cell RNA sequencing dataset of human embryonic stem cells from @messmer2019transcriptional.
+We obtain a single-cell RNA sequencing dataset of human embryonic stem cells from [Messmer et al. (2019)](https://doi.org/10.1016/j.celrep.2018.12.099).
 Counts for endogenous genes and spike-in transcripts are available from ArrayExpress
 using the accession number [E-MTAB-6819](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6819/).
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
@@ -25,10 +18,11 @@ We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-messmer.zip <- bfcrpath(bfc, 
-    file.path("https://www.ebi.ac.uk/arrayexpress/files",
-        "E-MTAB-6819/E-MTAB-6819.processed.1.zip"))
-unzip(messmer.zip, exdir=tempdir())
+base.url <- 'https://www.ebi.ac.uk/biostudies/files/E-MTAB-6819/'
+all.files <- list()
+for (sample in c("2383", "2384", "2677", "2678", "2739", "2740", "2780", "2781")) {
+    all.files[[sample]] <- bfcrpath(bfc, paste0(base.url, "genic_counts_", sample, ".tsv"))
+}
 ```
 
 # Reading in the metadata
@@ -36,9 +30,7 @@ unzip(messmer.zip, exdir=tempdir())
 We read in the metadata from the SDRF file:
 
 ```{r}
-messmer.sdrf <- bfcrpath(bfc, 
-    file.path("https://www.ebi.ac.uk/arrayexpress/files",
-        "E-MTAB-6819/E-MTAB-6819.sdrf.txt"))
+messmer.sdrf <- bfcrpath(bfc, paste0(base.url, "E-MTAB-6819.sdrf.txt"))
 coldata <- read.delim(messmer.sdrf, check.names=FALSE, stringsAsFactors=FALSE)
 
 library(S4Vectors)
@@ -97,7 +89,7 @@ gene.names <- NULL
 gene.length <- NULL
 
 for (sample in c("2383", "2384", "2677", "2678", "2739", "2740", "2780", "2781")) {
-    cur.file <- file.path(tempdir(), paste0("genic_counts_", sample, ".tsv"))
+    cur.file <- all.files[[sample]]
     current_counts <- read.table(cur.file, sep="\t", header=TRUE, row.names=1)
 
     # Checking gene names and length are the same as those in other files.
@@ -160,14 +152,46 @@ stopifnot(identical(colnames(combined.counts), libnames))
 
 # Saving for upload 
 
-We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+We assemble it all into a `SingleCellExperiment` with spike-ins stored in an alternative experiment:
 
 ```{r}
-path <- file.path("scRNAseq", "messmer-esc", "2.0.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(combined.counts, file=file.path(path, "counts.rds"))
-saveRDS(coldata, file=file.path(path, "coldata.rds"))
-saveRDS(DataFrame(Length=gene.length), file=file.path(path, "rowdata.rds"))
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=combined.counts), colData=coldata, 
+    rowData=DataFrame(Length=gene.length, row.names=gene.names))
+
+# Splitting off the ERCCs:
+spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+sce <- splitAltExps(sce, spike.type, ref="endogenous")
+spike.exp <- altExp(sce, "ERCC")
+spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25000000)
+spikedata <- spikedata[rownames(spike.exp), ]
+rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+altExp(sce, "ERCC") <- spike.exp
+
+sce <- polishDataset(sce)
+sce
+```
+
+We save these to file in preparation for upload:
+
+```{r}
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished", 
+    createMetadata(
+        title="Transcriptional Heterogeneity in Naive and Primed Human Pluripotent Stem Cells at Single-Cell Resolution",
+        description="Conventional human embryonic stem cells are considered to be primed pluripotent but can be induced to enter a naive state. However, the transcriptional features associated with naive and primed pluripotency are still not fully understood. Here we used single-cell RNA sequencing to characterize the differences between these conditions. We observed that both naive and primed populations were mostly homogeneous with no clear lineage-related structure and identified an intermediate subpopulation of naive cells with primed-like expression. We found that the naive-primed pluripotency axis is preserved across species, although the timing of the transition to a primed state is species specific. We also identified markers for distinguishing human naive and primed pluripotency as well as strong co-regulatory relationships between lineage markers and epigenetic regulators that were exclusive to naive cells. Our data provide valuable insights into the transcriptional landscape of human pluripotency at a cellular and genome-wide resolution.
+        
+This dataset is represented by a `SingleCelLExperiment` where technical replicates for the same cell have been summed together. The spike-in counts are also stored in an alternative experiment.",
+        taxonomy.id="9606",
+        genome="GRCh38",
+        sources=list(
+            list(provider="PubMed", id="30673604"),
+            list(provider="ArrayExpress", id="E-MTAB-6819")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com" 
+    )
+)
 ```
 
 # Session information
@@ -175,5 +199,3 @@ saveRDS(DataFrame(Length=gene.length), file=file.path(path, "rowdata.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
