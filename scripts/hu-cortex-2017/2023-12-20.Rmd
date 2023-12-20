@@ -1,0 +1,126 @@
+---
+title: Processing the Hu cortex snRNA-seq data
+author: "Aaron Lun"
+---
+
+```{r setup, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Download the data
+
+We obtain a single-nucleus RNA sequencing dataset of mouse brains from [Hu et al. (2017)](https://doi.org/10.1016/j.molcel.2017.11.017).
+Counts for endogenous genes and antibody-derived tags are available from the Gene Expression Omnibus
+using the accession number [GSE106678](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE106678).
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+tarred <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE106678&format=file")
+
+temp <- tempfile()
+dir.create(temp)
+untar(tarred, exdir=temp)
+list.files(temp)
+```
+
+# Processing the data
+
+We load in each of the files.
+
+```{r}
+library(scuttle)
+counts <- list()
+for (x in list.files(temp, full.names=TRUE)) {
+    prefix <- sub("^[^_]*_", "", x)
+    prefix <- sub("_.*", "", prefix)
+    counts[[prefix]] <- readSparseCounts(x)
+}
+do.call(rbind, lapply(counts, dim))
+```
+
+For some unknown reason, each matrix has its own set of features!
+Crazy.
+At least the intersection is of a reasonable size.
+
+```{r}
+length(Reduce(intersect, lapply(counts, rownames)))
+```
+
+# Creating a mapping
+
+Unpacking the sample identities:
+
+```{r}
+samples <- c(
+    "cell-3T3",
+    "nuclei-3T3",
+    "nuclei-ctx-1",
+    "nuclei-ctx-2",
+    "nuclei-ctx-3", 
+    "nuclei-ctx-4",
+    "nuclei-ctx-5",
+    "nuclei-ctx-6",
+    "nuclei-ctx-7",
+    "nuclei-ctx-8",
+    "nuclei-ctx-9",
+    "nuclei-ctx-10",
+    "nuclei-ctx-11",
+    "nuclei-ctx-12",
+    "nuclei-ctx-13",
+    "nuclei-ctx-saline1", 
+    "nuclei-ctx-PTZ1", 
+    "nuclei-ctx-saline2",
+    "nuclei-ctx-PTZ2" 
+)
+
+details <- c(
+    "3T3 cells",
+    "3T3 nuclei",
+    sprintf("mouse cortex cells (animal %i)", seq_len(13)),
+    sprintf("mouse cortex cells (%s-treated, animal %i)",
+        rep(c("saline", "PTZ"), rep=2),
+        rep(1:2, each=2)
+    )
+)
+
+names(details) <- samples
+```
+
+# Save for upload
+ 
+We now assemble `SingleCellExperiment` objects:
+
+```{r}
+library(scRNAseq)
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+
+for (x in names(counts)) {
+    sce <- SingleCellExperiment(list(counts=counts[[x]]))
+    sce <- polishDataset(sce)
+    saveDataset(sce, file.path("finished", x),
+        createMetadata(
+            title="[subset] Dissecting cell-type composition and activity-dependent transcriptional state in mammalian brains by massively parallel single-nucleus RNA-Seq",
+            description=paste0("Massively parallel single-cell RNA sequencing can precisely resolve cellular diversity in a high-throughput manner at low cost, but unbiased isolation of intact single cells from complex tissues, such as adult mammalian brains, is challenging. Here, we integrate sucrose-gradient assisted purification of nuclei with droplet microfluidics to develop a highly scalable single-nucleus RNA-Seq approach (sNucDrop-Seq), which is free of enzymatic dissociation and nuclei sorting. By profiling ~18,000 nuclei isolated from cortical tissues of adult mice, we demonstrate that sNucDrop-Seq not only accurately reveals neuronal and non-neuronal subtype composition with high sensitivity, but also enables in-depth analysis of transient transcriptional states driven by neuronal activity, at single-cell resolution, in vivo.
+
+This dataset contains the counts for sample `", x, "` containing ", details[x], ". All samples are stored in separate `SingleCellExperiment` objects due to differences in their feature spaces."),
+            taxonomy.id="10090",
+            genome="GRCm38",
+            sources=list(
+                list(provider="GEO", id="GSE106678"),
+                list(provider="PubMed", id="29220646")
+            ),
+            maintainer.name="Aaron Lun",
+            maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+        )
+    )
+}
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
