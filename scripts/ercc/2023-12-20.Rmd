@@ -1,0 +1,55 @@
+---
+title: Processing the ERCC concentrations
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the ERCC counts
+
+Downloading the ERCC concentrations from Thermo-Fisher:
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask=FALSE)
+url <- "https://assets.thermofisher.com/TFS-Assets/LSG/manuals/cms_095046.txt"
+path <- bfcrpath(bfc, url)
+```
+
+Cleaning up the data frame by removing irrelevant columns:
+
+```{r}
+tab <- read.delim(path, check.names = FALSE)
+tab <- DataFrame(tab, check.names=FALSE)
+rownames(tab) <- tab[,"ERCC ID"]
+tab <- tab[,-(1:2)]
+```
+
+And then saving it again:
+
+```{r}
+library(scRNAseq)
+unlink("finished", recursive=TRUE)
+saveDataset(tab, "finished",
+    createMetadata(
+        title="ERCC RNA Spike-In Mix Concentrations",
+        description="Concentrations for ERCC spike-in RNA molecules in 2 mixes, obtained from ThermoFisher.",
+        taxonomy.id=list(),
+        genome=list(),
+        sources=list(
+            list(provider="other", id=url)
+        ),
+        maintainer.name="Alan O'Callaghan",
+        maintainer.email="alan.ocallaghan@outlook.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
