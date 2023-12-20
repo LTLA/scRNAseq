@@ -1,0 +1,116 @@
+---
+title: Processing the Shekhar retina dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse retina from [Shekhar et al. (2016)](https://doi.org/10.1016/j.cell.2016.07.054).
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE81904](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81904).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE81nnn/GSE81904/suppl/"
+count.url <- paste0(base.url, "GSE81904_BipolarUMICounts_Cell2016.txt.gz")
+count.file <- bfcrpath(bfc, count.url)
+```
+
+We load them into memory.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Downloading the per-cell metadata
+
+We also download a file containing the metadata for each cell.
+This was originally obtained from the authors by Vladimir Kiselev and Martin Hemberg, as the original annotation isn't availabledisappeared
+Annoyingly, our original source of this file is no longer available, so we'll have to load the copy from ExperimentHub.
+
+
+```{r}
+library(ExperimentHub)
+ehub <- ExperimentHub()
+coldata <- ehub[["EH2697"]]
+stopifnot(identical(coldata$NAME, colnames(counts)))
+coldata$NAME <- NULL # This doesn't need a special NAME.
+table(coldata$CLUSTER, useNA="always") 
+```
+
+Also pulling some information out of their Rdata file.
+
+```{r}
+rda.url <- paste0(base.url, "GSE81904_bipolar_data_Cell2016.Rdata.gz")
+rda.file <- bfcrpath(bfc, rda.url)
+
+library(R.utils)
+unzipped <- tempfile(fileext=".Rdata")
+gunzip(rda.file, destname=unzipped)
+
+loaded <- new.env()
+load(unzipped, envir=loaded)
+```
+
+# Saving to file 
+
+We slap everything together into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+
+metadata(sce)$pca.loadings <- as.matrix(loaded$pca.load)
+
+m <- match(colnames(sce), rownames(loaded$pca.scores))
+pca <- as.matrix(loaded$pca.scores[m,,drop=FALSE])
+rownames(pca) <- colnames(sce)
+reducedDim(sce, "PCA") <- pca
+
+m <- match(colnames(sce), rownames(loaded$tsne.y))
+tsne <- as.matrix(loaded$tsne.y[m,,drop=FALSE])
+rownames(tsne) <- colnames(sce)
+reducedDim(sce, "TSNE") <- tsne
+
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save all of the components to file:
+
+```{r}
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished", 
+    createMetadata(
+        title="Comprehensive Classification of Retinal Bipolar Neurons by Single-Cell Transcriptomics",
+        description="Patterns of gene expression can be used to characterize and classify neuronal types. It is challenging, however, to generate taxonomies that fulfill the essential criteria of being comprehensive, harmonizing with conventional classification schemes, and lacking superfluous subdivisions of genuine types. To address these challenges, we used massively parallel single-cell RNA profiling and optimized computational methods on a heterogeneous class of neurons, mouse retinal bipolar cells (BCs). From a population of ∼25,000 BCs, we derived a molecular classification that identified 15 types, including all types observed previously and two novel types, one of which has a non-canonical morphology and position. We validated the classification scheme and identified dozens of novel markers using methods that match molecular expression to cell morphology. This work provides a systematic methodology for achieving comprehensive molecular classification of neurons, identifies novel neuronal types, and uncovers transcriptional differences that distinguish types within a class.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="GEO", id="GSE81904"),
+            list(provider="PubMed", id="27565351"),
+            list(provider="ExperimentHub", id="EH2697")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
+
+# References
