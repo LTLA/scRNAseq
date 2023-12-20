@@ -1,0 +1,210 @@
+---
+title: Processing the Stoeckius hashing dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the hashed PBMCs and cell lines from [Stoeckius et al. (2018)](https://doi.org/10.1186/s13059-018-1603-1).
+Counts for endogenous genes, ADTs and HTOs are available from the Gene Expression Omnibus
+using the accession number [GGSE108313](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE108313).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+base.url <- "https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM2895nnn/"
+pbmc.rna <- bfcrpath(bfc, paste0(base.url, "GSM2895282/suppl/GSM2895282_Hashtag-RNA.umi.txt.gz"))
+pbmc.hto <- bfcrpath(bfc, paste0(base.url, "GSM2895283/suppl/GSM2895283_Hashtag-HTO-count.csv.gz"))
+pbmc.adt1 <- bfcrpath(bfc, paste0(base.url, "GSM2895284/suppl/GSM2895284_Hashtag-ADT1-count.csv.gz"))
+pbmc.adt2 <- bfcrpath(bfc, paste0(base.url, "GSM2895284/suppl/GSM2895284_Hashtag-ADT2-count.csv.gz"))
+
+base.url <- "https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM3501nnn/"
+cell.rna <- bfcrpath(bfc, paste0(base.url, "GSM3501446/suppl/GSM3501446_MixCellLines-RNA.umi.txt.gz"))
+cell.hto <- bfcrpath(bfc, paste0(base.url, "GSM3501447/suppl/GSM3501447_MixCellLines-HTO-counts.csv.gz"))
+```
+
+We read the RNA counts into memory as sparse matrices,
+while the HTO and ADT counts are read in as dense matrices owing to, well, their density.
+
+```{r}
+library(scuttle)
+pbmc.rna.mat <- readSparseCounts(pbmc.rna, row.names=1)
+dim(pbmc.rna.mat)
+pbmc.hto.mat <- as.matrix(read.csv(pbmc.hto, row.names=1))
+dim(pbmc.hto.mat)
+pbmc.adt1.mat <- as.matrix(read.csv(pbmc.adt1, row.names=1))
+dim(pbmc.adt1.mat)
+pbmc.adt2.mat <- as.matrix(read.csv(pbmc.adt2, row.names=1))
+dim(pbmc.adt2.mat)
+```
+
+Same for the cell line mixture:
+
+```{r}
+cell.rna.mat <- readSparseCounts(cell.rna, row.names=1)
+dim(cell.rna.mat)
+cell.hto.mat <- t(as.matrix(read.csv(cell.hto, row.names=1)))
+dim(cell.hto.mat)
+```
+
+# Preparing the PBMC data
+
+Somehow, none of the matrices have the same set of columns!
+Incredible.
+
+```{r}
+length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.adt1.mat)))
+length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.adt2.mat)))
+length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.rna.mat)))
+```
+
+We take the intersection, because otherwise it's not going to be very useful for downstream users.
+
+```{r}
+common <- Reduce(intersect, 
+    list(
+        colnames(pbmc.rna.mat), 
+        colnames(pbmc.hto.mat), 
+        colnames(pbmc.adt1.mat), 
+        colnames(pbmc.adt2.mat)
+    )
+)
+length(common)
+```
+
+Now we start to put together a `SingleCellExperiment`.
+This dataset contains both human and mouse transcripts; let's try to figure out which is which based on capitalization and the fact that the cell line data is human-only.
+Even this is not straightforward because the cell line data does not have the full set of human features!
+
+```{r}
+sce <- SingleCellExperiment(list(counts=pbmc.rna.mat[,common]))
+
+probably.human <- !grepl("[a-z]+", rownames(pbmc.rna.mat)) |
+    grepl("^hsa-", rownames(pbmc.rna.mat)) |
+    rownames(pbmc.rna.mat) %in% rownames(cell.rna.mat)
+summary(probably.human)
+head(rownames(pbmc.rna.mat)[probably.human])
+tail(rownames(pbmc.rna.mat)[probably.human])
+
+head(rownames(pbmc.rna.mat)[!probably.human])
+tail(rownames(pbmc.rna.mat)[!probably.human])
+
+rowData(sce)$probably.human <- probably.human
+```
+
+Continuing with the theme of odd formatting, we notice that the HTO and ADT matrices contain metrics as rows, so we need to extract them.
+Let's whip up a little function to do so.
+
+```{r}
+extract_metrics <- function(x) {
+    cols <- c("no_match", "ambiguous", "total_reads", "bad_struct")
+    present <- rownames(x) %in% cols
+    list(x=x[!present,,drop=FALSE], metrics=t(x[present,]))
+}
+```
+
+Now we can progressively add the HTOs (for multiplexed batches) and ADTs (for surface marker quantification):
+
+```{r}
+hto.shifted <- extract_metrics(pbmc.hto.mat[,common])
+hto.se <- SummarizedExperiment(list(counts=hto.shifted$x))
+colData(hto.se)$metrics <- DataFrame(hto.shifted$metrics)
+rowData(hto.se)$batch <- sub("Batch([A-Z]+)-.*", "\\1", rownames(hto.se))
+altExp(sce, "HTO") <- hto.se
+
+adt1.shifted <- extract_metrics(pbmc.adt1.mat[,common])
+adt2.shifted <- extract_metrics(pbmc.adt2.mat[,common])
+adt.se <- SummarizedExperiment(list(counts=rbind(adt1.shifted$x, adt2.shifted$x)))
+colData(adt.se)$control.metrics <- DataFrame(adt1.shifted$metrics)
+colData(adt.se)$surface.metrics <- DataFrame(adt2.shifted$metrics)
+rowData(adt.se)$target <- c(sub("_.*", "", rownames(adt1.shifted$x)), sub("-[ACTG]+$", "", rownames(adt2.shifted$x)))
+rowData(adt.se)$control <- rep(c(TRUE, FALSE), c(nrow(adt1.shifted$x), nrow(adt2.shifted$x)))
+altExp(sce, "ADT") <- adt.se
+
+sce
+```
+
+Preparing the metadata:
+
+```{r}
+library(scRNAseq)
+meta <- createMetadata(
+    title="[subset] Cell Hashing with barcoded antibodies enables multiplexing and doublet detection for single cell genomics",
+    description="Despite rapid developments in single cell sequencing, sample-specific batch effects, detection of cell multiplets, and experimental costs remain outstanding challenges. Here, we introduce Cell Hashing, where oligo-tagged antibodies against ubiquitously expressed surface proteins uniquely label cells from distinct samples, which can be subsequently pooled. By sequencing these tags alongside the cellular transcriptome, we can assign each cell to its original sample, robustly identify cross-sample multiplets, and \"super-load\" commercial droplet-based systems for significant cost reduction. We validate our approach using a complementary genetic approach and demonstrate how hashing can generalize the benefits of single cell multiplexing to diverse samples and experimental designs.",
+    taxonomy.id=NULL,
+    genome=NULL,
+    sources=list(
+        list(provider="GEO", id="GSE108313"),
+        list(provider="PubMed", id="30567574")
+    ),
+    maintainer.name="Aaron Lun",
+    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+copy <- meta
+copy$taxonomy_id <- c("10090", "9606")
+copy$genome <- c("GRCm38", "GRCh37")
+copy$description <- paste0(copy$description, "\n\nThis dataset contains the PBMCs from this study. ADTs and HTOs are stored in alternative experiments.")
+```
+
+And finally, saving it.
+Note that we allow the alternative experiments to have their own column data due to the metrics.
+
+```{r}
+sce <- polishDataset(sce, remove.altexp.coldata=FALSE)
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+saveDataset(sce, file.path("finished", "pbmc"), copy)
+```
+
+# Preparing the cell mixture data
+
+Again, the RNA and HTO matrices don't have the same set of columns!
+Some filtering is required.
+
+```{r}
+common <- intersect(colnames(cell.rna.mat), colnames(cell.hto.mat))
+length(common)
+```
+
+Assembling the `SingleCellExperiment`; at least it's all human this time.
+
+```{r}
+sce <- SingleCellExperiment(list(counts=cell.rna.mat[,common]))
+```
+
+Adding the HTO counts:
+
+```{r}
+hto.shifted <- extract_metrics(cell.hto.mat[,common])
+hto.se <- SummarizedExperiment(list(counts=hto.shifted$x))
+colData(hto.se)$metrics <- DataFrame(hto.shifted$metrics)
+rowData(hto.se)$cell_line <- sub("_.*", "\\1", rownames(hto.se))
+rowData(hto.se)$replicate <- sub(".*_", "\\1", rownames(hto.se))
+altExp(sce, "HTO") <- hto.se
+```
+
+And finally, saving it.
+
+```{r}
+copy <- meta
+copy$taxonomy_id <- "9606"
+copy$genome <- "GRCh37"
+copy$description <- paste0(copy$description, "\n\nThis dataset contains the cell line mixture from this study. HTOs are stored in the alternative experiment.")
+
+sce <- polishDataset(sce, remove.altexp.coldata=FALSE)
+saveDataset(sce, file.path("finished", "mixture"), copy)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
