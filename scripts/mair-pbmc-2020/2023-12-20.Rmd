@@ -1,12 +1,6 @@
 ---
 title: "Processing Mair-2020 CITEseq data (One-SENSE paper)"
 author: "Stephany Orjuela"
-date: "June 24, 2020"
-output: 
- BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r setup, echo=FALSE, results='hide', message=FALSE}
@@ -16,7 +10,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Download the data
 
-We obtain a single-cell RNA sequencing dataset of the human PBMCs from @mair2020targeted.
+We obtain a single-cell RNA sequencing dataset of the human PBMCs from [Mair et al. (2020)](https://doi.org/10.1016/j.celrep.2020.03.063).
 Counts for endogenous genes and antibody-derived tags are available from the Gene Expression Omnibus
 using the accession number [GSE13525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135325).
 Of particular interest are the `*Combined_PBMC_AbSeq*.csv.gz` files that contain the data for Figure 3A.
@@ -24,14 +18,12 @@ Of particular interest are the `*Combined_PBMC_AbSeq*.csv.gz` files that contain
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/samples/",
-    "GSM4005nnn/GSM4005486/suppl/")
-Abseq_1 <- count.file <- bfcrpath(bfc, file.path(base.url,
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4005nnn/GSM4005486/suppl/"
+Abseq_1 <- count.file <- bfcrpath(bfc, paste0(base.url,
     "GSM4005486_Combined_PBMC_AbSeq_1_DBEC_MolsPerCell_with_SampleTag.csv.gz"))
 
-base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/samples/",
-    "GSM4005nnn/GSM4005487/suppl/")
-Abseq_2 <- count.file <- bfcrpath(bfc, file.path(base.url,
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4005nnn/GSM4005487/suppl/"
+Abseq_2 <- count.file <- bfcrpath(bfc, paste0(base.url,
     "GSM4005487_Combined_PBMC_AbSeq_2_DBEC_MolsPerCell_with_SampleTag.csv.gz"))
 ```
 
@@ -120,19 +112,45 @@ head(final.names)
 
 # Save for upload
  
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
-Note that it doesn't matter which row data we use, as they should be the same.
+We slap everything together into a `SingleCellExperiment`:
 
 ```{r}
-repath <- file.path("scRNAseq", "mair-pbmc", "2.4.0")
-dir.create(repath, showWarnings=FALSE, recursive=TRUE)
-saveRDS(final.coldata, file=file.path(repath, "coldata.rds"))
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(
+    list(counts=final.rna.mat), 
+    colData=final.coldata, 
+    rowData=ingested1$rna.rowdata)
 
-saveRDS(ingested1$rna.rowdata, file=file.path(repath, "rowdata-rna.rds"))
-saveRDS(final.rna.mat, file=file.path(repath, "counts-rna.rds"))
+altExp(sce, "ADT") <- SummarizedExperiment(
+    list(counts=final.p.mat),
+    rowData=ingested1$p.rowdata
+)
 
-saveRDS(ingested1$p.rowdata, file=file.path(repath, "rowdata-adt.rds"))
-saveRDS(final.p.mat, file=file.path(repath, "counts-adt.rds"))
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save it to disk:
+
+```{r}
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished",
+    createMetadata(
+        title="A Targeted Multi-omic Analysis Approach Measures Protein Expression and Low-Abundance Transcripts on the Single-Cell Level",
+        description="High-throughput single-cell RNA sequencing (scRNA-seq) has become a frequently used tool to assess immune cell heterogeneity. Recently, the combined measurement of RNA and protein expression was developed, commonly known as cellular indexing of transcriptomes and epitopes by sequencing (CITE-seq). Acquisition of protein expression data along with transcriptome data resolves some of the limitations inherent to only assessing transcripts but also nearly doubles the sequencing read depth required per single cell. Furthermore, there is still a paucity of analysis tools to visualize combined transcript-protein datasets. Here, we describe a targeted transcriptomics approach that combines an analysis of over 400 genes with simultaneous measurement of over 40 proteins on 2 × 104 cells in a single experiment. This targeted approach requires only about one-tenth of the read depth compared to a whole-transcriptome approach while retaining high sensitivity for low abundance transcripts. To analyze these multi-omic datasets, we adapted one-dimensional soli expression by nonlinear stochastic embedding (One-SENSE) for intuitive visualization of protein-transcript relationships on a single-cell level.",
+        taxonomy.id="9606",
+        genome="GRCh38",
+        sources=list(
+            list(provider="PubMed", id="32268080"),
+            list(provider="GEO", id="GSE135325"),
+            list(provider="GEO", id="GSM4005486"),
+            list(provider="GEO", id="GSM4005487")
+        ),
+        maintainer.name="Stephany Orjuela",
+        maintainer.email="sorjuelal@gmail.com"
+    )
+)
 ```
 
 # Session info
@@ -140,5 +158,3 @@ saveRDS(final.p.mat, file=file.path(repath, "counts-adt.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
