@@ -1,0 +1,89 @@
+---
+title: Processing the Nestorowa HSC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the mouse haematopoietic stem cells from [Paul et al. (2015)](https://doi.org/10.1016/j.cell.2015.11.013).
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE72857](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE72857).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE72nnn/GSE72857/suppl/"
+fname.A <- bfcrpath(bfc, paste0(base.url, "GSE72857_umitab.txt.gz"))
+```
+
+We read this into memory as a sparse matrix.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(fname.A, quote='"')
+dim(counts)
+```
+
+# Downloading the metadata
+
+We pull down the metadata from GEO as well. 
+
+```{r}
+meta.A <- bfcrpath(bfc, paste0(base.url, "GSE72857_experimental_design.txt.gz"))
+meta <- read.delim(meta.A, skip=19, header=TRUE, stringsAsFactors=FALSE)
+meta <- DataFrame(meta)
+meta
+```
+
+We check that the cell names match up with the matrix.
+
+```{r}
+m <- match(colnames(counts), meta$Well_ID)
+stopifnot(all(!is.na(m)))
+meta <- meta[m,]
+```
+
+# Saving to file 
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=meta)
+
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+And now saving it:
+
+```{r}
+unlink("finished", recursive=TRUE)
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Transcriptional Heterogeneity and Lineage Commitment in Myeloid Progenitors",
+        description="Within the bone marrow, stem cells differentiate and give rise to diverse blood cell types and functions. Currently, hematopoietic progenitors are defined using surface markers combined with functional assays that are not directly linked with in vivo differentiation potential or gene regulatory mechanisms. Here, we comprehensively map myeloid progenitor subpopulations by transcriptional sorting of single cells from the bone marrow. We describe multiple progenitor subgroups, showing unexpected transcriptional priming toward seven differentiation fates but no progenitors with a mixed state. Transcriptional differentiation is correlated with combinations of known and previously undefined transcription factors, suggesting that the process is tightly regulated. Histone maps and knockout assays are consistent with early transcriptional priming, while traditional transplantation experiments suggest that in vivo priming may still allow for plasticity given strong perturbations. These data establish a reference model and general framework for studying hematopoiesis at single-cell resolution.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="GEO", id="GSE72857"),
+            list(provider="PubMed", id="26627738")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
