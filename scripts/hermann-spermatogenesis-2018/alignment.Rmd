@@ -2,11 +2,7 @@
 title: Processing the Hermann spermatogenesis dataset for RNA velocity analysis
 author: Charlotte Soneson
 date: "June 5, 2020"
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
+bibliography: ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
