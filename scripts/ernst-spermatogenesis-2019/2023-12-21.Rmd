@@ -1,0 +1,125 @@
+---
+title: Processing the Ernst spermatogenesis dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of mouse spermatogenesis from [Ernst et al. (2019)](https://doi.org/10.1038/s41467-019-09182-1).
+Counts for endogenous genes are available from ArrayExpress using the accession number [E-MTAB-6946](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6946/).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-6946/"
+```
+
+We read each of the count matrices into memory.
+
+```{r}
+library(Matrix)
+cr.path <- bfcrpath(bfc, paste0(base.url, "raw_counts.mtx"))
+cr.mat <- as(readMM(cr.path), "dgCMatrix")
+dim(cr.mat)
+ed.path <- bfcrpath(bfc, paste0(base.url, "raw_counts_emptyDrops.mtx"))
+ed.mat <- as(readMM(ed.path), "dgCMatrix")
+dim(ed.mat)
+```
+
+We then slap all the objects together in a `SingleCellExperiment` object.
+
+```{r}
+library(SingleCellExperiment)
+cellranger <- SingleCellExperiment(list(counts=cr.mat))
+cellranger
+emptydrops <- SingleCellExperiment(list(counts=ed.mat))
+emptydrops
+```
+
+# Filling in the metadata
+
+Adding gene-level metadata.
+
+```{r}
+gene.path <- bfcrpath(bfc, paste0(base.url, "genes.tsv"))
+gene.info <- read.delim(gene.path)
+rownames(cellranger) <- gene.info$ID
+rowData(cellranger)$Symbol <- gene.info$Symbol
+
+gene.path <- bfcrpath(bfc, paste0(base.url, "genes_emptyDrops.tsv"))
+gene.info <- read.delim(gene.path)
+rownames(emptydrops) <- gene.info$ID
+rowData(emptydrops)$Symbol <- gene.info$Symbol
+```
+
+Adding cell-level metadata.
+
+```{r}
+cell.path <- bfcrpath(bfc, paste0(base.url, "cell_metadata.txt"))
+cell.info <- read.table(cell.path, check.names=FALSE)
+colData(cellranger) <- DataFrame(cell.info, check.names=FALSE)
+colData(cellranger)
+
+cell.path <- bfcrpath(bfc, paste0(base.url, "cell_metadata_emptyDrops.txt"))
+cell.info <- read.table(cell.path)
+colData(emptydrops) <- DataFrame(cell.info, check.names=FALSE)
+colData(emptydrops)
+```
+
+# Saving to file
+
+We polish the datasets to optimaize for space.
+
+```{r}
+library(scRNAseq)
+cellranger <- polishDataset(cellranger)
+emptydrops <- polishDataset(emptydrops)
+```
+
+We create a metadata template to save each object:
+
+```{r}
+meta <- createMetadata(
+    title="Staged developmental mapping and X chromosome transcriptional dynamics during mouse spermatogenesis. [%s calls only]",
+    description="Male gametes are generated through a specialised differentiation pathway involving a series of developmental transitions that are poorly characterised at the molecular level. Here, we use droplet-based single-cell RNA-Sequencing to profile spermatogenesis in adult animals and at multiple stages during juvenile development. By exploiting the first wave of spermatogenesis, we both precisely stage germ cell development and enrich for rare somatic cell-types and spermatogonia. To capture the full complexity of spermatogenesis including cells that have low transcriptional activity, we apply a statistical tool that identifies previously uncharacterised populations of leptotene and zygotene spermatocytes. Focusing on post-meiotic events, we characterise the temporal dynamics of X chromosome re-activation and profile the associated chromatin state using CUT&RUN. This identifies a set of genes strongly repressed by H3K9me3 in spermatocytes, which then undergo extensive chromatin remodelling post-meiosis, thus acquiring an active chromatin state and spermatid-specific expression.
+
+Maintainer note: this dataset contains the cells that were called as cells via the %s algorithm.",
+    taxonomy.id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-6946"),
+        list(provider="PubMed", id="30890697")
+    ),
+    maintainer.name="Aaron Lun",
+    maintainer.email="infinite.monkeys.with.keyboards.gmail.com"
+)
+```
+
+We now do the saving.
+
+```{r}
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+
+copy <- meta
+copy$title <- sprintf(copy$title, "CellRanger")
+copy$description <- sprintf(copy$description, "CellRanger")
+saveMetadata(cellranger, file.path("finished", "cellranger"), copy)
+
+copy <- meta
+copy$title <- sprintf(copy$title, "EmptyDrops")
+copy$description <- sprintf(copy$description, "EmptyDrops")
+saveMetadata(cellranger, file.path("finished", "emptydrops"), copy)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
