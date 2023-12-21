@@ -2,11 +2,6 @@
 title: Processing the Fletcher Olfactory Epithelium (OE) dataset
 author: Davide Risso
 date: 9 February 2021
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,7 +11,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of Olfactory Epithelium cells from multiple mice from @fletcher2017deconstructing.
+We obtain a single-cell RNA sequencing dataset of Olfactory Epithelium cells from multiple mice from [Fletcher et al. (2017)](https://doi.org/10.1016/j.stem.2017.04.003).
 Counts for the endogenous genes, spike-ins, and gene constructs are available from the Gene Expression Omnibus using the accession number [GSE95601](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE95601).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
@@ -25,17 +20,10 @@ library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
 
 base <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE95601&format=file&file="
-fname <- bfcrpath(bfc, 
-    paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5Fcounts%5Ftable%2Etxt%2Egz"))
-
-protocol_data_file <- bfcrpath(bfc, 
-    paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FprotocolData%2Etxt%2Egz"))
-
-pheno_data_file <- bfcrpath(bfc, 
-    paste0(base, "GSE95601%5FoeHBCdiff%5FphenoData%2Etxt%2Egz"))
-
-rowdata_file <- bfcrpath(bfc, 
-    paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FfeatureData%2Etxt%2Egz"))
+fname <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5Fcounts%5Ftable%2Etxt%2Egz"))
+protocol_data_file <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FprotocolData%2Etxt%2Egz"))
+pheno_data_file <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FphenoData%2Etxt%2Egz"))
+rowdata_file <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FfeatureData%2Etxt%2Egz"))
 ```
 
 Reading the counts in a matrix:
@@ -59,7 +47,7 @@ mean(lost)
 counts[lost] <- 0L
 ```
 
-# Adding metadata
+# Adding row/column annotations
 
 Reading in the column data in dataframes:
 
@@ -93,11 +81,13 @@ stopifnot(
 rowdata
 ```
 
+# Adding clustering results
+
 Attaching the cluster results from the original analysis (cluster labels available [here](https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/clusterKey.md)):
 
 ```{r}
-cluster_file <- bfcrpath(bfc, 
-    "https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/oeHBCdiff_clusterLabels.txt")
+cluster_url <- "https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/oeHBCdiff_clusterLabels.txt"
+cluster_file <- bfcrpath(bfc, cluster_url)
 cluster_id <- read.table(cluster_file, col.names = c("sample_id", "cluster_id"))
 
 cluster_labels <- data.frame(cluster_id = c(1:5, 7:12, 14, 15),
@@ -138,24 +128,41 @@ coldata <- cbind(coldata, cluster_labels[mc,-1])
 coldata
 ```
 
-Creating a `SingleCellExperiment` object:
+# Saving to file 
+
+We put this all together in a `SingleCellExperiment` object, with some optimizations for space.
 
 ```{r}
 library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=counts),
-    colData = coldata, rowData = rowdata)
+sce <- SingleCellExperiment(list(counts=counts), colData = coldata, rowData = rowdata)
+colData(sce) <- colData(sce)[,setdiff(colnames(coldata), "sample_sequencing_id")] # redundant with column names.
+
+# Adding some polish to optimize for space.
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
 ```
 
-# Saving to file 
-
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We now save everything to disk in preparation for upload:
 
 ```{r}
-path <- file.path("scRNAseq", "fletcher-olfactory", "2.6.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(assay(sce), file=file.path(path, "counts.rds"))
-saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
-saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Deconstructing Olfactory Stem Cell Trajectories at Single-Cell Resolution",
+        description="A detailed understanding of the paths that stem cells traverse to generate mature progeny is vital for elucidating the mechanisms governing cell fate decisions and tissue homeostasis. Adult stem cells maintain and regenerate multiple mature cell lineages in the olfactory epithelium. Here we integrate single-cell RNA sequencing and robust statistical analyses with in vivo lineage tracing to define a detailed map of the postnatal olfactory epithelium, revealing cell fate potentials and branchpoints in olfactory stem cell lineage trajectories. Olfactory stem cells produce support cells via direct fate conversion in the absence of cell division, and their multipotency at the population level reflects collective unipotent cell fate decisions by single stem cells. We further demonstrate that Wnt signaling regulates stem cell fate by promoting neuronal fate choices. This integrated approach reveals the mechanisms guiding olfactory lineage trajectories and provides a model for deconstructing similar hierarchies in other stem cell niches.
+
+Maintainer note: cluster labels were obtained from the corresponding code repository on GitHub. Only a subset of cells were used for clustering and thus have these labels; these are indicated as such via the `retained` column.",
+        taxonomy.id="10090",
+        genome="GRCm38",
+        sources=list(
+            list(provider="GEO", id="GSE95601"),
+            list(provider="PubMed", id="28506465"),
+            list(provider="other", id=cluster_url)
+        ),
+        maintainer.name="Davide Risso",
+        maintainer.email="risso.davide@gmail.com"
+    )
+)
 ```
 
 # Session information {-}
@@ -163,5 +170,3 @@ saveRDS(rowData(sce), file=file.path(path, "rowdata.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
