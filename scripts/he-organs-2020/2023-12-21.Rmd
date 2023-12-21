@@ -1,0 +1,170 @@
+---
+title: Processing the He organ atlas dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of human organs from [He et al. (2020)](https://doi.org/10.1186/s13059-020-02210-0).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE159929](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE159929).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+mat.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE159929&format=file")
+```
+
+We load this into memory.
+
+```{r}
+tmp <- tempfile()
+untar(mat.path, exdir=tmp)
+all.files <- list.files(tmp)
+
+library(scuttle)
+all.counts <- lapply(file.path(tmp, all.files), readSparseCounts, sep=",", row.names=1, quote='"')
+names(all.counts) <- sub(".*_([^_]+)_Counts.csv.gz", "\\1", all.files)
+```
+
+Sadly, each matrix does not contain the same set of features.
+This is because they filtered out low-expressing genes - it would not be correct to zero-fill.
+
+```{r}
+do.call(rbind, lapply(all.counts, dim))
+```
+
+# Downloading the metadata
+
+We obtain the metadata from the GitHub repository accompanying the study 
+(see [here](https://github.com/bei-lab/scRNA-AHCA/tree/master/Cell_barcode_and_corresponding_cell_types_of_AHCA)).
+
+```{r}
+meta.path <- bfcrpath(bfc,
+    "https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/Annotation_AHCA_alltissues_meta.data_84363_cell.txt")
+meta <- read.delim(meta.path)
+meta <- DataFrame(meta, check.names=FALSE)
+meta
+```
+
+This requires some serious clean-up to make it look presentable.
+
+```{r}
+rownames(meta) <- meta$X
+meta <- meta[,-1]
+colnames(meta)[1] <- "Tissue"
+meta$Tissue <- sub("_cDNA", "", meta$Tissue)
+meta$Color_of_tissues <- NULL # Don't need this crap.
+
+# Checking that all cells are accounted for.
+ref.names <- lapply(all.counts, colnames)
+ref.names <- paste0(rep(names(all.counts), lengths(ref.names)), "_cDNA_", unlist(ref.names))
+stopifnot(identical(sort(ref.names), sort(rownames(meta))))
+```
+
+We extract the reduced dimensions into their own category.
+
+```{r}
+tsne <- cbind(meta$tSNE_1, meta$tSNE_2)
+rownames(tsne) <- rownames(meta)
+meta <- meta[,setdiff(colnames(meta), c("tSNE_1", "tSNE_2"))]
+```
+
+We also obtain finer cell types from reclustering.
+
+```{r}
+fine.anno <- broad.anno <- rep(NA_character_, nrow(meta))
+
+for (sub in c("B_and_plasma.meta.data.txt", "CD4_meta.data.txt", "CD8_meta.data.txt",
+    "Endothelial_cell.meta.data.txt", "Epithelial_cells.meta.data.txt", 
+    "FibSmo.meta.data.txt", "Myeloid.meta.data.txt")) 
+{
+    sub.path <- bfcrpath(bfc, paste0("https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/", sub))
+    sub.df <- read.delim(sub.path)
+    m <- match(sub.df$X, rownames(meta))
+    stopifnot(all(is.na(fine.anno[m])))
+    stopifnot(all(is.na(broad.anno[m])))
+    broad.anno[m] <- sub(".meta\\.data.txt", "", sub)
+    fine.anno[m] <- sub.df$annotation
+}
+
+meta$reclustered.broad <- broad.anno
+meta$reclustered.fine <- fine.anno
+```
+
+# Saving to file
+
+We assemble each organ-specific `SingleCellExperiment`:
+
+```{r}
+library(scRNAseq)
+all.sce <- list()
+
+for (tissue in names(all.counts)) {
+    current <- all.counts[[tissue]]
+    ref.names <- paste0(tissue, "_cDNA_", colnames(current))
+    m <- match(ref.names, rownames(meta))
+
+    # Just verifying that everything is in order.
+    stopifnot(all(!is.na(m)))
+    stopifnot(all(meta$Tissue[m]==tissue))
+
+    sce <- SingleCellExperiment(list(counts=current))
+    colData(sce) <- cbind(colData(sce), meta[m,])
+    reducedDim(sce, "TSNE", withDimnames=FALSE) <- tsne[ref.names,]
+
+    # Adding some polish to save space.
+    all.sce[[tissue]] <- polishDataset(sce)
+}
+```
+
+We create some template metadata:
+
+```{r}
+library(scRNAseq)
+meta <- createMetadata(
+    title="Single-cell transcriptome profiling of an adult human cell atlas of 15 major organs [%s only]",
+    description="Background: As core units of organ tissues, cells of various types play their harmonious rhythms to maintain the homeostasis of the human body. It is essential to identify the characteristics of cells in human organs and their regulatory networks for understanding the biological mechanisms related to health and disease. However, a systematic and comprehensive single-cell transcriptional profile across multiple organs of a normal human adult is missing.
+
+Results: We perform single-cell transcriptomes of 84,363 cells derived from 15 tissue organs of one adult donor and generate an adult human cell atlas. The adult human cell atlas depicts 252 subtypes of cells, including major cell types such as T, B, myeloid, epithelial, and stromal cells, as well as novel COCH+ fibroblasts and FibSmo cells, each of which is distinguished by multiple marker genes and transcriptional profiles. These collectively contribute to the heterogeneity of major human organs. Moreover, T cell and B cell receptor repertoire comparisons and trajectory analyses reveal direct clonal sharing of T and B cells with various developmental states among different tissues. Furthermore, novel cell markers, transcription factors, and ligand-receptor pairs are identified with potential functional regulations in maintaining the homeostasis of human cells among tissues.
+
+Conclusions: The adult human cell atlas reveals the inter- and intra-organ heterogeneity of cell characteristics and provides a useful resource in uncovering key events during the development of human diseases in the context of the heterogeneity of cells and organs.
+
+Maintainer note: this dataset contains only the cells from the %s. Additional metadata has been added from the GitHub repository accompanying the paper.",
+    taxonomy.id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="GEO", id="GSE159929"),
+        list(provider="PubMed", id="33287869"),
+        list(provider="other", id="https://github.com/bei-lab/scRNA-AHCA")
+    ),
+    maintainer.name="Aaron Lun",
+    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+)
+```
+
+We now save each organ's SCE in preparation for upload.
+
+```{r}
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+for (tissue in names(all.counts)) {
+    pretty <- gsub("\\.", " ", tolower(tissue))
+    copy <- meta
+    copy$title <- sprintf(copy$title, pretty)
+    copy$description <- sprintf(copy$description, pretty)
+    saveDataset(sce, file.path("finished", gsub("\\.", "_", tolower(tissue))), copy)
+}
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
