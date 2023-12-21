@@ -1,12 +1,6 @@
 ---
 title: Processing the Bhaduri cortical organoid dataset
 author: Aaron Lun
-date: 14 January 2021
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,8 +10,8 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of human cortical organoids from @bhaduri2020cell.
-Counts for endogenous genes are available from GEO using the accession [GSE132672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132672). 
+We obtain a single-cell RNA sequencing dataset of human cortical organoids from [Bhaduri et al. (2020)](https://doi.org/10.1038/s41586-020-1962-0).
+Normalized and batch-corrected data for endogenous genes are available from GEO using the accession [GSE132672](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132672). 
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
@@ -26,12 +20,18 @@ bfc <- BiocFileCache("raw_data", ask = FALSE)
 fname <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE132672&format=file&file=GSE132672%5Fallorganoids%5Fwithnew%5Fmatrix%2Etxt%2Egz")
 ```
 
-Reading the counts in as a sparse matrix - this may take some time.
+Reading the values in as a sparse matrix - this may take some time.
 
 ```{r}
 library(scuttle)
-counts <- readSparseCounts(fname)
-sce <- SingleCellExperiment(list(counts=counts))
+normalized <- readSparseCounts(fname)
+dim(normalized)
+```
+
+We then stick this into a `SingleCelLExperiment`.
+
+```{r}
+sce <- SingleCellExperiment(list(normalized=normalized))
 sce
 ```
 
@@ -50,12 +50,11 @@ meta
 ```
 
 Then it's just a simple matter to expand it.
+Well, not so simple, because these authors couldn't keep their names straight if their lives depended on it.
 
 ```{r}
 observed.donor <- sub("_.*", "", colnames(sce))
 
-# Well, not so simple, because these authors couldn't 
-# keep their names straight if their lives depended on it.
 mappings <- c(
     H1SWeek24="wk24H1S_S2",
     L13234PWeek24="wk2413234P",
@@ -75,6 +74,7 @@ table(observed.donor)
 
 m <- match(observed.donor, meta$title)
 stopifnot(all(!is.na(m)))
+
 coldata <- meta[m,,drop=FALSE]
 rownames(coldata) <- colnames(sce)
 colData(sce) <- coldata
@@ -132,13 +132,31 @@ table(converted, is.na(m))
 
 # Saving to file 
 
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We polish the dataset to optimize for space:
 
 ```{r}
-path <- file.path("scRNAseq", "bhaduri-organoid", "2.6.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(assay(sce), file=file.path(path, "counts.rds"))
-saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save everything to disk in preparation for upload:
+
+```{r}
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Cell stress in cortical organoids impairs molecular subtype specification",
+        description="Cortical organoids are self-organizing three-dimensional cultures that model features of the developing human cerebral cortex. However, the fidelity of organoid models remains unclear. Here we analyse the transcriptomes of individual primary human cortical cells from different developmental periods and cortical areas. We find that cortical development is characterized by progenitor maturation trajectories, the emergence of diverse cell subtypes and areal specification of newborn neurons. By contrast, organoids contain broad cell classes, but do not recapitulate distinct cellular subtype identities and appropriate progenitor maturation. Although the molecular signatures of cortical areas emerge in organoid neurons, they are not spatially segregated. Organoids also ectopically activate cellular stress pathways, which impairs cell-type specification. However, organoid stress and subtype defects are alleviated by transplantation into the mouse cortex. Together, these datasets and analytical tools provide a framework for evaluating and improving the accuracy of cortical organoids as models of human brain development.",
+        taxonomy.id="9606",
+        genome="GRCh38",
+        sources=list(
+            list(provider="GEO", id="GSE132672"),
+            list(provider="PubMed", id="31996853")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
 ```
 
 # Session information
@@ -146,5 +164,3 @@ saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
