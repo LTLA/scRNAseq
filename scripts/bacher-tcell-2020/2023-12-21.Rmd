@@ -1,12 +1,6 @@
 ---
 title: Processing the Bacher T cell dataset
 author: Aaron Lun
-date: 5 January 2021
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,7 +10,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of T cells from multiple patients from @bacher2020low.
+We obtain a single-cell RNA sequencing dataset of T cells from multiple patients from [Bacher et al. (2020)](https://doi.org/10.1016/j.immuni.2020.11.016).
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE162086](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
@@ -59,6 +53,8 @@ for (x in seq_along(counts)) {
 }
 ```
 
+# Reading in the counts
+
 Reading all the counts in as sparse matrices:
 
 ```{r}
@@ -75,6 +71,7 @@ all.cn <- unlist(lapply(counts, colnames))
 stopifnot(anyDuplicated(all.cn)==0)
 
 combined <- do.call(cbind, counts)
+dim(combined)
 ```
 
 Creating a `SingleCellExperiment` object:
@@ -82,15 +79,21 @@ Creating a `SingleCellExperiment` object:
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=combined))
-true.patient <- rep(samples[,2], vapply(counts, ncol, 0L))
 ```
 
-Attaching some metadata:
+# Reading in the cell metadata
+
+Loading in the per-cell metadata:
 
 ```{r}
 meta.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE162086&format=file&file=GSE162086%5Fseurat%5Fmetadata%2Etsv%2Egz")
 meta <- read.delim(meta.path, check.names=FALSE)
+head(meta)
+```
 
+This is, unfortunately, just a subset of the count matrix:
+
+```{r}
 ID <- paste0(sub("-1", "", meta$barcode), "-", meta$sample)
 ref <- gsub("\"", "", colnames(combined))
 stopifnot(all(ID %in% ref))
@@ -99,38 +102,70 @@ m <- match(ref, ID)
 meta <- meta[m,]
 rownames(meta) <- ref
 meta$retained <- !is.na(m)
+summary(meta$retained)
+```
 
-# Filling in some of the patient-level attributes for missing cells.
-# This is done by extrapolating from cells in the same patient. 
+We can try to fill in the patient-level attributes for missing cells, by extrapolating from cells in the same patient.
+
+```{r}
 meta$sample <- sub(".*-", "", ref)
 meta$barcode <- sub("-.*", "", ref)
 
 for (field in c("batch", "seq_run", "diagnosis")) {
     tab <- table(meta$sample, meta[[field]])
-    best <- colnames(tab)[max.col(tab)]
-    best <- as(best, typeof(meta[[field]]))
+    best <- max.col(tab)
+    stopifnot(all(tab[cbind(seq_along(best), best)] == rowSums(tab))) # Checking that there's only one option here.
+    best <- as(colnames(tab)[best], typeof(meta[[field]]))
     names(best) <- rownames(tab)
     meta[[field]] <- best[meta$sample]
+    print(field)
+    print(t(tab))
 }
+```
 
+We also slap in the sample-level metadata, that doesn't show up in the above.
+
+```{r}
 m <- match(meta$sample,samples[,2])
 stopifnot(all(!is.na(m)))
 meta$who_class <- samples[m,3]
 meta$severity <- samples[m,4]
+```
 
+And finally we add it to the `SingleCellExperiment`.
+
+```{r}
 colData(sce) <- DataFrame(meta)
-sce
+colData(sce)
 ```
 
 # Saving to file 
 
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We run some polishing to optimize the dataset for storage:
 
 ```{r}
-path <- file.path("scRNAseq", "bacher-tcell", "2.6.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(assay(sce), file=file.path(path, "counts.rds"))
-saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+ 
+We now save all of the relevant components to file for upload:
+
+```{r}
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Low-Avidity CD4+ T Cell Responses to SARS-CoV-2 in Unexposed Individuals and Humans with Severe COVID-19",
+        description="CD4+ T cells reactive against SARS-CoV-2 can be found in unexposed individuals, and these are suggested to arise in response to common cold coronavirus (CCCoV) infection. Here, we utilized SARS-CoV-2-reactive CD4+ T cell enrichment to examine the antigen avidity and clonality of these cells, as well as the relative contribution of CCCoV cross-reactivity. SARS-CoV-2-reactive CD4+ memory T cells were present in virtually all unexposed individuals examined, displaying low functional avidity and multiple, highly variable cross-reactivities that were not restricted to CCCoVs. SARS-CoV-2-reactive CD4+ T cells from COVID-19 patients lacked cross-reactivity to CCCoVs, irrespective of strong memory T cell responses against CCCoV in all donors analyzed. In severe but not mild COVID-19, SARS-CoV-2-specific T cells displayed low functional avidity and clonality, despite increased frequencies. Our findings identify low-avidity CD4+ T cell responses as a hallmark of severe COVID-19 and argue against a protective role for CCCoV-reactive T cells in SARS-CoV-2 infection.",
+        taxonomy.id="9606",
+        genome="GRCh38",
+        sources=list(
+            list(provider="PubMed", id="33296686"),
+            list(provider="GEO", id="GSE162086")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
 ```
 
 # Session information
@@ -138,5 +173,3 @@ saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
