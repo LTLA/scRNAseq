@@ -18,8 +18,8 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-count.file <- bfcrpath(bfc, file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
-    "GSE76nnn/GSE76983/suppl/GSE76983_expdata_BMJhscC.csv.gz"))
+url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE76nnn/GSE76983/suppl/GSE76983_expdata_BMJhscC.csv.gz"
+count.file <- bfcrpath(bfc, url)
 ```
 
 We read this into memory as a sparse matrix.
@@ -36,23 +36,20 @@ Slapping together everything into an SCE:
 
 ```{r}
 library(SingleCellExperiment)
-library(SparseArray)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
-y <- as(counts, "SVT_SparseMatrix") # don't convert to integer, these are numeric!
-sce <- SingleCellExperiment(list(counts=y))
-dimnames(sce) <- dn
+sce <- SingleCellExperiment(list(counts=counts))
 ```
 
-And fleshing out the row and column data:
+Creating some row data for user convenience:
 
 ```{r}
-# Cleaning up the row data.
 symbol <- sub("__.*", "", rownames(sce))
 loc <- sub(".*__", "", rownames(sce))
 rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+```
 
-# Cleaning up the col data.
+Also fleshing out the column data, using GEO sample annotation to determine the extraction protocol.
+
+```{r}
 cn <- colnames(sce)
 sample <- sub("_.*", "", cn)
 protocol <- ifelse(sample %in% c("JC4", "JC48P2", "JC48P4", "JC48P6", "JC48P7"),
@@ -60,19 +57,25 @@ protocol <- ifelse(sample %in% c("JC4", "JC48P2", "JC48P4", "JC48P6", "JC48P7"),
 colData(sce) <- DataFrame(sample=sample, protocol=protocol, row.names=cn)
 ```
 
-# Saving to file 
-
-We save the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+Adding some polish to save space:
 
 ```{r}
 library(scRNAseq)
-unlink('finished', recursive=TRUE)
+sce <- polishDataset(sce)
+sce
+```
+
+# Saving to file 
+
+We save everything to disk in preparation for upload.
+
+```{r}
 saveDataset(sce, "finished",
     createMetadata(
-        title="De Novo Prediction of Stem Cell Identity using Single-Cell Transcriptome Data",
+        title="De Novo Prediction of Stem Cell Identity using Single-Cell Transcriptome Data [bone marrow only]",
         description="Adult mitotic tissues like the intestine, skin, and blood undergo constant turnover throughout the life of an organism. Knowing the identity of the stem cell is crucial to understanding tissue homeostasis and its aberrations upon disease. Here we present a computational method for the derivation of a lineage tree from single-cell transcriptome data. By exploiting the tree topology and the transcriptome composition, we establish StemID, an algorithm for identifying stem cells among all detectable cell types within a population. We demonstrate that StemID recovers two known adult stem cell populations, Lgr5+ cells in the small intestine and hematopoietic stem cells in the bone marrow. We apply StemID to predict candidate multipotent cell populations in the human pancreas, a tissue with largely uncharacterized turnover dynamics. We hope that StemID will accelerate the search for novel stem cells by providing concrete markers for biological follow-up and validation.
 
-This dataset is represented by a `SingleCellExperiment` containing the bone marrow cells from the study. The protocol used to extract each cell is determined from the sample annotation in this study's GEO entry.",
+Maintainer note: this dataset contains only the bone marrow cells from the study. The protocol used to extract each cell is determined from the GEO annotation for the sample containing the cell.",
         taxonomy.id="10090",
         genome="GRCm38",
         sources=list(

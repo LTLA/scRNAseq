@@ -62,8 +62,6 @@ for (i in seq_along(accessions)) {
         paste0(header, "matrix%2Emtx%2Egz")))
 
     current.counts <- as(readMM(counts.fname), "dgCMatrix")
-    current.counts <- as(current.counts, "SVT_SparseMatrix")
-    type(current.counts) <- "integer"
     collected.counts[[i]] <- current.counts
 
     gene.info <- read.table(gene.fname, stringsAsFactors=FALSE)
@@ -94,16 +92,27 @@ We bind them all into one `SingleCellExperiment`:
 ```{r}
 final.counts <- do.call(cbind, collected.counts)
 final.coldata <- do.call(rbind, collected.coldata)
+
 library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=final.counts), rowData=collected.rowdata[[1]], colData=final.coldata)
+sce <- SingleCellExperiment(
+    list(counts=final.counts), 
+    rowData=collected.rowdata[[1]], 
+    colData=final.coldata
+)
+
+# Moving the Ensembl identifiers to the row names.
 rownames(sce) <- rowData(sce)$Ensembl
+rowData(sce)$Ensembl <- NULL
+
+# Polishing up the object.
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
 ```
 
 And we save them to disk in preparation for upload:
 
 ```{r}
-library(scRNAseq)
-unlink("finished", recursive=TRUE)
 saveDataset(sce, "finished",
     createMetadata(
         title="Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA sequencing",

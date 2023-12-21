@@ -18,10 +18,8 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
-    "GSE87nnn/GSE87544/suppl")
-count.file <- bfcrpath(bfc, file.path(base.url,
-    "GSE87544_Merged_17samples_14437cells_count.txt.gz"))
+base.url <- paste0("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE87nnn/GSE87544/suppl/"
+count.file <- bfcrpath(bfc, paste0(base.url, "GSE87544_Merged_17samples_14437cells_count.txt.gz"))
 ```
 
 Reading them in as a sparse matrix.
@@ -37,8 +35,7 @@ dim(counts)
 We also download the cluster identities.
 
 ```{r}
-cluster.file <- bfcrpath(bfc, file.path(base.url,
-    "GSE87544_1443737Cells.SVM.cluster.identity.renamed.csv.gz"))
+cluster.file <- bfcrpath(bfc, paste0(base.url, "GSE87544_1443737Cells.SVM.cluster.identity.renamed.csv.gz"))
 coldata <- read.csv(cluster.file, stringsAsFactors=FALSE, row.names=1)
 coldata <- as(coldata, "DataFrame")
 coldata
@@ -54,21 +51,18 @@ stopifnot(identical(colnames(counts), rownames(coldata)))
 
 # Saving to file 
 
-We now save all of the components to disk in preparation for upload.
-These will be used to construct a `SingleCellExperiment` on the client side when the dataset is requested.
+We slap together a `SingleCellExperiment` object:
 
 ```{r}
-library(SingleCellExperiment)
-library(SparseArray)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
-y <- as(counts, "SVT_SparseMatrix")
-type(y) <- "integer"
-sce <- SingleCellExperiment(list(counts=y), colData=coldata)
-dimnames(sce) <- dn
-
 library(scRNAseq)
-unlink('finished', recursive=TRUE)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
+Now, saving to disk:
+
+```{r}
 saveDataset(sce, "finished",
     createMetadata(
         title="Single-Cell RNA-Seq Reveals Hypothalamic Cell Diversity",

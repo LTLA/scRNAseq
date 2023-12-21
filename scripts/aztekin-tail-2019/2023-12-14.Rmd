@@ -3,7 +3,6 @@ title: Processing the Aztekin Xenopus tail dataset
 author: Aaron Lun
 ---
 
-
 ```{r style, echo=FALSE, results='hide', message=FALSE}
 library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
@@ -17,8 +16,8 @@ We download and cache the count matrix and metadata using the `r Biocpkg("BiocFi
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-contents <- bfcrpath(bfc, paste0("https://www.ebi.ac.uk/biostudies/files/",
-    "E-MTAB-7716/arrayExpressUpload.zip"))
+url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-7716/arrayExpressUpload.zip"
+contents <- bfcrpath(bfc, url)
 
 cache <- tempfile()
 unzip(contents, exdir=cache)
@@ -28,21 +27,20 @@ unzip(file.path(cache, "ArrayExpressV2.zip"), exdir=cache)
 # Processing the read counts
 
 We load the counts into memory.
-Despite the name of the file, it is not actually comma-separated!
 
 ```{r}
 library(Matrix)
 path <- file.path(cache, "ArrayExpress")
-counts <- readMM(file.path(path, "countsMatrix.mtx"))
+counts <- as(readMM(file.path(path, "countsMatrix.mtx")), "dgCMatrix")
 
-library(DelayedArray)
-counts <- as(as(counts, "dgCMatrix"), "SVT_SparseMatrix")
-type(counts) <- "integer"
+gene.info <- read.csv(file.path(path, "genes.csv"), stringsAsFactors=FALSE, header=FALSE)
+head(gene.info)
+rownames(counts) <- gene.info[,1]
 
-rownames(counts) <- read.csv(file.path(path, "genes.csv"), 
-    stringsAsFactors=FALSE, header=FALSE)[,1]
-colnames(counts) <- read.csv(file.path(path, "cells.csv"), 
-    stringsAsFactors=FALSE, header=FALSE)[,1]
+cell.info <- read.csv(file.path(path, "cells.csv"), stringsAsFactors=FALSE, header=FALSE)
+head(cell.info)
+colnames(counts) <- cell.info[,1]
+
 dim(counts)
 ```
 
@@ -61,27 +59,34 @@ meta
 ```
 
 Now enforcing consistency checks with the column names of `counts`.
+We remove `cell` afterwards to save some space, given that it's redundant with the column names.
 
 ```{r}
 stopifnot(identical(colnames(counts), meta$cell))
+meta$cell <- NULL
 ```
 
 # Saving for upload 
 
-We save these to disk in preparation for upload.
+Let's put together a `SingleCellExperiment` object:
 
 ```{r}
 library(SingleCellExperiment)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
 sce <- SingleCellExperiment(list(counts=counts), colData=meta)
-dimnames(sce) <- dn
 
+# Adding reduced dimensions.
 reducedDim(sce, "UMAP") <- as.matrix(colData(sce)[,c("X", "Y")])
 colData(sce) <- colData(sce)[,setdiff(colnames(colData(sce)), c("X", "Y"))]
 
+# Performing some polishing.
 library(scRNAseq)
-unlink("finished", recursive=TRUE)
+sce <- polishDataset(sce)
+sce
+```
+
+We save this to disk in preparation for upload.
+
+```{r}
 saveDataset(sce, "finished",
     createMetadata(
         title="Identification of a regeneration-organizing cell in the Xenopus tail",

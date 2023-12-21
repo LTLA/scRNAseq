@@ -31,25 +31,14 @@ original <- as.matrix(original)
 dim(original)
 ```
 
-We convert this to an integer sparse matrix, because why not.
-
-```{r}
-library(DelayedArray)
-counts <- as(original, "SVT_SparseMatrix")
-type(counts) <- "integer"
-```
-
 And then we slap this into a `SingleCellExperiment`:
 
 ```{r}
 library(SingleCellExperiment)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
 sce <- SingleCellExperiment(list(counts=counts))
-dimnames(sce) <- dn
 ```
 
-# Assembling a `SingleCellExperiment`
+# Cleaning up the `SingleCellExperiment`
 
 First we split out the ERCC data.
 
@@ -57,10 +46,10 @@ First we split out the ERCC data.
 spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
 sce <- splitAltExps(sce, spike.type, ref="endogenous")
 
+library(scRNAseq)
 spike.exp <- altExp(sce, "ERCC")
-spikedata <- scRNAseq::ERCCSpikeInConcentrations(volume = 1, dilution = 25e6)
-spikedata <- spikedata[rownames(spike.exp), ]
-rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+spikedata <- countErccMolecules(volume = 1, dilution = 25e6)
+rowData(spike.exp) <- spikedata[rownames(spike.exp), ]
 altExp(sce, "ERCC") <- spike.exp
 ```
 
@@ -81,19 +70,24 @@ colnames(metrics) <- sub("^__", "", colnames(metrics))
 colData(sce)$metrics <- DataFrame(metrics)
 ```
 
+And then adding some polish:
+
+```{r}
+sce <- polishDataset(sce)
+sce
+```
+
 # Saving for upload 
 
 We save these to disk in preparation for upload.
 
 ```{r}
-library(scRNAseq)
-unlink("finished", recursive=TRUE)
 saveDataset(sce, "finished",
     createMetadata(
         title="Single Cell RNA-Sequencing of Pluripotent States Unlocks Modular Transcriptional Variation",
         description="Embryonic stem cell (ESC) culture conditions are important for maintaining long-term self-renewal, and they influence cellular pluripotency state. Here, we report single cell RNA-sequencing of mESCs cultured in three different conditions: serum, 2i, and the alternative ground state a2i. We find that the cellular transcriptomes of cells grown in these conditions are distinct, with 2i being the most similar to blastocyst cells and including a subpopulation resembling the two-cell embryo state. Overall levels of intercellular gene expression heterogeneity are comparable across the three conditions. However, this masks variable expression of pluripotency genes in serum cells and homogeneous expression in 2i and a2i cells. Additionally, genes related to the cell cycle are more variably expressed in the 2i and a2i conditions. Mining of our dataset for correlations in gene expression allowed us to identify additional components of the pluripotency network, including Ptma and Zfp640, illustrating its value as a resource for future discovery.
 
-This dataset is represented as a `SingleCellExperiment` where the column data contains the culture conditions and the plate of origin for each cell (generated from the cell identifiers), along with the alignment metrics as a nested `DataFrame`. Count data for ERCC spike-ins are stored in an alternative experiment, with molecule counts computed using a volume of 1 nL per cell at a dilution of 1:25000000.",
+Maintainer note: Alignment metrics are stored as a nested data frame in the column data. Molecule counts for ERCC spike-ins are computed based on a volume of 1 nL per cell at a dilution of 1:25000000.",
         taxonomy.id="10090",
         genome="GRCm38",
         sources=list(

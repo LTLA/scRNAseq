@@ -18,10 +18,8 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- file.path("ftp://ftp.ncbi.nlm.nih.gov/geo/series",
-    "GSE93nnn/GSE93374/suppl")
-count.file <- bfcrpath(bfc, file.path(base.url,
-    "GSE93374_Merged_all_020816_DGE.txt.gz"))
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE93nnn/GSE93374/suppl/"
+count.file <- bfcrpath(bfc, paste0(base.url, "GSE93374_Merged_all_020816_DGE.txt.gz"))
 ```
 
 Reading them in as a sparse matrix.
@@ -37,12 +35,10 @@ dim(counts)
 We also download the cluster identities.
 
 ```{r}
-cluster.file <- bfcrpath(bfc, file.path(base.url,
-    "GSE93374_cell_metadata.txt.gz"))
+cluster.file <- bfcrpath(bfc, paste0(base.url, "GSE93374_cell_metadata.txt.gz"))
 colClasses <- vector("list", 15)
 colClasses[1:11] <- "character"
-coldata <- read.delim(cluster.file, stringsAsFactors=FALSE, 
-    colClasses=colClasses)
+coldata <- read.delim(cluster.file, stringsAsFactors=FALSE, colClasses=colClasses, row.names=1)
 coldata <- as(coldata, "DataFrame")
 colnames(coldata) <- sub("X[0-9]+\\.", "", colnames(coldata))
 coldata
@@ -51,27 +47,25 @@ coldata
 We check that the columns are in the same order.
 
 ```{r}
-m <- match(colnames(counts), coldata$ID)
+m <- match(colnames(counts), rownames(coldata))
 coldata <- coldata[m,]
-stopifnot(identical(colnames(counts), coldata$ID))
+stopifnot(identical(colnames(counts), rownames(coldata)))
 ```
 
 # Saving to file 
 
+We slap together a `SingleCellExperiment`:
+
+```{r}
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
 We now save all of the components to disk in preparation for upload.
 
 ```{r}
-library(SingleCellExperiment)
-library(SparseArray)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
-y <- as(counts, "SVT_SparseMatrix")
-type(y) <- "integer"
-sce <- SingleCellExperiment(list(counts=y), colData=coldata)
-dimnames(sce) <- dn
-
-library(scRNAseq)
-unlink('finished', recursive=TRUE)
 saveDataset(sce, "finished",
     createMetadata(
         title="A molecular census of arcuate hypothalamus and median eminence cell types",

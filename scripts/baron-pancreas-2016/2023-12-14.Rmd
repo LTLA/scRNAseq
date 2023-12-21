@@ -18,8 +18,7 @@ We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask=FALSE)    
-tarball <- bfcrpath(bfc, 
-    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE84133&format=file")
+tarball <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE84133&format=file")
 ```
 
 We unpack it to a temporary directory.
@@ -29,19 +28,45 @@ temp <- tempfile()
 untar(tarball, exdir=temp)
 ```
 
+We set up the metadata template to be used for each subdataset (for each species):
+
+```{r}
+library(scRNAseq)
+meta <- createMetadata(
+    title="A Single-Cell Transcriptomic Map of the Human and Mouse Pancreas Reveals Inter- and Intra-cell Population Structure [%s cells only]",
+    description="Although the function of the mammalian pancreas hinges on complex interactions of distinct cell types, gene expression profiles have primarily been described with bulk mixtures. Here we implemented a droplet-based, single-cell RNA-seq method to determine the transcriptomes of over 12,000 individual pancreatic cells from four human donors and two mouse strains. Cells could be divided into 15 clusters that matched previously characterized cell types: all endocrine cell types, including rare epsilon-cells; exocrine cell types; vascular cells; Schwann cells; quiescent and activated stellate cells; and four types of immune cells. We detected subpopulations of ductal cells with distinct expression profiles and validated their existence with immuno-histochemistry stains. Moreover, among human beta- cells, we detected heterogeneity in the regulation of genes relating to functional maturation and levels of ER stress. Finally, we deconvolved bulk gene expression samples using the single-cell data to detect disease-associated differential expression. Our dataset provides a resource for the discovery of novel cell type-specific transcription factors, signaling receptors, and medically relevant genes.
+
+Maintainer note: this dataset contains only the %s cells from the study.",
+    taxonomy.id=NULL,
+    genome=NULL,
+    sources=list(
+        list(provider="GEO", id="GSE84133"),
+        list(provider="PubMed", id="27667365")
+    ),
+    maintainer.name="Aaron Lun",
+    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+)
+```
+
+We also flush any existing directory to remove previous artifacts. 
+
+```{r}
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+```
+
 # Reading in human data
 
 We set up a function to load in each set of counts as a sparse matrix.
 
 ```{r}
-library(Matrix)
 FUN <- function(X) {
     input <- read.csv(X, stringsAsFactors=FALSE)
     rownames(input) <- input[,1]
     labels <- as.character(input$assigned_cluster)
     input <- input[,4:ncol(input)]
     input <- t(input)
-    list(mat=as(input, "dgCMatrix"), label=labels)
+    list(mat=as.matrix(input), label=labels)
 }
 ```
 
@@ -78,39 +103,21 @@ coldata <- DataFrame(donor=donor, label=labels)
 coldata
 ```
 
+We slap together a `SingleCellExperiment`.
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
 We save all of the components to disk in preparation for upload.
 
 ```{r}
-library(DelayedArray)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
-y <- as(counts, "SVT_SparseMatrix")
-type(y) <- "integer"
-
-library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=y), colData=coldata)
-dimnames(sce) <- dn
-
-library(scRNAseq)
-meta <- createMetadata(
-    title="[subset] A Single-Cell Transcriptomic Map of the Human and Mouse Pancreas Reveals Inter- and Intra-cell Population Structure",
-    description="Although the function of the mammalian pancreas hinges on complex interactions of distinct cell types, gene expression profiles have primarily been described with bulk mixtures. Here we implemented a droplet-based, single-cell RNA-seq method to determine the transcriptomes of over 12,000 individual pancreatic cells from four human donors and two mouse strains. Cells could be divided into 15 clusters that matched previously characterized cell types: all endocrine cell types, including rare epsilon-cells; exocrine cell types; vascular cells; Schwann cells; quiescent and activated stellate cells; and four types of immune cells. We detected subpopulations of ductal cells with distinct expression profiles and validated their existence with immuno-histochemistry stains. Moreover, among human beta- cells, we detected heterogeneity in the regulation of genes relating to functional maturation and levels of ER stress. Finally, we deconvolved bulk gene expression samples using the single-cell data to detect disease-associated differential expression. Our dataset provides a resource for the discovery of novel cell type-specific transcription factors, signaling receptors, and medically relevant genes.",
-    taxonomy.id=NULL,
-    genome=NULL,
-    sources=list(
-        list(provider="GEO", id="GSE84133"),
-        list(provider="PubMed", id="27667365")
-    ),
-    maintainer.name="Aaron Lun",
-    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-)
-
-unlink("finished", recursive=TRUE)
-dir.create("finished")
-
 copy <- meta
-copy$description <- paste0(copy$description, "\n\n",
-    "This dataset contains the human cells from this study.")
+copy$title <- sprintf(copy$title, "human")
+copy$description <- sprintf(copy$description, "human")
 copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh38"
 saveDataset(sce, "finished/human", copy)
@@ -147,23 +154,20 @@ coldata <- DataFrame(strain=strain, label=labels)
 coldata
 ```
 
+We slap this all together to a `SingleCellExperiment`:
+
+```{r}
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
 We save all of the components to disk in preparation for upload.
 
 ```{r}
-library(DelayedArray)
-dn <- dimnames(counts)
-dimnames(counts) <- NULL
-y <- as(counts, "SVT_SparseMatrix")
-type(y) <- "integer"
-
-library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=y), colData=coldata)
-dimnames(sce) <- dn
-
-library(scRNAseq)
 copy <- meta
-copy$description <- paste0(copy$description, "\n\n",
-    "This dataset contains the mouse cells from this study.")
+copy$title <- sprintf(copy$title, "mouse")
+copy$description <- sprintf(copy$description, "mouse")
 copy$taxonomy_id <- "10090"
 copy$genome <- "GRCm38"
 saveDataset(sce, "finished/mouse", copy)

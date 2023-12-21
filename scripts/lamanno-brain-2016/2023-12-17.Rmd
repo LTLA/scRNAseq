@@ -33,10 +33,7 @@ membryo.count.file <- bfcrpath(bfc, paste0(base.url, "GSE76381_MouseEmbryoMolecu
 We create a function to extract data from each file.
 
 ```{r}
-library(S4Vectors)
-library(SparseArray)
-library(SingleCellExperiment)
-
+library(scRNAseq)
 FUN <- function(path, as.csv=FALSE, skip=0) {
     if (as.csv) {
         FUN <- read.csv
@@ -53,19 +50,18 @@ FUN <- function(path, as.csv=FALSE, skip=0) {
     colnames(df) <- x[2:(is.gene-1L),2]
     rownames(df) <- NULL
 
-    counts <- as.matrix(x[-(1:(is.gene+1L)),])
-    rownames <- counts[,1]
-    dimnames(counts) <- NULL
-    
-    # checking that second column has nothing interesting.
-    stopifnot(length(unique(counts[,2]))==1L) 
-    counts <- as(counts[,-(1:2)], "SVT_SparseMatrix")
-    type(counts) <- "integer"
+    raw_data <- as.matrix(x[-(1:(is.gene+1L)),])
+    rownames <- raw_data[,1]
+    stopifnot(length(unique(raw_data[,2]))==1L) # checking that second column has nothing interesting.
 
+    counts <- counts[,-(1:2)]
+    storage.mode(counts) <- "numeric"
     sce <- SingleCellExperiment(list(counts=counts), colData=df)
+
     rownames(sce) <- rownames
     rowData(sce)$symbol <- sub("_loc[0-9]+$", "", rownames(sce))
-    sce
+
+    polishDataset(sce)
 }    
 ```
 
@@ -95,37 +91,40 @@ Rather frustratingly, each of the stages has a different set of genes, so we nee
 We set up a simple function do to so:
 
 ```{r}
-library(scRNAseq)
 unlink('finished', recursive=TRUE)
 dir.create("finished")
 
-title <- "[subset] Molecular Diversity of Midbrain Development in Mouse, Human, and Stem Cells"
-description <- "Understanding human embryonic ventral midbrain is of major interest for Parkinson’s disease. However, the cell types, their gene expression dynamics, and their relationship to commonly used rodent models remain to be defined. We performed single-cell RNA sequencing to examine ventral midbrain development in human and mouse. We found 25 molecularly defined human cell types, including five subtypes of radial glia-like cells and four progenitors. In the mouse, two mature fetal dopaminergic neuron subtypes diversified into five adult classes during postnatal development. Cell types and gene expression were generally conserved across species, but with clear differences in cell proliferation, developmental timing, and dopaminergic neuron development. Additionally, we developed a method to quantitatively assess the fidelity of dopaminergic neurons derived from human pluripotent stem cells, at a single-cell level. Thus, our study provides insight into the molecular programs controlling human midbrain development and provides a foundation for the development of cell replacement therapies."
+title <- "Molecular Diversity of Midbrain Development in Mouse, Human, and Stem Cells [%s only]"
+description <- "Understanding human embryonic ventral midbrain is of major interest for Parkinson’s disease. However, the cell types, their gene expression dynamics, and their relationship to commonly used rodent models remain to be defined. We performed single-cell RNA sequencing to examine ventral midbrain development in human and mouse. We found 25 molecularly defined human cell types, including five subtypes of radial glia-like cells and four progenitors. In the mouse, two mature fetal dopaminergic neuron subtypes diversified into five adult classes during postnatal development. Cell types and gene expression were generally conserved across species, but with clear differences in cell proliferation, developmental timing, and dopaminergic neuron development. Additionally, we developed a method to quantitatively assess the fidelity of dopaminergic neurons derived from human pluripotent stem cells, at a single-cell level. Thus, our study provides insight into the molecular programs controlling human midbrain development and provides a foundation for the development of cell replacement therapies.
 
-savePart <- function(sce, prefix, details, human=TRUE) {
-    saveDataset(sce, file.path("finished", prefix), createMetadata(
-        title=title,
-        description=paste0(description, "\n\n", details),
-        taxonomy.id=if (human) "9606" else "10090",
-        genome=if (human) "GRCh38" else "GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE76381"),
-            list(provider="PubMed", id="27716510")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    ))
+Maintainer note: this dataset contains only the %s from this study."
+
+savePart <- function(sce, short, long, human=TRUE) {
+    saveDataset(sce, file.path("finished", short), 
+        createMetadata(
+            title=sprintf(title, long),
+            description=sprintf(description, long),
+            taxonomy.id=if (human) "9606" else "10090",
+            genome=if (human) "GRCh38" else "GRCm38",
+            sources=list(
+                list(provider="GEO", id="GSE76381"),
+                list(provider="PubMed", id="27716510")
+            ),
+            maintainer.name="Aaron Lun",
+            maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+        )
+    )
 }
 ```
 
 We save all of the relevant components to file in preparation for upload.
 
 ```{r}
-savePart(es.data, "human-es", "This dataset contains the human embryonic stem cells from this study.")
-savePart(embryo.data, "human-embryo", "This dataset contains the human embryo ventral midbrain cells from this study.")
-savePart(ips.data, "human-ips", "This dataset contains the human induced pluripotent stem cells from this study.")
-savePart(madult.data, "mouse-adult", "This dataset contains the adult mouse brain cells from this study.")
-savePart(membryo.data, "mouse-embryo", "This dataset contains the mouse embryonic brain cells from this study.")
+savePart(es.data, "human-es", "human embryonic stem cells")
+savePart(embryo.data, "human-embryo", "human embryo ventral midbrain cells")
+savePart(ips.data, "human-ips", "human induced pluripotent stem cells")
+savePart(madult.data, "mouse-adult", "adult mouse brain cells")
+savePart(membryo.data, "mouse-embryo", "mouse embryonic brain cells")
 ```
 
 # Session information
