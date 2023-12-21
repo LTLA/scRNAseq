@@ -1,0 +1,171 @@
+---
+title: Processing the Bunis HSPC dataset
+author: Aaron Lun and Daniel Bunis
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of haematopoietic stem-progenitor cells from [Bunis et al. (2021)](https://doi.org/10.1016/j.celrep.2020.108573).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE158490](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE158490).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+mat.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fmatrix%2Emtx%2Egz")
+mat <- Matrix::readMM(mat.path)
+mat <- as(mat, "dgCMatrix")
+dim(mat)
+```
+
+Creating a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=mat))
+```
+
+Slapping on the barcodes:
+
+```{r}
+cd.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fbarcodes%2Etsv%2Egz")
+colnames(sce) <- readLines(cd.path)
+```
+
+And adding some row names:
+
+```{r}
+rd.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5Fgenes%2Etsv%2Egz")
+rd <- read.table(rd.path)
+rownames(sce) <- rd[,1]
+rowData(sce)$Symbol <- rd[,2]
+```
+
+# Pulling down the metadata
+
+Attaching some metadata.
+The `SNG.1ST` column specifies the sample for each cell, ranging from adult bone marrow (`APB`), fetal bone marrow (`FS`) and newborn umbilical cord (`UCB`).
+Various other _demuxlet_ statistics are also reported here.
+We won't expand this out to all 720k columns of `mat` to save some space, given that most downstream applications will only care about the observed cells.
+
+```{r}
+demux.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE158490&format=file&file=GSE158490%5FHSPC%2Ebest%2Etxt%2Egz")
+demux <- read.delim(demux.path, check.names=FALSE)
+stopifnot(all(demux$BARCODE %in% colnames(sce)))
+dim(demux)
+```
+
+We can import this data into our `sce`, using the `importDemux()` function of `r Biocpkg("dittoSeq")` to retain selected metadata.
+(Indeed, yes it is an odd placement for this function which should be split off into some other demultiplexing-focused package.)
+We'll only keep the columns of the SCE corresponding to cells, so as to avoid storing data for empty droplets.
+
+```{r}
+sce <- sce[,demux$BARCODE]
+sce <- dittoSeq::importDemux(sce, demuxlet.best = demux, verbose = FALSE)
+sce$Lane <- NULL # Remove the unnecessary (single-value here) Lane metadata
+```
+
+We can then convert the ABM/UCB/FBM of Samples into age groups of samples.
+We remove the "CD4_" from start of sample names.
+We also replace "APB" and "FS" with "ABM" and "FBM", as the former corresponds to the names of samples used in bulk RNA-seq to generate genotyping for Demuxlet, rather than the cells used in the single-cell data.
+
+```{r}
+sce$Sample <- gsub("^CD4_", "", sce$Sample)
+sce$Sample <- gsub("^FS", "FBM", sce$Sample)
+sce$Sample <- gsub("^APB", "ABM", sce$Sample)
+
+# Add age metadata
+sce$age <- NA
+sce$age[grep("^F", sce$Sample)] <- "fetal"
+sce$age[grep("^U", sce$Sample)] <- "newborn"
+sce$age[grep("^A", sce$Sample)] <- "adult"
+
+colData(sce)
+```
+
+# Adding additional metadata
+
+From the fully processed objects shared on figshare, we will obtain cell type annotations and developmental stage scores.
+
+```{r}
+full.path <- bfcrpath(bfc, "https://ndownloader.figshare.com/files/25953740")
+raw_meta <- readRDS(full.path)@meta.data
+stopifnot(all(rownames(raw_meta) %in% colnames(sce)))
+dim(raw_meta)
+```
+
+We add a `retained` field to identify barcodes retained by authors during the analysis.
+
+```{r}
+sce$retained <- colnames(sce) %in% rownames(raw_meta)
+summary(sce$retained)
+```
+
+We add the cell types:
+
+```{r}
+authors_meta <- raw_meta[colnames(sce),]
+rownames(authors_meta) <- colnames(sce)
+sce$labels <- authors_meta$trajectory_calls
+table(sce$labels)
+```
+
+And we add developmental stage scoring as a data frame.
+
+```{r}
+DevStageScores <- DataFrame(
+  HSCMPP_scores = authors_meta$MPP.RFScore,
+  HSCMPP_inTraining = authors_meta$MPP.inTraining,
+  GMP_scores = authors_meta$GMP.RFScore,
+  GMP_inTraining = authors_meta$GMP.inTraining,
+  MEP_scores = authors_meta$MEP.RFScore,
+  MEP_inTraining = authors_meta$MEP.inTraining,
+  row.names = rownames(authors_meta)
+)
+sce$DevStageScoring <- DevStageScores
+sce$DevStageScoring[sce$retained,]
+```
+
+# Saving to file 
+
+Performing some polishing to optimize storage:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save all of this to file.
+
+```{r}
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Single-Cell Mapping of Progressive Fetal-to-Adult Transition in Human Naive T Cells",
+        description="Whereas the human fetal immune system is poised to generate immune tolerance and suppress inflammation in utero, an adult-like immune system emerges to orchestrate anti-pathogen immune responses in post-natal life. It has been posited that cells of the adult immune system arise as a discrete ontological “layer” of hematopoietic stem-progenitor cells (HSPCs) and their progeny; evidence supporting this model in humans has, however, been inconclusive. Here, we combine bulk and single-cell transcriptional profiling of lymphoid cells, myeloid cells, and HSPCs from fetal, perinatal, and adult developmental stages to demonstrate that the fetal-to-adult transition occurs progressively along a continuum of maturity—with a substantial degree of inter-individual variation at the time of birth—rather than via a transition between discrete waves. These findings have important implications for the design of strategies for prophylaxis against infection in the newborn and for the use of umbilical cord blood (UCB) in the setting of transplantation.
+
+Maintainer note: the count matrix contains all possible CellRanger barcodes, but only those with entries in the \"best\" supplementary file (i.e., reported by Demuxlet) are retained in the `SingleCellExperiment` to save space. Of these, only a further subset of cells were actually used in further analysis; the identities of these analyzed cells are captured in the `retained` column data field. The `DevStageScoring` column is a nested data frame that contains the applied results (`<cell_type>_scores`) of random forest regression trained on the fetal (score = 0) and adult (score = 1) cells of individual cell types indicated by `<cell_type>_inTraining`.",
+        taxonomy.id="9606",
+        genome="GRCh38",
+        sources=list(
+            list(provider="GEO", id="GSE158490"),
+            list(provider="PubMed", id="33406429"),
+            list(provider="other", id="https://ndownloader.figshare.com/files/25953740")
+        ),
+        maintainer.name="Aaron Lun",
+        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    )
+)
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
