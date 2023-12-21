@@ -9,7 +9,8 @@ saveDataset(x, path, metadata)
 \arguments{
 \item{x}{A \linkS4class{SummarizedExperiment} or one of its subclasses.}
 
-\item{path}{String containing the path to a new directory in which to save \code{x}.}
+\item{path}{String containing the path to a new directory in which to save \code{x}.
+Any existing directory is removed before saving \code{x}.}
 
 \item{metadata}{Named list containing metadata, usually generated using \code{\link{createMetadata}} or \code{\link{fetchMetadata}}.}
 }

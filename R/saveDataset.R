@@ -4,6 +4,7 @@
 #'
 #' @param x A \linkS4class{SummarizedExperiment} or one of its subclasses.
 #' @param path String containing the path to a new directory in which to save \code{x}.
+#' Any existing directory is removed before saving \code{x}.
 #' @param metadata Named list containing metadata, usually generated using \code{\link{createMetadata}} or \code{\link{fetchMetadata}}.
 #'
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
@@ -46,7 +47,7 @@ saveDataset <- function(x, path, metadata) {
     contents <- jsonlite::toJSON(metadata, pretty=4, auto_unbox=TRUE)
     gypsum::validateMetadata(contents, schema=gypsum::fetchMetadataSchema())
 
-    # Stripping out all the redundant names.
+    unlink(path, recursive=TRUE)
     alabaster.base::saveObject(x, path)
 
     write(contents, file=file.path(path, "_bioconductor.json"))
