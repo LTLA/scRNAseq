@@ -1,12 +1,6 @@
 ---
 title: Processing the Ledergor Myeloma data
 author: Milan Malfait
-date: 6 July 2021
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,8 +10,7 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a MARS-seq single-cell RNA sequencing dataset of human bone marrow
-plasma cells and circulating plasma cells from @ledergor2018single.
+We obtain a MARS-seq single-cell RNA sequencing dataset of human bone marrow plasma cells and circulating plasma cells from [Ledergor et al. (2018)](https://doi.org/10.1038/s41591-018-0269-2).
 Counts for endogenous genes are available from the Gene Expression Omnibus
 using the accession number [GSE117156](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE117156).
 We download and cache them using the `r Biocpkg("BiocFileCache")` package.
@@ -25,9 +18,7 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-mat.path <- bfcrpath(bfc,
-    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE117156&format=file"
-)
+mat.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE117156&format=file")
 ```
 
 We read this into memory as a sparse matrix.
@@ -107,13 +98,31 @@ sce
 
 # Saving to file 
 
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We polish the dataset to remove redundant names and convert assay types to more appropriate formats:
 
 ```{r}
-path <- file.path("scRNAseq", "ledergor-myeloma", "2.8.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(assay(sce), file=file.path(path, "counts.rds"))
-saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We then save all of the relevant components to disk for upload:
+
+```{r}
+saveDataset(sce, "finished",
+    createMetadata(
+        title="Single cell dissection of plasma cell heterogeneity in symptomatic and asymptomatic myeloma",
+        description="Multiple myeloma, a plasma cell malignancy, is the second most common blood cancer. Despite extensive research, disease heterogeneity is poorly characterized, hampering efforts for early diagnosis and improved treatments. Here, we apply single cell RNA sequencing to study the heterogeneity of 40 individuals along the multiple myeloma progression spectrum, including 11 healthy controls, demonstrating high interindividual variability that can be explained by expression of known multiple myeloma drivers and additional putative factors. We identify extensive subclonal structures for 10 of 29 individuals with multiple myeloma. In asymptomatic individuals with early disease and in those with minimal residual disease post-treatment, we detect rare tumor plasma cells with molecular characteristics similar to those of active myeloma, with possible implications for personalized therapies. Single cell analysis of rare circulating tumor cells allows for accurate liquid biopsy and detection of malignant plasma cells, which reflect bone marrow disease. Our work establishes single cell RNA sequencing for dissecting blood malignancies and devising detailed molecular characterization of tumor cells in symptomatic and asymptomatic patients.",
+        taxonomy.id="9606",
+        genome="GRCh38",
+        sources=list(
+            list(provider="GEO", id="GSE117156"),
+            list(provider="PubMed", id="30523328")
+        ),
+        maintainer.name="Milan Malfait",
+        maintainer.email="milan.malfait94@gmail.com"
+    )
+)
 ```
 
 # Session information
@@ -121,5 +130,3 @@ saveRDS(colData(sce), file=file.path(path, "coldata.rds"))
 ```{r}
 sessionInfo()
 ```
-
-# References
