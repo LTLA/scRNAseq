@@ -108,6 +108,15 @@ rownames(counts) <- raw.counts[,1,drop=TRUE]
 dim(counts)
 ```
 
+We also rename the column names:
+
+```{r}
+stopifnot(!anyDuplicated(coldata$cellID))
+colnames(counts) <- coldata$cellID
+rownames(coldata) <- coldata$cellID
+coldata$cellID <- NULL
+```
+
 # Saving to file 
 
 Putting everything together into a `SingleCellExperiment`:
