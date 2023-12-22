@@ -37,7 +37,6 @@ We also download a file containing the metadata for each cell.
 This was originally obtained from the authors by Vladimir Kiselev and Martin Hemberg, as the original annotation isn't availabledisappeared
 Annoyingly, our original source of this file is no longer available, so we'll have to load the copy from ExperimentHub.
 
-
 ```{r}
 library(ExperimentHub)
 ehub <- ExperimentHub()
@@ -80,7 +79,11 @@ m <- match(colnames(sce), rownames(loaded$tsne.y))
 tsne <- as.matrix(loaded$tsne.y[m,,drop=FALSE])
 rownames(tsne) <- colnames(sce)
 reducedDim(sce, "TSNE") <- tsne
+```
 
+We polish up the dataset to optimize for disk space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -89,28 +92,25 @@ sce
 We now save all of the components to file:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished", 
-    createMetadata(
-        title="Comprehensive Classification of Retinal Bipolar Neurons by Single-Cell Transcriptomics",
-        description="Patterns of gene expression can be used to characterize and classify neuronal types. It is challenging, however, to generate taxonomies that fulfill the essential criteria of being comprehensive, harmonizing with conventional classification schemes, and lacking superfluous subdivisions of genuine types. To address these challenges, we used massively parallel single-cell RNA profiling and optimized computational methods on a heterogeneous class of neurons, mouse retinal bipolar cells (BCs). From a population of ∼25,000 BCs, we derived a molecular classification that identified 15 types, including all types observed previously and two novel types, one of which has a non-canonical morphology and position. We validated the classification scheme and identified dozens of novel markers using methods that match molecular expression to cell morphology. This work provides a systematic methodology for achieving comprehensive molecular classification of neurons, identifies novel neuronal types, and uncovers transcriptional differences that distinguish types within a class.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE81904"),
-            list(provider="PubMed", id="27565351"),
-            list(provider="ExperimentHub", id="EH2697")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Comprehensive Classification of Retinal Bipolar Neurons by Single-Cell Transcriptomics",
+    description="Patterns of gene expression can be used to characterize and classify neuronal types. It is challenging, however, to generate taxonomies that fulfill the essential criteria of being comprehensive, harmonizing with conventional classification schemes, and lacking superfluous subdivisions of genuine types. To address these challenges, we used massively parallel single-cell RNA profiling and optimized computational methods on a heterogeneous class of neurons, mouse retinal bipolar cells (BCs). From a population of ∼25,000 BCs, we derived a molecular classification that identified 15 types, including all types observed previously and two novel types, one of which has a non-canonical morphology and position. We validated the classification scheme and identified dozens of novel markers using methods that match molecular expression to cell morphology. This work provides a systematic methodology for achieving comprehensive molecular classification of neurons, identifies novel neuronal types, and uncovers transcriptional differences that distinguish types within a class.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE81904"),
+        list(provider="PubMed", id="27565351"),
+        list(provider="ExperimentHub", id="EH2697")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
 ```
-
-# References

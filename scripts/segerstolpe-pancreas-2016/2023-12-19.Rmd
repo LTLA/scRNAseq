@@ -67,15 +67,15 @@ We retrieve the column metadata fields from ArrayExpress using the same accessio
 
 ```{r}
 meta.fname <- bfcrpath(bfc, paste0(base.url, "E-MTAB-5061.sdrf.txt"))
-emtab.sdrf <- read.delim(meta.fname, stringsAsFactors=FALSE, check.names=FALSE)
+emtab.sdrf <- read.delim(meta.fname, stringsAsFactors=FALSE, check.names=FALSE, row.names=1)
 colnames(emtab.sdrf)
 ```
 
 We make sure that the sample IDs match with the column names of the count matrix.
 
 ```{r}
-stopifnot(identical(sort(emtab.sdrf[["Source Name"]]), sort(colnames(emtab.df))))
-emtab.sdrf <- emtab.sdrf[match(colnames(counts), emtab.sdrf[["Source Name"]]),]
+stopifnot(identical(sort(rownames(emtab.sdrf)), sort(colnames(counts))))
+emtab.sdrf <- emtab.sdrf[match(colnames(counts), rownames(emtab.sdrf)),]
 ```
 
 We only keep the `Source Name` and `Characteristics` fields.
@@ -115,8 +115,11 @@ Slapping everything together into a `SingleCellExperiment`:
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=counts), colData=coldata, rowData=rowdata)
+```
 
-# Splitting off the spike-ins.
+We split off the spike-ins.
+
+```{r}
 status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
 sce <- splitAltExps(sce, status, ref="endogenous")
 
@@ -127,15 +130,22 @@ rowData(spike.exp) <- rowData(spike.exp)[,0] # not really useful for spike-ins.
 # This is wrong for one donor - donor "H1" has 100ul rather than 25ul -
 # but there's not much that we can do about that in the rowData.
 library(scRNAseq)
-spikedata <- ERCCSpikeInConcentrations(volume = 25, dilution = 40000)
+spikedata <- countErccMolecules(volume = 25, dilution = 40000)
 spikedata <- spikedata[rownames(spike.exp), ]
 rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
 altExp(sce, "ERCC") <- spike.exp
+```
 
-# Slapping the symbols as the names, because the RefSeq identifiers are a mess,
-# what with all the '+' symbols everywhere.
+We use symbols as the row names, because the RefSeq identifiers are a mess, what with all the `+` symbols everywhere.
+
+```{r}
 rownames(sce) <- rowData(sce)$symbol
+rowData(sce)$symbol <- NULL
+```
 
+Finally we do some polishing to optimize for space.
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -144,27 +154,26 @@ sce
 And saving it:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Single-Cell Transcriptome Profiling of Human Pancreatic Islets in Health and Type 2 Diabetes",
-        description="Hormone-secreting cells within pancreatic islets of Langerhans play important roles in metabolic homeostasis and disease. However, their transcriptional characterization is still incomplete. Here, we sequenced the transcriptomes of thousands of human islet cells from healthy and type 2 diabetic donors. We could define specific genetic programs for each individual endocrine and exocrine cell type, even for rare δ, γ, ε, and stellate cells, and revealed subpopulations of α, β, and acinar cells. Intriguingly, δ cells expressed several important receptors, indicating an unrecognized importance of these cells in integrating paracrine and systemic metabolic signals. Genes previously associated with obesity or diabetes were found to correlate with BMI. Finally, comparing healthy and T2D transcriptomes in a cell-type resolved manner uncovered candidates for future functional studies. Altogether, our analyses demonstrate the utility of the generated single-cell gene expression resource.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="ArrayExpress", id="E-MTAB-5061"),
-            list(provider="PubMed", id="27667667")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Single-Cell Transcriptome Profiling of Human Pancreatic Islets in Health and Type 2 Diabetes",
+    description="Hormone-secreting cells within pancreatic islets of Langerhans play important roles in metabolic homeostasis and disease. However, their transcriptional characterization is still incomplete. Here, we sequenced the transcriptomes of thousands of human islet cells from healthy and type 2 diabetic donors. We could define specific genetic programs for each individual endocrine and exocrine cell type, even for rare δ, γ, ε, and stellate cells, and revealed subpopulations of α, β, and acinar cells. Intriguingly, δ cells expressed several important receptors, indicating an unrecognized importance of these cells in integrating paracrine and systemic metabolic signals. Genes previously associated with obesity or diabetes were found to correlate with BMI. Finally, comparing healthy and T2D transcriptomes in a cell-type resolved manner uncovered candidates for future functional studies. Altogether, our analyses demonstrate the utility of the generated single-cell gene expression resource.
+    
+Maintainer note: ERCC molecule counts were computed based on the addition of 25 uL of a 1:40000 dilution of ERCC mix 1.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-5061"),
+        list(provider="PubMed", id="27667667")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
 ```
-
-# References

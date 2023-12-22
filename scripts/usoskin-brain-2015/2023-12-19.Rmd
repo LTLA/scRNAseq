@@ -40,9 +40,12 @@ coldata <- data.frame(t(meta.raw[,-(1:9)]), stringsAsFactors=FALSE)
 library(S4Vectors)
 coldata <- DataFrame(coldata)
 colnames(coldata) <- meta.raw[,9,drop=TRUE]
-rownames(coldata) <- NULL
 
-coldata[,5] <- as.numeric(coldata[,5])
+rownames(coldata) <- coldata$`Sample ID`
+stopifnot(!anyDuplicated(rownames(coldata)))
+coldata <- coldata[,setdiff(colnames(coldata), "Sample ID")]
+
+coldata$Reads <- as.numeric(coldata$Reads)
 coldata
 ```
 
@@ -69,13 +72,19 @@ dim(rpms)
 
 # Saving to file 
 
-Slapping them together to form a `SingleCellExperiment`, we'll just call them CPMs.
+Slapping them together to form a `SingleCellExperiment`.
+We'll just call it a CPM assay.
 
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(cpm=rpms), rowData=rowdata, colData=coldata)
 rownames(sce) <- rowData(sce)[,1]
+rowData(sce) <- rowData(sce)[,-1]
+```
 
+We apply some polish to optimize for storage:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -84,24 +93,23 @@ sce
 And saving them for upload:
 
 ```{r}
-library(scRNAseq)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Unbiased classification of sensory neuron types by large-scale single-cell RNA sequencing",
-        description="The primary sensory system requires the integrated function of multiple cell types, although its full complexity remains unclear. We used comprehensive transcriptome analysis of 622 single mouse neurons to classify them in an unbiased manner, independent of any a priori knowledge of sensory subtypes. Our results reveal eleven types: three distinct low-threshold mechanoreceptive neurons, two proprioceptive, and six principal types of thermosensitive, itch sensitive, type C low-threshold mechanosensitive and nociceptive neurons with markedly different molecular and operational properties. Confirming previously anticipated major neuronal types, our results also classify and provide markers for new, functionally distinct subtypes. For example, our results suggest that itching during inflammatory skin diseases such as atopic dermatitis is linked to a distinct itch-generating type. We demonstrate single-cell RNA-seq as an effective strategy for dissecting sensory responsive cells into distinct neuronal types. The resulting catalog illustrates the diversity of sensory types and the cellular complexity underlying somatic sensation.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="PubMed", id="25420068"),
-            list(provider="other", id=count.url)
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Unbiased classification of sensory neuron types by large-scale single-cell RNA sequencing",
+    description="The primary sensory system requires the integrated function of multiple cell types, although its full complexity remains unclear. We used comprehensive transcriptome analysis of 622 single mouse neurons to classify them in an unbiased manner, independent of any a priori knowledge of sensory subtypes. Our results reveal eleven types: three distinct low-threshold mechanoreceptive neurons, two proprioceptive, and six principal types of thermosensitive, itch sensitive, type C low-threshold mechanosensitive and nociceptive neurons with markedly different molecular and operational properties. Confirming previously anticipated major neuronal types, our results also classify and provide markers for new, functionally distinct subtypes. For example, our results suggest that itching during inflammatory skin diseases such as atopic dermatitis is linked to a distinct itch-generating type. We demonstrate single-cell RNA-seq as an effective strategy for dissecting sensory responsive cells into distinct neuronal types. The resulting catalog illustrates the diversity of sensory types and the cellular complexity underlying somatic sensation.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="25420068"),
+        list(provider="other", id=count.url)
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

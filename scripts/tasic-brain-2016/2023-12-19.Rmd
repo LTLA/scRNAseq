@@ -34,11 +34,17 @@ spike.mat <- as.matrix(spike.mat)
 dim(spike.mat)
 ```
 
-We check that all objects are in the same order and combine them.
+We check that all objects are in the same order.
 
 ```{r}
 stopifnot(identical(colnames(count.mat), colnames(spike.mat)))
-counts <- rbind(count.mat, spike.mat)
+```
+
+We move td-Tomato expression from the ERCC matrix to the count matrix, because it is expressed (biologically) and not a spike-in.
+
+```{r}
+count.mat <- rbind(count.mat, spike.mat["tdTomato",,drop=FALSE])
+spike.mat <- spike.mat[setdiff(rownames(spike.mat), "tdTomato"),,drop=FALSE]
 ```
 
 # Downloading the per-cell metadata
@@ -67,7 +73,7 @@ for (i in colnames(metadata)) {
 We check that all objects are in the same order, and use this to create a column-level `DataFrame`.
 
 ```{r}
-m <- match(colnames(counts), metadata$sample_title)
+m <- match(colnames(count.mat), metadata$sample_title)
 stopifnot(all(!is.na(m)))
 metadata <- metadata[m,]
 library(S4Vectors)
@@ -81,19 +87,24 @@ Slapping everything together into a `SingleCellExperiment`:
 
 ```{r}
 library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- SingleCellExperiment(list(counts=count.mat), colData=coldata)
+```
 
-# Splitting off the ERCC part:
-status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(sce)), "ERCC", "endogenous")
-sce <- splitAltExps(sce, status, ref="endogenous")
-spike.exp <- altExp(sce, "ERCC")
+We add the spike-in infomration:
 
+```{r}
 library(scRNAseq)
-spikedata <- ERCCSpikeInConcentrations(volume = 100, dilution = 1000000)
+spike.exp <- SummarizedExperiment(list(counts=spike.mat))
+spikedata <- countErccMolecules(volume = 100, dilution = 1000000)
 spikedata <- spikedata[rownames(spike.exp), ]
 rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
 altExp(sce, "ERCC") <- spike.exp
+spike.exp
+```
 
+We apply some polish to save disk space:
+
+```{r}
 sce <- polishDataset(sce)
 sce
 ```
@@ -101,26 +112,25 @@ sce
 We now save all of the components to file:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished", 
-    createMetadata(
-        title="Adult mouse cortical cell taxonomy revealed by single cell transcriptomics",
-        description="Nervous systems are composed of various cell types, but the extent of cell type diversity is poorly understood. We constructed a cellular taxonomy of one cortical region, primary visual cortex, in adult mice on the basis of single-cell RNA sequencing. We identified 49 transcriptomic cell types, including 23 GABAergic, 19 glutamatergic and 7 non-neuronal types. We also analyzed cell type-specific mRNA processing and characterized genetic access to these transcriptomic types by many transgenic Cre lines. Finally, we found that some of our transcriptomic cell types displayed specific and differential electrophysiological and axon projection properties, thereby confirming that the single-cell transcriptomic signatures can be associated with specific cellular properties.
+meta <- list(
+    title="Adult mouse cortical cell taxonomy revealed by single cell transcriptomics",
+    description="Nervous systems are composed of various cell types, but the extent of cell type diversity is poorly understood. We constructed a cellular taxonomy of one cortical region, primary visual cortex, in adult mice on the basis of single-cell RNA sequencing. We identified 49 transcriptomic cell types, including 23 GABAergic, 19 glutamatergic and 7 non-neuronal types. We also analyzed cell type-specific mRNA processing and characterized genetic access to these transcriptomic types by many transgenic Cre lines. Finally, we found that some of our transcriptomic cell types displayed specific and differential electrophysiological and axon projection properties, thereby confirming that the single-cell transcriptomic signatures can be associated with specific cellular properties.
 
-This dataset is represented by a `SingleCellExperiment` with spike-in data stored in the alternative experiment. Note that some of the spike-in rows have missing observations for some (but not all) cells. The last 9 cells (containing `_CTX_` in their names) correspond to no-cell control libraries.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="PubMed", id="26727548"),
-            list(provider="GEO", id="GSE71585")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+Maintainer note: spike-in molecule counts were computed based on a volume of 100 nL for a 1:1000000 dilution of mix 1. Note that some of the spike-in rows have missing observations for some (but not all) cells. The last 9 cells (containing `_CTX_` in their names) correspond to no-cell control libraries.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="26727548"),
+        list(provider="GEO", id="GSE71585")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
