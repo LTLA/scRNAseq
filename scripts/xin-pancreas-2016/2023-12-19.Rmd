@@ -41,6 +41,7 @@ coldata <- ehub[["EH2700"]]
 
 transformed <- sub("_", " ", colnames(mat))
 stopifnot(identical(transformed, coldata$Sample.name)) # check consistency
+coldata$Sample.name <- NULL # mostly redundant and removed.
 coldata
 ```
 
@@ -49,6 +50,7 @@ We do the same for the row metadata.
 ```{r}
 rowdata <- ehub[["EH2699"]]
 stopifnot(identical(rownames(mat), as.character(rowdata[,1])))
+rowdata <- rowdata[,-1,drop=FALSE] # redundant and removed.
 rowdata
 ```
 
@@ -59,7 +61,11 @@ Slapping everything together into a `SingleCellExperiment`:
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(rpkm=mat), colData=coldata, rowData=rowdata)
+```
 
+Adding some polish to optimize for disk space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -68,26 +74,25 @@ sce
 Now saving it to disk:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="RNA Sequencing of Single Human Islet Cells Reveals Type 2 Diabetes Genes",
-        description="Pancreatic islet cells are critical for maintaining normal blood glucose levels, and their malfunction underlies diabetes development and progression. We used single-cell RNA sequencing to determine the transcriptomes of 1,492 human pancreatic α, β, δ, and PP cells from non-diabetic and type 2 diabetes organ donors. We identified cell-type-specific genes and pathways as well as 245 genes with disturbed expression in type 2 diabetes. Importantly, 92% of the genes have not previously been associated with islet cell function or growth. Comparison of gene profiles in mouse and human α and β cells revealed species-specific expression. All data are available for online browsing and download and will hopefully serve as a resource for the islet research community.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="GEO", id="GSE81608"),
-            list(provider="PubMed", id="27667665"),
-            list(provider="ExperimentHub", id="EH2700"),
-            list(provider="ExperimentHub", id="EH2699")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="RNA Sequencing of Single Human Islet Cells Reveals Type 2 Diabetes Genes",
+    description="Pancreatic islet cells are critical for maintaining normal blood glucose levels, and their malfunction underlies diabetes development and progression. We used single-cell RNA sequencing to determine the transcriptomes of 1,492 human pancreatic α, β, δ, and PP cells from non-diabetic and type 2 diabetes organ donors. We identified cell-type-specific genes and pathways as well as 245 genes with disturbed expression in type 2 diabetes. Importantly, 92% of the genes have not previously been associated with islet cell function or growth. Comparison of gene profiles in mouse and human α and β cells revealed species-specific expression. All data are available for online browsing and download and will hopefully serve as a resource for the islet research community.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="GEO", id="GSE81608"),
+        list(provider="PubMed", id="27667665"),
+        list(provider="ExperimentHub", id="EH2700"),
+        list(provider="ExperimentHub", id="EH2699")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

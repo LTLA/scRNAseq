@@ -17,8 +17,7 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- paste0("https://storage.googleapis.com/",
-    "linnarsson-lab-www-blobs/blobs/cortex")
+base.url <- "https://storage.googleapis.com/linnarsson-lab-www-blobs/blobs/cortex"
 
 mRNA.url <- paste0(base.url, "/expression_mRNA_17-Aug-2014.txt")
 rep.url <- paste0(base.url, "/expression_rep_17-Aug-2014.txt")
@@ -30,6 +29,8 @@ rep.path <- bfcrpath(bfc, rep.url)
 mito.path <- bfcrpath(bfc, mito.url)
 spike.path <- bfcrpath(bfc, spike.url)
 ```
+
+# Loading the counts
 
 We define a simple utility function for loading data in from each file. 
 Each file contains some metadata, so we create a `SingleCellExperiment` object to accommodate both the counts and the metadata.
@@ -55,21 +56,17 @@ readFormat <- function(infile) {
     }
     rownames(metadata) <- NULL
 
-    # First column after row names is some useless filler.
-    counts <- read.delim(infile, stringsAsFactors=FALSE, 
-        header=FALSE, row.names=1, skip=11)[,-1] 
+    # First column after row names is some unknown per-gene annotation, let's just ditch it.
+    counts <- read.delim(infile, stringsAsFactors=FALSE, header=FALSE, row.names=1, skip=11)
+    counts <- counts[,-1] 
     counts <- as.matrix(counts)
 
-    # Clearing out names so that they don't get saved (again) at the assay level.
-    rn <- rownames(counts)
-    rownames(counts) <- NULL
-    colnames(counts) <- NULL
+    # Adding the column names.
+    colnames(counts) <- metadata$cell_id
+    stopifnot(!anyDuplicated(colnames(counts)))
+    metadata$cell_id <- NULL
 
-    sce <- SingleCellExperiment(list(counts=as(counts, "SVT_SparseMatrix")), colData=metadata)
-    rownames(sce) <- rn
-    colnames(sce) <- metadata$cell_id
-
-    sce
+    SingleCellExperiment(list(counts=as(counts, "SVT_SparseMatrix")), colData=metadata)
 }
 ```
 
@@ -86,68 +83,84 @@ mito.data <- readFormat(mito.path)
 mito.data
 ```
 
-# Saving objects
-
 We need to rearrange the columns for the mitochondrial data, as the order is not consistent with the other files.
 
 ```{r}
-m <- match(endo.data$cell_id, mito.data$cell_id)
+m <- match(colnames(endo.data), colnames(mito.data))
 mito.data <- mito.data[,m]
+summary(is.na(m))
 ```
 
-```{r, echo=FALSE}
+Checking that the column data is the same for all objects:
+
+```{r}
 # Should all be the same.
 stopifnot(identical(colData(endo.data), colData(spike.data))) 
 stopifnot(identical(colData(endo.data), colData(rep.data)))
 stopifnot(identical(colData(endo.data), colData(mito.data)))
 ```
 
+# Assembling the `SingleCellExperiment`
+
 We combine all components into a single `SingleCellExperiment` object.
+First we start with the endogenous genes:
 
 ```{r}
 sce <- rbind(endo.data, mito.data)
 rowData(sce)$featureType <- rep(c("endogenous", "mito"), c(nrow(endo.data), nrow(mito.data)))
 mainExpName(sce) <- "gene"
+```
 
-# Removing the colData as it's duplicated with that of the main SCE.
-colData(rep.data) <- NULL
+Then we add the repeats:
+
+```{r}
 altExp(sce, "repeat") <- rep.data
+```
 
-# Adding some spike-in congcentrations to the pile.
-spike.conc <- scRNAseq::ERCCSpikeInConcentrations(volume = 9, dilution = 20000)
+And finally, the ERCC spike-ins with their concentrations:
+
+```{r}
+spike.conc <- scRNAseq::countErccMolecules(volume = 9, dilution = 20000)
 spike.conc <- spike.conc[rownames(spike.data), ]
 rowData(spike.data) <- cbind(rowData(spike.data), spike.conc)
-colData(spike.data) <- NULL
 altExp(sce, "ERCC") <- spike.data
+```
+
+# Saving to file
+
+We apply some polish to optimize the disk space:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
 ```
 
 We now save all of the relevant components of `sce` to file for upload.
 
 ```{r}
-library(scRNAseq)
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq",
-        description="The mammalian cerebral cortex supports cognitive functions such as sensorimotor integration, memory, and social behaviors. Normal brain function relies on a diverse set of differentiated cell types, including neurons, glia, and vasculature. Here, we have used large-scale single-cell RNA sequencing (RNA-seq) to classify cells in the mouse somatosensory cortex and hippocampal CA1 region. We found 47 molecularly distinct subclasses, comprising all known major cell types in the cortex. We identified numerous marker genes, which allowed alignment with known cell types, morphology, and location. We found a layer I interneuron expressing Pax6 and a distinct postmitotic oligodendrocyte subclass marked by Itpr2. Across the diversity of cortical cell types, transcription factors formed a complex, layered regulatory code, suggesting a mechanism for the maintenance of adult cell type identity.
+meta <- list(
+    title="Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq",
+    description="The mammalian cerebral cortex supports cognitive functions such as sensorimotor integration, memory, and social behaviors. Normal brain function relies on a diverse set of differentiated cell types, including neurons, glia, and vasculature. Here, we have used large-scale single-cell RNA sequencing (RNA-seq) to classify cells in the mouse somatosensory cortex and hippocampal CA1 region. We found 47 molecularly distinct subclasses, comprising all known major cell types in the cortex. We identified numerous marker genes, which allowed alignment with known cell types, morphology, and location. We found a layer I interneuron expressing Pax6 and a distinct postmitotic oligodendrocyte subclass marked by Itpr2. Across the diversity of cortical cell types, transcription factors formed a complex, layered regulatory code, suggesting a mechanism for the maintenance of adult cell type identity.
 
-This dataset is represented as a `SingleCellExperiment` where the row data contains a single `featureType` field describing the type of each feature (endogenous genes or mitochondrial genes). Spike-ins and repeats are stored as separate entries in the `altExps`. Spike-in metadata is added using the ERCC concentrations, with molecule counts computed using a volume of 9 nL per cell at a dilution of 1:20000.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="other", id=mRNA.url),
-            list(provider="other", id=rep.url),
-            list(provider="other", id=spike.url),
-            list(provider="other", id=mito.url),
-            list(provider="PubMed", id="25700174")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+Maintainer note: ERCC molecule counts are computed using a volume of 9 nL per cell at a dilution of 1:20000.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="other", id=mRNA.url),
+        list(provider="other", id=rep.url),
+        list(provider="other", id=spike.url),
+        list(provider="other", id=mito.url),
+        list(provider="PubMed", id="25700174")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

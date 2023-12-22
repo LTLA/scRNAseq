@@ -80,13 +80,21 @@ Now assembling the `SingleCellExperiment`:
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=cbind(healthy.mat[common,], disease.mat[common,])))
+```
 
+We also add the column data:
+
+```{r}
 disease.tab$Status <- "disease"
 disease.tab$Technology <- "sNuc-10x" 
 healthy.tab$Status <- "healthy"
 healthy.tab$Technology <- sub("_.*", "", colnames(healthy.mat))
 colData(sce) <- DataFrame(rbind(healthy.tab, disease.tab), check.names=FALSE)
+```
 
+And apply some polish to optimize disk space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -97,30 +105,31 @@ sce
 We now save to disk in preparation for upload:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Advantages of Single-Nucleus over Single-Cell RNA Sequencing of Adult Kidney: Rare Cell Types and Novel Cell States Revealed in Fibrosis",
-        description="Background: A challenge for single-cell genomic studies in kidney and other solid tissues is generating a high-quality single-cell suspension that contains rare or difficult-to-dissociate cell types and is free of both RNA degradation and artifactual transcriptional stress responses.
+meta <- list(
+    title="Advantages of Single-Nucleus over Single-Cell RNA Sequencing of Adult Kidney: Rare Cell Types and Novel Cell States Revealed in Fibrosis",
+    description="Background: A challenge for single-cell genomic studies in kidney and other solid tissues is generating a high-quality single-cell suspension that contains rare or difficult-to-dissociate cell types and is free of both RNA degradation and artifactual transcriptional stress responses.
 
 Methods: We compared single-cell RNA sequencing (scRNA-seq) using the DropSeq platform with single-nucleus RNA sequencing (snRNA-seq) using sNuc-DropSeq, DroNc-seq, and 10X Chromium platforms on adult mouse kidney. We validated snRNA-seq on fibrotic kidney from mice 14 days after unilateral ureteral obstruction (UUO) surgery.
 
 Results: A total of 11,391 transcriptomes were generated in the comparison phase. We identified ten clusters in the scRNA-seq dataset, but glomerular cell types were absent, and one cluster consisted primarily of artifactual dissociation-induced stress response genes. By contrast, snRNA-seq from all three platforms captured a diversity of kidney cell types that were not represented in the scRNA-seq dataset, including glomerular podocytes, mesangial cells, and endothelial cells. No stress response genes were detected. Our snRNA-seq protocol yielded 20-fold more podocytes compared with published scRNA-seq datasets (2.4% versus 0.12%, respectively). Unexpectedly, single-cell and single-nucleus platforms had equivalent gene detection sensitivity. For validation, analysis of frozen day 14 UUO kidney revealed rare juxtaglomerular cells, novel activated proximal tubule and fibroblast cell states, and previously unidentified tubulointerstitial signaling pathways.
 
-Conclusions: snRNA-seq achieves comparable gene detection to scRNA-seq in adult kidney, and it also has substantial advantages, including reduced dissociation bias, compatibility with frozen samples, elimination of dissociation-induced transcriptional stress responses, and successful performance on inflamed fibrotic kidney.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE119531"),
-            list(provider="PubMed", id="30510133")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+Conclusions: snRNA-seq achieves comparable gene detection to scRNA-seq in adult kidney, and it also has substantial advantages, including reduced dissociation bias, compatibility with frozen samples, elimination of dissociation-induced transcriptional stress responses, and successful performance on inflamed fibrotic kidney.
+
+Maintainer note: the healthy and disease matrices supplied by the author have different sets of features, so the intersection is used to create this dataset.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE119531"),
+        list(provider="PubMed", id="30510133")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session info
+# Session information {-}
 
 ```{r}
 sessionInfo()

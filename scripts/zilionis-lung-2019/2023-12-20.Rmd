@@ -28,7 +28,33 @@ temp <- tempfile()
 untar(tarball, exdir=temp)
 ```
 
-# Reading in human data
+We clean out any existing output directory:
+
+```{r}
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+```
+
+We also set up a metadata template in preparation for saving:
+
+```{r}
+meta <- list(
+    title="Single-Cell Transcriptomics of Human and Mouse Lung Cancers Reveals Conserved Myeloid Populations across Individuals and Species [%s only]",
+    description="Tumor-infiltrating myeloid cells (TIMs) comprise monocytes, macrophages, dendritic cells, and neutrophils, and have emerged as key regulators of cancer growth. These cells can diversify into a spectrum of states, which might promote or limit tumor outgrowth but remain poorly understood. Here, we used single-cell RNA sequencing (scRNA-seq) to map TIMs in non-small-cell lung cancer patients. We uncovered 25 TIM states, most of which were reproducibly found across patients. To facilitate translational research of these populations, we also profiled TIMs in mice. In comparing TIMs across species, we identified a near-complete congruence of population structures among dendritic cells and monocytes; conserved neutrophil subsets; and species differences among macrophages. By contrast, myeloid cell population structures in patients' blood showed limited overlap with those of TIMs. This study determines the lung TIM landscape and sets the stage for future investigations into the potential of TIMs as immunotherapy targets.
+
+Maintainer note: this dataset contains only the %s cells from this study.",
+    sources=list(
+        list(provider="GEO", id="GSE127465"),
+        list(provider="PubMed", id="30979687")
+    ),
+    maintainer_name="Jens Preussner",
+    maintainer_email="jens.preussner@mpi-bn.mpg.de"
+)
+```
+
+# Processing human data
+
+## Reading the counts
 
 We read in all the human datasets as sparse matrices.
 
@@ -79,6 +105,8 @@ counts <- do.call(cbind, all.human)
 dim(counts)
 ```
 
+## Creating column annotations
+
 We derive some metadata from each file name and apply them to all of the constituent barcodes.
 
 ```{r}
@@ -124,12 +152,17 @@ colData <- cbind(coldata, metadata[m,setdiff(colnames(metadata), discard)])
 colData
 ```
 
-We now assemble a `SingleCellExperiment`, moving the SPRING coordinates into the reduced dimensions for easier viewing.
+## Putting it all together
+
+We now assemble a `SingleCellExperiment`:
 
 ```{r}
 sce <- SingleCellExperiment(list(counts=counts))
+```
 
-# Hacking out the spring coordinates.
+We move the SPRING coordinates into the reduced dimensions for easier viewing.
+
+```{r}
 cn <- colnames(colData)
 is.x <- grepl("^x_", cn)
 is.y <- grepl("^y_", cn)
@@ -145,8 +178,19 @@ for (i in seq_along(grouping.x)) {
         y=colData[,which.y[i]]
     ) 
 }
-colData(sce) <- colData[,!is.x & !is.y]
+```
 
+The remaining column annotations are added to the column data.
+Note that this overwrites the column names, which aren't unique across samples anyway, so it's no big deal.
+
+```{r}
+colData(sce) <- colData[,!is.x & !is.y]
+stopifnot(is.null(colnames(sce)))
+```
+
+We apply some polish to optimize disk space usage:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -155,26 +199,11 @@ sce
 And we save it in preparation for upload:
 
 ```{r}
-meta <- createMetadata(
-    title="[subset] Single-Cell Transcriptomics of Human and Mouse Lung Cancers Reveals Conserved Myeloid Populations across Individuals and Species",
-    description="Tumor-infiltrating myeloid cells (TIMs) comprise monocytes, macrophages, dendritic cells, and neutrophils, and have emerged as key regulators of cancer growth. These cells can diversify into a spectrum of states, which might promote or limit tumor outgrowth but remain poorly understood. Here, we used single-cell RNA sequencing (scRNA-seq) to map TIMs in non-small-cell lung cancer patients. We uncovered 25 TIM states, most of which were reproducibly found across patients. To facilitate translational research of these populations, we also profiled TIMs in mice. In comparing TIMs across species, we identified a near-complete congruence of population structures among dendritic cells and monocytes; conserved neutrophil subsets; and species differences among macrophages. By contrast, myeloid cell population structures in patients' blood showed limited overlap with those of TIMs. This study determines the lung TIM landscape and sets the stage for future investigations into the potential of TIMs as immunotherapy targets.",
-    taxonomy.id=NULL,
-    genome=NULL,
-    sources=list(
-        list(provider="GEO", id="GSE127465"),
-        list(provider="PubMed", id="30979687")
-    ),
-    maintainer.name="Jens Preussner",
-    maintainer.email="jens.preussner@mpi-bn.mpg.de"
-)
-
 copy <- meta
 copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh38"
-copy$description <- paste0(copy$description, "\n\n", "This dataset contains the human cells from this study")
-
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+copy$title <- sprintf(copy$title, "human")
+copy$description <- sprintf(copy$description, "human")
 saveDataset(sce, file.path("finished", "human"), copy)
 ```
 
@@ -183,7 +212,9 @@ rm(counts, all.human)
 gc()
 ```
 
-# Reading in mouse data
+# Processing mouse data
+
+## Reading the counts
 
 We read in all the mouse datasets.
 
@@ -217,6 +248,8 @@ stopifnot(length(unique(lapply(all.mouse, rownames)))==1L)
 counts <- do.call(cbind, all.mouse)
 dim(counts)
 ```
+
+## Creating column annotations
 
 We derive some metadata from each file name and apply them to all of the constituent barcodes.
 
@@ -263,19 +296,34 @@ colData <- cbind(coldata, metadata[m,setdiff(colnames(metadata), discard)])
 colData
 ```
 
+## Putting it all together
+
 We assemble all of this into a `SingleCellExperiment`.
-We move the SPRING coordinates into the reduced dimensions for easier viewing.
 
 ```{r}
 sce <- SingleCellExperiment(list(counts=counts))
+```
 
-# Hacking out the SPRING coordinates.
+We move the SPRING coordinates into the reduced dimensions for easier viewing.
+
+```{r}
 cn <- colnames(colData)
 is.x <- cn=="x"
 is.y <- cn=="y"
 reducedDim(sce, "SPRING") <- cbind(x=colData[,is.x], y=colData[,is.y])
-colData(sce) <- colData[,!is.x & !is.y]
+```
 
+The remaining column annotations are added to the column data.
+Note that this overwrites the column names, which aren't unique across samples anyway, so it's no big deal.
+
+```{r}
+colData(sce) <- colData[,!is.x & !is.y]
+stopifnot(is.null(colnames(sce)))
+```
+
+We apply some polish to optimize the disk space.
+
+```{r}
 sce <- polishDataset(sce)
 sce
 ```
@@ -286,11 +334,12 @@ And then we save it to disk with some metadata:
 copy <- meta
 copy$taxonomy_id <- "10090"
 copy$genome <- "GRCm38"
-copy$description <- paste0(copy$description, "\n\n", "This dataset contains the mouse cells from this study.")
+copy$title <- sprintf(copy$title, "mouse")
+copy$description <- sprintf(copy$description, "mouse")
 saveDataset(sce, file.path("finished", "mouse"), copy)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
