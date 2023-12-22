@@ -125,7 +125,11 @@ altExp(sce, "ADT") <- SummarizedExperiment(
     list(counts=final.p.mat),
     rowData=ingested1$p.rowdata
 )
+```
 
+We polish it up to save some disk space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -134,26 +138,25 @@ sce
 We now save it to disk:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="A Targeted Multi-omic Analysis Approach Measures Protein Expression and Low-Abundance Transcripts on the Single-Cell Level",
-        description="High-throughput single-cell RNA sequencing (scRNA-seq) has become a frequently used tool to assess immune cell heterogeneity. Recently, the combined measurement of RNA and protein expression was developed, commonly known as cellular indexing of transcriptomes and epitopes by sequencing (CITE-seq). Acquisition of protein expression data along with transcriptome data resolves some of the limitations inherent to only assessing transcripts but also nearly doubles the sequencing read depth required per single cell. Furthermore, there is still a paucity of analysis tools to visualize combined transcript-protein datasets. Here, we describe a targeted transcriptomics approach that combines an analysis of over 400 genes with simultaneous measurement of over 40 proteins on 2 × 104 cells in a single experiment. This targeted approach requires only about one-tenth of the read depth compared to a whole-transcriptome approach while retaining high sensitivity for low abundance transcripts. To analyze these multi-omic datasets, we adapted one-dimensional soli expression by nonlinear stochastic embedding (One-SENSE) for intuitive visualization of protein-transcript relationships on a single-cell level.",
-        taxonomy.id="9606",
-        genome="GRCh38",
-        sources=list(
-            list(provider="PubMed", id="32268080"),
-            list(provider="GEO", id="GSE135325"),
-            list(provider="GEO", id="GSM4005486"),
-            list(provider="GEO", id="GSM4005487")
-        ),
-        maintainer.name="Stephany Orjuela",
-        maintainer.email="sorjuelal@gmail.com"
-    )
+meta <- list(
+    title="A Targeted Multi-omic Analysis Approach Measures Protein Expression and Low-Abundance Transcripts on the Single-Cell Level",
+    description="High-throughput single-cell RNA sequencing (scRNA-seq) has become a frequently used tool to assess immune cell heterogeneity. Recently, the combined measurement of RNA and protein expression was developed, commonly known as cellular indexing of transcriptomes and epitopes by sequencing (CITE-seq). Acquisition of protein expression data along with transcriptome data resolves some of the limitations inherent to only assessing transcripts but also nearly doubles the sequencing read depth required per single cell. Furthermore, there is still a paucity of analysis tools to visualize combined transcript-protein datasets. Here, we describe a targeted transcriptomics approach that combines an analysis of over 400 genes with simultaneous measurement of over 40 proteins on 2 × 104 cells in a single experiment. This targeted approach requires only about one-tenth of the read depth compared to a whole-transcriptome approach while retaining high sensitivity for low abundance transcripts. To analyze these multi-omic datasets, we adapted one-dimensional soli expression by nonlinear stochastic embedding (One-SENSE) for intuitive visualization of protein-transcript relationships on a single-cell level.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="PubMed", id="32268080"),
+        list(provider="GEO", id="GSE135325"),
+        list(provider="GEO", id="GSM4005486"),
+        list(provider="GEO", id="GSM4005487")
+    ),
+    maintainer_name="Stephany Orjuela",
+    maintainer_email="sorjuelal@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session info
+# Session information {-}
 
 ```{r}
 sessionInfo()

@@ -36,7 +36,7 @@ We pull down the metadata from GEO as well.
 
 ```{r}
 meta.A <- bfcrpath(bfc, paste0(base.url, "GSE72857_experimental_design.txt.gz"))
-meta <- read.delim(meta.A, skip=19, header=TRUE, stringsAsFactors=FALSE)
+meta <- read.delim(meta.A, skip=19, header=TRUE, row.names=1, stringsAsFactors=FALSE)
 meta <- DataFrame(meta)
 meta
 ```
@@ -44,14 +44,14 @@ meta
 We check that the cell names match up with the matrix.
 
 ```{r}
-m <- match(colnames(counts), meta$Well_ID)
+m <- match(colnames(counts), rownames(meta))
 stopifnot(all(!is.na(m)))
 meta <- meta[m,]
 ```
 
 # Saving to file 
 
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We now save all of the relevant components to file, with some polishing to save disk space:
 
 ```{r}
 library(SingleCellExperiment)
@@ -65,24 +65,23 @@ sce
 And now saving it:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Transcriptional Heterogeneity and Lineage Commitment in Myeloid Progenitors",
-        description="Within the bone marrow, stem cells differentiate and give rise to diverse blood cell types and functions. Currently, hematopoietic progenitors are defined using surface markers combined with functional assays that are not directly linked with in vivo differentiation potential or gene regulatory mechanisms. Here, we comprehensively map myeloid progenitor subpopulations by transcriptional sorting of single cells from the bone marrow. We describe multiple progenitor subgroups, showing unexpected transcriptional priming toward seven differentiation fates but no progenitors with a mixed state. Transcriptional differentiation is correlated with combinations of known and previously undefined transcription factors, suggesting that the process is tightly regulated. Histone maps and knockout assays are consistent with early transcriptional priming, while traditional transplantation experiments suggest that in vivo priming may still allow for plasticity given strong perturbations. These data establish a reference model and general framework for studying hematopoiesis at single-cell resolution.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE72857"),
-            list(provider="PubMed", id="26627738")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Transcriptional Heterogeneity and Lineage Commitment in Myeloid Progenitors",
+    description="Within the bone marrow, stem cells differentiate and give rise to diverse blood cell types and functions. Currently, hematopoietic progenitors are defined using surface markers combined with functional assays that are not directly linked with in vivo differentiation potential or gene regulatory mechanisms. Here, we comprehensively map myeloid progenitor subpopulations by transcriptional sorting of single cells from the bone marrow. We describe multiple progenitor subgroups, showing unexpected transcriptional priming toward seven differentiation fates but no progenitors with a mixed state. Transcriptional differentiation is correlated with combinations of known and previously undefined transcription factors, suggesting that the process is tightly regulated. Histone maps and knockout assays are consistent with early transcriptional priming, while traditional transplantation experiments suggest that in vivo priming may still allow for plasticity given strong perturbations. These data establish a reference model and general framework for studying hematopoiesis at single-cell resolution.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE72857"),
+        list(provider="PubMed", id="26627738")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

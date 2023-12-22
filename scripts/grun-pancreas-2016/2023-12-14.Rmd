@@ -42,8 +42,8 @@ Fleshing out the column metadata based on the GEO sample annotation:
 
 ```{r}
 lib.names <- sub("_.*", "", colnames(sce))
-donor.names <- sub("(D10|D17|D2|D3|D7).*", "\\1", lib.names)
-treatment <- c(
+sce$donor <- sub("(D10|D17|D2|D3|D7).*", "\\1", lib.names)
+sce$treatment <- c(
     D10631="CD63+ sorted cells",
     D101="live sorted cells, library 1",
     D102="live sorted cells, library 2",
@@ -63,7 +63,6 @@ treatment <- c(
     D73="live sorted cells, library 3",
     D74="live sorted cells, library 4"
 )[lib.names]
-colData(sce) <- DataFrame(donor=donor.names, sample=treatment, row.names=colnames(sce))
 ```
 
 Splitting spike-ins into an alternative experiment:
@@ -82,14 +81,14 @@ altExp(sce, "ERCC") <- spike.exp
 Splitting up the gene names into some useful information for downstream users:
 
 ```{r}
-symbol <- sub("__.*", "", rownames(sce))
-loc <- sub(".*__", "", rownames(sce))
-rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+rowData(sce)$symbol <- sub("__.*", "", rownames(sce))
+rowData(sce)$chr <- sub(".*__", "", rownames(sce))
 ```
 
 And adding some polish:
 
 ```{r}
+library(scRNAseq)
 sce <- polishDataset(sce)
 sce
 ```
@@ -99,26 +98,25 @@ sce
 We save all of the components to file in preparation for upload:
 
 ```{r}
-library(scRNAseq)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="De Novo Prediction of Stem Cell Identity using Single-Cell Transcriptome Data [pancreas only]",
-        description="Adult mitotic tissues like the intestine, skin, and blood undergo constant turnover throughout the life of an organism. Knowing the identity of the stem cell is crucial to understanding tissue homeostasis and its aberrations upon disease. Here we present a computational method for the derivation of a lineage tree from single-cell transcriptome data. By exploiting the tree topology and the transcriptome composition, we establish StemID, an algorithm for identifying stem cells among all detectable cell types within a population. We demonstrate that StemID recovers two known adult stem cell populations, Lgr5+ cells in the small intestine and hematopoietic stem cells in the bone marrow. We apply StemID to predict candidate multipotent cell populations in the human pancreas, a tissue with largely uncharacterized turnover dynamics. We hope that StemID will accelerate the search for novel stem cells by providing concrete markers for biological follow-up and validation.
+meta <- list(
+    title="De Novo Prediction of Stem Cell Identity using Single-Cell Transcriptome Data [pancreas only]",
+    description="Adult mitotic tissues like the intestine, skin, and blood undergo constant turnover throughout the life of an organism. Knowing the identity of the stem cell is crucial to understanding tissue homeostasis and its aberrations upon disease. Here we present a computational method for the derivation of a lineage tree from single-cell transcriptome data. By exploiting the tree topology and the transcriptome composition, we establish StemID, an algorithm for identifying stem cells among all detectable cell types within a population. We demonstrate that StemID recovers two known adult stem cell populations, Lgr5+ cells in the small intestine and hematopoietic stem cells in the bone marrow. We apply StemID to predict candidate multipotent cell populations in the human pancreas, a tissue with largely uncharacterized turnover dynamics. We hope that StemID will accelerate the search for novel stem cells by providing concrete markers for biological follow-up and validation.
 
-Maintainer note: this dataset contains only the pancreas cells from the study. The sorting protocol and donor identity for each cell were obtained from the sample annotations in the GEO entry. ERCC spike-in molecule counts were computed with a volume of 20 nL per cell and a dilution of 50000.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="GEO", id='GSE81076'),
-            list(provider="PubMed", id='27345837')
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+Maintainer note: this dataset contains only the pancreas cells from the study. The sorting protocol and donor identity for each cell were obtained from the sample annotations in the GEO entry. ERCC spike-in molecule counts were computed with a volume of 20 nL per cell and a dilution of 1:50000.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="GEO", id='GSE81076'),
+        list(provider="PubMed", id='27345837')
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

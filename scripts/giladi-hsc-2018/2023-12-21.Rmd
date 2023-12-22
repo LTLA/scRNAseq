@@ -8,25 +8,34 @@ library(BiocStyle)
 knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 ```
 
-# Downloading the data (RNA-seq)
+# Overview 
 
-We obtain a single-cell RNA sequencing dataset of haematopoietic stem cells from [Giladi et al. (2018)](https://doi.org/10.1038/s41556-018-0121-4).
-Counts for endogenous genes are available from the Gene Expression Omnibus
-using the accession number [GSE92575](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE92575).
-We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+Here, we process a single-cell sequencing dataset of haematopoietic stem cells from [Giladi et al. (2018)](https://doi.org/10.1038/s41556-018-0121-4).
+This involves both RNA and CRISPR components, so we'll be handling each one separately.
+We set up a local `r Biocpkg("BiocFileCache")` directory to handle the file caching:
 
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-collected <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file")
+```
 
+# Processing RNA-seq
+
+## Counts
+
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE92575](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE92575).
+We download and cache them:
+
+```{r}
+collected <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file")
 dir <- tempfile()
 untar(collected, exdir=dir)
 all.files <- list.files(dir, full=TRUE)
 length(all.files)
 ```
 
-Loading them all into memory.
+Loading all of the count matrices into memory.
 
 ```{r}
 library(scuttle)
@@ -57,14 +66,19 @@ rowData(sce)$symbol <- sub(".*;", "", rownames(sce))
 head(rowData(sce)$symbol)
 ```
 
-Filling in the column data as well.
+## Loading column data
+
+We download the cell metadata as well:
 
 ```{r}
-meta.path <- bfcrpath(bfc, 
-    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file&file=GSE92575%5Fmetadata%2Etxt%2Egz")
+meta.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file&file=GSE92575%5Fmetadata%2Etxt%2Egz")
 meta <- read.delim(meta.path, skip=14, check.names=FALSE)
+str(meta)
+```
 
-# Expanding to cover all cells in the SCE.
+We expand this to cover all cells in the SCE.
+
+```{r}
 true.samples <- sub(".*_", "", sub(".txt.gz", "", basename(all.files)))
 true.samples <- rep(true.samples, vapply(out, ncol, 0L))
 ref <- DataFrame(well=colnames(combined), sample=true.samples)
@@ -77,15 +91,18 @@ meta$retained <- !is.na(m)
 meta$sample <- true.samples
 
 stopifnot(all(meta$well == colnames(combined) | !meta$retained))
-meta$well <- colnames(combined)
-rownames(meta) <- meta$well
+rownames(meta) <- colnames(combined)
 meta$well <- NULL # removing redundant columns
+```
 
+And then we attach it to the SCE.
+
+```{r}
 colData(sce) <- DataFrame(meta)
 colData(sce)
 ```
 
-# Downloading the data (CRISPR-seq)
+# Processing CRISPR
 
 Counts for CRISPR barcodes are also available from the Gene Expression Omnibus
 using the accession number [GSE113494](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113494).
@@ -136,8 +153,8 @@ crisp.sce
 
 # Saving to file
 
-Unfortunately the RNA and CRISPR data don't pertain to the same set of cells.
-I'll make the executive decision of taking the intersection to combine them into a single SCE.
+Unfortunately the RNA and CRISPR datasets don't have exactly the same set of cells.
+I'll make an executive decision here: we'll take the intersection to combine them into a single SCE.
 
 ```{r}
 common <- intersect(colnames(sce), colnames(crisp.sce))
@@ -146,7 +163,7 @@ altExp(sce, "CRISPR") <- crisp.sce[,common]
 length(common)
 ```
 
-Check that the amplification batches are the same, in which case we don't need to save the CRISPR column data.
+We check that the amplification batches are the same, in which case we don't need to save the CRISPR column data.
 
 ```{r}
 stopifnot(identical(sce$Amp_batch_ID, altExp(sce)$amplification.batch))
@@ -161,28 +178,29 @@ sce <- polishDataset(sce)
 sce
 ```
 
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We now save all of the relevant components to file in preparation for upload.
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Single-cell characterization of haematopoietic progenitors and their trajectories in homeostasis and perturbed haematopoiesis",
-        description="The dynamics of haematopoietic stem cell differentiation and the hierarchy of oligopotent stem cells in the bone marrow remain controversial. Here we dissect haematopoietic progenitor populations at single cell resolution, deriving an unbiased reference model of transcriptional states in normal and perturbed murine bone marrow. We define the signature of the naive haematopoietic stem cell and find a continuum of core progenitor states. Core cell populations mix transcription of pre-myeloid and pre-lymphoid programs, but do not mix erythroid or megakaryocyte programs with other fates. CRISP-seq perturbation analysis confirms our models and reveals that Cebpa regulates entry into all myeloid fates, while Irf8 and PU.1 deficiency block later differentiation towards monocyte or granulocyte fates. Our transcriptional map defines a reference network model for blood progenitors and their differentiation trajectories during normal and perturbed haematopoiesis.
+meta <- list(
+    title="Single-cell characterization of haematopoietic progenitors and their trajectories in homeostasis and perturbed haematopoiesis",
+    description="The dynamics of haematopoietic stem cell differentiation and the hierarchy of oligopotent stem cells in the bone marrow remain controversial. Here we dissect haematopoietic progenitor populations at single cell resolution, deriving an unbiased reference model of transcriptional states in normal and perturbed murine bone marrow. We define the signature of the naive haematopoietic stem cell and find a continuum of core progenitor states. Core cell populations mix transcription of pre-myeloid and pre-lymphoid programs, but do not mix erythroid or megakaryocyte programs with other fates. CRISP-seq perturbation analysis confirms our models and reveals that Cebpa regulates entry into all myeloid fates, while Irf8 and PU.1 deficiency block later differentiation towards monocyte or granulocyte fates. Our transcriptional map defines a reference network model for blood progenitors and their differentiation trajectories during normal and perturbed haematopoiesis.
 
 Maintainer note: this object only contains cells that were present in both the RNA and CRISPR data from this study.",
-        taxonomy.id="10090",
-        genome="MGSCv37",
-        sources=list(
-            list(provider="GEO", id="GSE92575"),
-            list(provider="PubMed", id="29915358")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+    taxonomy_id="10090",
+    genome="MGSCv37",
+    sources=list(
+        list(provider="GEO", id="GSE92575"),
+        list(provider="GEO", id="GSE11349"),
+        list(provider="PubMed", id="29915358")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

@@ -122,23 +122,23 @@ sce
 We then save it to disk in preparation for upload:
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="A survey of human brain transcriptome diversity at the single cell level",
-        description="The human brain is a tissue of vast complexity in terms of the cell types it comprises. Conventional approaches to classifying cell types in the human brain at single cell resolution have been limited to exploring relatively few markers and therefore have provided a limited molecular characterization of any given cell type. We used single cell RNA sequencing on 466 cells to capture the cellular complexity of the adult and fetal human brain at a whole transcriptome level. Healthy adult temporal lobe tissue was obtained during surgical procedures where otherwise normal tissue was removed to gain access to deeper hippocampal pathology in patients with medical refractory seizures. We were able to classify individual cells into all of the major neuronal, glial, and vascular cell types in the brain. We were able to divide neurons into individual communities and show that these communities preserve the categorization of interneuron subtypes that is typically observed with the use of classic interneuron markers. We then used single cell RNA sequencing on fetal human cortical neurons to identify genes that are differentially expressed between fetal and adult neurons and those genes that display an expression gradient that reflects the transition between replicating and quiescent fetal neuronal populations. Finally, we observed the expression of major histocompatibility complex type I genes in a subset of adult neurons, but not fetal neurons. The work presented here demonstrates the applicability of single cell RNA sequencing on the study of the adult human brain and constitutes a first step toward a comprehensive cellular atlas of the human brain.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="GEO", id="GSE67835"),
-            list(provider="PubMed", id="26060301")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="A survey of human brain transcriptome diversity at the single cell level",
+    description="The human brain is a tissue of vast complexity in terms of the cell types it comprises. Conventional approaches to classifying cell types in the human brain at single cell resolution have been limited to exploring relatively few markers and therefore have provided a limited molecular characterization of any given cell type. We used single cell RNA sequencing on 466 cells to capture the cellular complexity of the adult and fetal human brain at a whole transcriptome level. Healthy adult temporal lobe tissue was obtained during surgical procedures where otherwise normal tissue was removed to gain access to deeper hippocampal pathology in patients with medical refractory seizures. We were able to classify individual cells into all of the major neuronal, glial, and vascular cell types in the brain. We were able to divide neurons into individual communities and show that these communities preserve the categorization of interneuron subtypes that is typically observed with the use of classic interneuron markers. We then used single cell RNA sequencing on fetal human cortical neurons to identify genes that are differentially expressed between fetal and adult neurons and those genes that display an expression gradient that reflects the transition between replicating and quiescent fetal neuronal populations. Finally, we observed the expression of major histocompatibility complex type I genes in a subset of adult neurons, but not fetal neurons. The work presented here demonstrates the applicability of single cell RNA sequencing on the study of the adult human brain and constitutes a first step toward a comprehensive cellular atlas of the human brain.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="GEO", id="GSE67835"),
+        list(provider="PubMed", id="26060301")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

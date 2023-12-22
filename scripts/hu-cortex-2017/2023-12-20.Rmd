@@ -28,20 +28,19 @@ list.files(temp)
 We also create a metadata template:
 
 ```{r}
-library(scRNAseq)
-meta <- createMetadata(
+meta <- list(
     title="Dissecting cell-type composition and activity-dependent transcriptional state in mammalian brains by massively parallel single-nucleus RNA-Seq [%s only]",
-    description=paste0("Massively parallel single-cell RNA sequencing can precisely resolve cellular diversity in a high-throughput manner at low cost, but unbiased isolation of intact single cells from complex tissues, such as adult mammalian brains, is challenging. Here, we integrate sucrose-gradient assisted purification of nuclei with droplet microfluidics to develop a highly scalable single-nucleus RNA-Seq approach (sNucDrop-Seq), which is free of enzymatic dissociation and nuclei sorting. By profiling ~18,000 nuclei isolated from cortical tissues of adult mice, we demonstrate that sNucDrop-Seq not only accurately reveals neuronal and non-neuronal subtype composition with high sensitivity, but also enables in-depth analysis of transient transcriptional states driven by neuronal activity, at single-cell resolution, in vivo.
+    description="Massively parallel single-cell RNA sequencing can precisely resolve cellular diversity in a high-throughput manner at low cost, but unbiased isolation of intact single cells from complex tissues, such as adult mammalian brains, is challenging. Here, we integrate sucrose-gradient assisted purification of nuclei with droplet microfluidics to develop a highly scalable single-nucleus RNA-Seq approach (sNucDrop-Seq), which is free of enzymatic dissociation and nuclei sorting. By profiling ~18,000 nuclei isolated from cortical tissues of adult mice, we demonstrate that sNucDrop-Seq not only accurately reveals neuronal and non-neuronal subtype composition with high sensitivity, but also enables in-depth analysis of transient transcriptional states driven by neuronal activity, at single-cell resolution, in vivo.
 
 Maintainer note: this dataset contains only the %s cells from the study.",
-    taxonomy.id="10090",
+    taxonomy_id="10090",
     genome="GRCm38",
     sources=list(
         list(provider="GEO", id="GSE106678"),
         list(provider="PubMed", id="29220646")
     ),
-    maintainer.name="Aaron Lun",
-    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 ```
 
@@ -72,13 +71,12 @@ Crazy.
 At least the intersection is of a reasonable size.
 
 ```{r}
-common <- Reduce(intersect, lapply(counts, rownames))
-length(common)
+length(Reduce(intersect, lapply(counts, rownames)))
 ```
 
-We can't be sure that the missing features in a given matrix are all zero.
-So, we will just take the intersection across matrices and stitch them together into a single matrix.
-If you don't like that, take it to the authors.
+I can't be sure that the missing features in a given matrix have all-zero expression values.
+So, I will make the executive decision of taking the intersection across matrices and `cbind`'ing them together into a single matrix for each system (i.e., cortex or 3T3).
+If you don't like that, take it up with the authors.
 
 # Saving the 3T3 data
 
@@ -86,7 +84,8 @@ Combining the 3T3 matrices for cell and nuclei:
 
 ```{r}
 counts.3T3 <- counts[c("cell-3T3", "nuclei-3T3")]
-combined.3T3 <- do.call(cbind, lapply(counts.3T3, function(x) x[common,]))
+common.3T3 <- Reduce(intersect, lapply(counts.3T3, rownames))
+combined.3T3 <- do.call(cbind, lapply(counts.3T3, function(x) x[common.3T3,]))
 dim(combined.3T3)
 ```
 
@@ -94,8 +93,15 @@ Slapping together a `SingleCellExperiment`:
 
 ```{r}
 library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=combined.3T3)
+sce <- SingleCellExperiment(list(counts=combined.3T3))
 sce$protocol <- rep(sub("-3T3$", "", names(counts.3T3)), vapply(counts.3T3, ncol, 0L))
+table(sce$protocol)
+```
+
+Adding some polisht o optimize for space:
+
+```{r}
+library(scRNAseq)
 sce <- polishDataset(sce)
 sce
 ```
@@ -109,7 +115,7 @@ copy$description <- sprintf(copy$description, "3T3")
 saveDataset(sce, "finished/3T3", copy)
 ```
 
-# Creating a mapping
+# Saving the cortex data
 
 Defining the sample identities:
 
@@ -133,14 +139,18 @@ samples <- c(
     "nuclei-ctx-saline2",
     "nuclei-ctx-PTZ2" 
 )
+
+# Checking that everyone is accounted for:
+cortex.samples <- sort(names(counts)[grep("^nuclei-ctx-", names(counts))])
+stopifnot(identical(cortex.samples, sort(samples)))
 ```
 
 Combining the cortex matrices across samples:
 
 ```{r}
-stopfinot(sort(names(counts)[grep("^nuclei-ctx-", names(counts))]), sort(samples))
 counts.cortex <- counts[samples]
-combined.cortex <- do.call(cbind, lapply(counts.cortex, function(x) x[common,]))
+common.cortex <- Reduce(intersect, lapply(counts.cortex, rownames))
+combined.cortex <- do.call(cbind, lapply(counts.cortex, function(x) x[common.cortex,]))
 dim(combined.cortex)
 ```
 
@@ -151,19 +161,21 @@ library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=combined.cortex))
 ```
 
-Adding some more information about each sample:
+Adding some more information about each sample.
 
 ```{r}
-replicator <- rep(seq_along(samples), vapply(counts, ncol, 0L))
+replicator <- rep(seq_along(samples), vapply(counts.cortex, ncol, 0L))
 
 treatment <- rep(NA_character_, length(samples))
 treatment[grep("^nuclei-ctx-saline[0-9]+$", samples)] <- "saline"
 treatment[grep("^nuclei-ctx-PTZ[0-9]+$", samples)] <- "PTZ"
 sce$treatment <- treatment[replicator]
+table(sce$treatment, useNA="always")
 
 animal <- as.integer(sub("[^0-9]+([0-9]+)$", "\\1", samples))
 stopifnot(!anyNA(animal))
 sce$animal <- animal[replicator]
+table(sce$animal)
 ```
 
 Polishing it up:
@@ -182,7 +194,7 @@ copy$description <- sprintf(copy$description, "cortex")
 saveDataset(sce, "finished/cortex", copy)
 ```
 
-# Session info {-}
+# Session information {-}
 
 ```{r}
 sessionInfo()

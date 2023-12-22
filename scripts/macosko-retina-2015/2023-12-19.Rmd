@@ -51,13 +51,14 @@ We match the metadata to the columns.
 ```{r}
 m <- match(colnames(counts), coldata$cell.id)
 coldata <- coldata[m,]
-coldata$cell.id <- colnames(counts)
+rownames(coldata) <- colnames(counts)
+coldata$cell.id <- NULL # redundant and unnecessary
 summary(is.na(m))
 ```
 
 # Saving to file 
 
-We now assemble the components into a `SingleCellExperiment`.
+We now assemble the components into a `SingleCellExperiment`, with some polishing to save disk space.
 
 ```{r}
 library(scRNAseq)
@@ -69,25 +70,24 @@ sce
 This is saved in preparation for upload:
 
 ```{r}
-unlink('finished', recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets",
-        description="Cells, the basic units of biological structure and function, vary broadly in type and state. Single-cell genomics can characterize cell identity and function, but limitations of ease and scale have prevented its broad application. Here we describe Drop-seq, a strategy for quickly profiling thousands of individual cells by separating them into nanoliter-sized aqueous droplets, associating a different barcode with each cell's RNAs, and sequencing them all together. Drop-seq analyzes mRNA transcripts from thousands of individual cells simultaneously while remembering transcripts' cell of origin. We analyzed transcriptomes from 44,808 mouse retinal cells and identified 39 transcriptionally distinct cell populations, creating a molecular atlas of gene expression for known retinal cell classes and novel candidate cell subtypes. Drop-seq will accelerate biological discovery by enabling routine transcriptional profiling at single-cell resolution.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE63472"),
-            list(provider="PubMed", id="26000488"),
-            list(provider="other", id=meta.url)
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets",
+    description="Cells, the basic units of biological structure and function, vary broadly in type and state. Single-cell genomics can characterize cell identity and function, but limitations of ease and scale have prevented its broad application. Here we describe Drop-seq, a strategy for quickly profiling thousands of individual cells by separating them into nanoliter-sized aqueous droplets, associating a different barcode with each cell's RNAs, and sequencing them all together. Drop-seq analyzes mRNA transcripts from thousands of individual cells simultaneously while remembering transcripts' cell of origin. We analyzed transcriptomes from 44,808 mouse retinal cells and identified 39 transcriptionally distinct cell populations, creating a molecular atlas of gene expression for known retinal cell classes and novel candidate cell subtypes. Drop-seq will accelerate biological discovery by enabling routine transcriptional profiling at single-cell resolution.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE63472"),
+        list(provider="PubMed", id="26000488"),
+        list(provider="other", id=meta.url)
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

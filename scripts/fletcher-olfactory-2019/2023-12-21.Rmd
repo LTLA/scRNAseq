@@ -83,13 +83,17 @@ rowdata
 
 # Adding clustering results
 
-Attaching the cluster results from the original analysis (cluster labels available [here](https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/clusterKey.md)):
+Downloading the cluster results from the original analysis:
 
 ```{r}
 cluster_url <- "https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/oeHBCdiff_clusterLabels.txt"
 cluster_file <- bfcrpath(bfc, cluster_url)
 cluster_id <- read.table(cluster_file, col.names = c("sample_id", "cluster_id"))
+```
 
+We map them onto the cluster labels available [here](https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/clusterKey.md):
+
+```{r}
 cluster_labels <- data.frame(cluster_id = c(1:5, 7:12, 14, 15),
     cluster_label = c("HBC", 
         "INP1", 
@@ -130,14 +134,17 @@ coldata
 
 # Saving to file 
 
-We put this all together in a `SingleCellExperiment` object, with some optimizations for space.
+We put this all together in a `SingleCellExperiment` object:
 
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=counts), colData = coldata, rowData = rowdata)
 colData(sce) <- colData(sce)[,setdiff(colnames(coldata), "sample_sequencing_id")] # redundant with column names.
+```
 
-# Adding some polish to optimize for space.
+We do some polishing to optimize for space.
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -146,23 +153,23 @@ sce
 We now save everything to disk in preparation for upload:
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Deconstructing Olfactory Stem Cell Trajectories at Single-Cell Resolution",
-        description="A detailed understanding of the paths that stem cells traverse to generate mature progeny is vital for elucidating the mechanisms governing cell fate decisions and tissue homeostasis. Adult stem cells maintain and regenerate multiple mature cell lineages in the olfactory epithelium. Here we integrate single-cell RNA sequencing and robust statistical analyses with in vivo lineage tracing to define a detailed map of the postnatal olfactory epithelium, revealing cell fate potentials and branchpoints in olfactory stem cell lineage trajectories. Olfactory stem cells produce support cells via direct fate conversion in the absence of cell division, and their multipotency at the population level reflects collective unipotent cell fate decisions by single stem cells. We further demonstrate that Wnt signaling regulates stem cell fate by promoting neuronal fate choices. This integrated approach reveals the mechanisms guiding olfactory lineage trajectories and provides a model for deconstructing similar hierarchies in other stem cell niches.
+meta <- list(
+    title="Deconstructing Olfactory Stem Cell Trajectories at Single-Cell Resolution",
+    description="A detailed understanding of the paths that stem cells traverse to generate mature progeny is vital for elucidating the mechanisms governing cell fate decisions and tissue homeostasis. Adult stem cells maintain and regenerate multiple mature cell lineages in the olfactory epithelium. Here we integrate single-cell RNA sequencing and robust statistical analyses with in vivo lineage tracing to define a detailed map of the postnatal olfactory epithelium, revealing cell fate potentials and branchpoints in olfactory stem cell lineage trajectories. Olfactory stem cells produce support cells via direct fate conversion in the absence of cell division, and their multipotency at the population level reflects collective unipotent cell fate decisions by single stem cells. We further demonstrate that Wnt signaling regulates stem cell fate by promoting neuronal fate choices. This integrated approach reveals the mechanisms guiding olfactory lineage trajectories and provides a model for deconstructing similar hierarchies in other stem cell niches.
 
 Maintainer note: cluster labels were obtained from the corresponding code repository on GitHub. Only a subset of cells were used for clustering and thus have these labels; these are indicated as such via the `retained` column.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE95601"),
-            list(provider="PubMed", id="28506465"),
-            list(provider="other", id=cluster_url)
-        ),
-        maintainer.name="Davide Risso",
-        maintainer.email="risso.davide@gmail.com"
-    )
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE95601"),
+        list(provider="PubMed", id="28506465"),
+        list(provider="other", id=cluster_url)
+    ),
+    maintainer_name="Davide Risso",
+    maintainer_email="risso.davide@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
 # Session information {-}

@@ -70,11 +70,15 @@ sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
 status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
 sce <- splitAltExps(sce, status, ref="endogenous")
 
-# Hacking out some details from the row names.
+# Hacking out some gene details from the row names.
 symbol <- sub("__.*", "", rownames(sce))
 loc <- sub(".*__", "", rownames(sce))
 rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+```
 
+We do some polishing to save disk space later.
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -83,25 +87,24 @@ sce
 And we then save it all to disk.
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="A Single-Cell Transcriptome Atlas of the Human Pancreas",
-        description="To understand organ function, it is important to have an inventory of its cell types and of their corresponding marker genes. This is a particularly challenging task for human tissues like the pancreas, because reliable markers are limited. Hence, transcriptome-wide studies are typically done on pooled islets of Langerhans, obscuring contributions from rare cell types and of potential subpopulations. To overcome this challenge, we developed an automated platform that uses FACS, robotics, and the CEL-Seq2 protocol to obtain the transcriptomes of thousands of single pancreatic cells from deceased organ donors, allowing in silico purification of all main pancreatic cell types. We identify cell type-specific transcription factors and a subpopulation of REG3A-positive acinar cells. We also show that CD24 and TM4SF4 expression can be used to sort live alpha and beta cells with high purity. This resource will be useful for developing a deeper understanding of pancreatic biology and pathophysiology of diabetes mellitus.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="GEO", id="GSE85241"),
-            list(provider="PubMed", id="27693023"),
-            list(provider="ExperimentHub", id="EH2693")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="A Single-Cell Transcriptome Atlas of the Human Pancreas",
+    description="To understand organ function, it is important to have an inventory of its cell types and of their corresponding marker genes. This is a particularly challenging task for human tissues like the pancreas, because reliable markers are limited. Hence, transcriptome-wide studies are typically done on pooled islets of Langerhans, obscuring contributions from rare cell types and of potential subpopulations. To overcome this challenge, we developed an automated platform that uses FACS, robotics, and the CEL-Seq2 protocol to obtain the transcriptomes of thousands of single pancreatic cells from deceased organ donors, allowing in silico purification of all main pancreatic cell types. We identify cell type-specific transcription factors and a subpopulation of REG3A-positive acinar cells. We also show that CD24 and TM4SF4 expression can be used to sort live alpha and beta cells with high purity. This resource will be useful for developing a deeper understanding of pancreatic biology and pathophysiology of diabetes mellitus.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="GEO", id="GSE85241"),
+        list(provider="PubMed", id="27693023"),
+        list(provider="ExperimentHub", id="EH2693")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

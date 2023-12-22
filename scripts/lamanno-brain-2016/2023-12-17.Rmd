@@ -54,7 +54,7 @@ FUN <- function(path, as.csv=FALSE, skip=0) {
     rownames <- raw_data[,1]
     stopifnot(length(unique(raw_data[,2]))==1L) # checking that second column has nothing interesting.
 
-    counts <- counts[,-(1:2)]
+    counts <- raw_data[,-(1:2)]
     storage.mode(counts) <- "numeric"
     sce <- SingleCellExperiment(list(counts=counts), colData=df)
 
@@ -101,17 +101,17 @@ Maintainer note: this dataset contains only the %s from this study."
 
 savePart <- function(sce, short, long, human=TRUE) {
     saveDataset(sce, file.path("finished", short), 
-        createMetadata(
+        list(
             title=sprintf(title, long),
             description=sprintf(description, long),
-            taxonomy.id=if (human) "9606" else "10090",
+            taxonomy_id=if (human) "9606" else "10090",
             genome=if (human) "GRCh38" else "GRCm38",
             sources=list(
                 list(provider="GEO", id="GSE76381"),
                 list(provider="PubMed", id="27716510")
             ),
-            maintainer.name="Aaron Lun",
-            maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+            maintainer_name="Aaron Lun",
+            maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
         )
     )
 }
@@ -127,7 +127,7 @@ savePart(madult.data, "mouse-adult", "adult mouse brain cells")
 savePart(membryo.data, "mouse-embryo", "mouse embryonic brain cells")
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

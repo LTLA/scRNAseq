@@ -170,7 +170,7 @@ Maintainer note: the column data contains an additional `retained` field, indica
 saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

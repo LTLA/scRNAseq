@@ -16,6 +16,7 @@ We obtain a single-cell RNA sequencing dataset of mouse ESCs from [Leng et al. (
 library(GEOquery)
 tmp <- "geo_cache"
 if (!file.exists(tmp)) {
+    dir.create(tmp)
     out <- getGEOSuppFiles("GSE64016", baseDir=tmp)
 }
 rownames(out)
@@ -53,35 +54,37 @@ Forming a `SingleCellExperiment`:
 
 ```{r}
 library(SingleCellExperiment)
-dn <- dimnames(hs.counts)
-dimnames(hs.counts) <- NULL
 sce <- SingleCellExperiment(list(normalized=hs.counts), colData=coldata)
-dimnames(sce) <- dn
-sce
 ```
 
-We save these to file for upload to `r Biocpkg("ExperimentHub")`.
+Doing some polishing to save space:
 
 ```{r}
 library(scRNAseq)
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Oscope identifies oscillatory genes in unsynchronized single-cell RNA-seq experiments",
-        description="Oscillatory gene expression is fundamental to development, but technologies for monitoring expression oscillations are limited. We have developed a statistical approach called Oscope to identify and characterize the transcriptional dynamics of oscillating genes in single-cell RNA-seq data from an unsynchronized cell population. Applying Oscope to a number of data sets, we demonstrated its utility and also identified a potential artifact in the Fluidigm C1 platform.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="GEO", id="GSE64016"),
-            list(provider="PubMed", id="26301841")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
-)
+sce <- polishDataset(sce)
+sce
 ```
 
-# Session information
+We save this to disk in preparation for upload:
+
+```{r}
+meta <- list(
+    title="Oscope identifies oscillatory genes in unsynchronized single-cell RNA-seq experiments",
+    description="Oscillatory gene expression is fundamental to development, but technologies for monitoring expression oscillations are limited. We have developed a statistical approach called Oscope to identify and characterize the transcriptional dynamics of oscillating genes in single-cell RNA-seq data from an unsynchronized cell population. Applying Oscope to a number of data sets, we demonstrated its utility and also identified a potential artifact in the Fluidigm C1 platform.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="GEO", id="GSE64016"),
+        list(provider="PubMed", id="26301841")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "finished", meta)
+```
+
+# Session information {-}
 
 ```{r}
 sessionInfo()

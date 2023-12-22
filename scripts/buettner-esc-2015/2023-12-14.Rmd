@@ -60,37 +60,36 @@ rowdata <- DataFrame(gene.g1)
 rowdata
 ```
 
-Assembling a `SingleCellExperiment`:
+Assembling a `SingleCellExperiment` consisting of the genes:
 
 ```{r}
 library(SingleCellExperiment)
-sce <- SingleCellExperiment(list(counts=combined), colData=coldata, rowData=rowdata)
+is.gene <- grepl("^ENSMUSG", rownames(combined))
+sce <- SingleCellExperiment(list(counts=combined[is.gene,]), colData=coldata, rowData=rowdata[is.gene,])
+mainExpName(sce) <- "gene"
 ```
 
 Splitting out the spike-in counts:
 
 ```{r}
-is.gene <- grepl("^ENSMUSG", rownames(sce))
-genes <- sce[is.gene,]
-mainExpName(genes) <- "gene"
-
 library(scRNAseq)
-is.ercc <- grepl("^ERCC-", rownames(sce))
-spikes <- sce[is.ercc,]
+is.ercc <- grepl("^ERCC-", rownames(combined))
 spikedata <- countErccMolecules(volume = 1, dilution = 1000)
 
-# We just replace the row data entirely, as this is non-informative.
-rowData(spikes) <- spikedata
-altExp(genes, "ERCC") <- spikes
+# We don't use 'rowdata' at all as this is non-informative for spike-ins.
+spikes <- SummarizedExperiment(list(counts=combined[is.ercc,]))
+rowData(spikes) <- spikedata[rownames(spikes),]
+altExp(sce, "ERCC") <- spikes
+spikes
 ```
 
 Shifting the diagnostics into the column data.
 
 ```{r}
 is.other <- !is.gene & !is.ercc
-diagnostics <- t(as.matrix(assay(sce)[is.other,]))
+diagnostics <- t(as.matrix(combined[is.other,]))
 rownames(diagnostics) <- NULL
-colData(genes)$metrics <- DataFrame(diagnostics)
+colData(sce)$metrics <- DataFrame(diagnostics)
 ```
 
 Now polishing the object to save some space.
@@ -110,7 +109,7 @@ meta <- list(
     title="Computational analysis of cell-to-cell heterogeneity in single-cell RNA-sequencing data reveals hidden subpopulations of cells",
     description="Recent technical developments have enabled the transcriptomes of hundreds of cells to be assayed in an unbiased manner, opening up the possibility that new subpopulations of cells can be found. However, the effects of potential confounding factors, such as the cell cycle, on the heterogeneity of gene expression and therefore on the ability to robustly identify subpopulations remain unclear. We present and validate a computational approach that uses latent variable models to account for such hidden factors. We show that our single-cell latent variable model (scLVM) allows the identification of otherwise undetectable subpopulations of cells that correspond to different stages during the differentiation of naive T cells into T helper 2 cells. Our approach can be used not only to identify cellular subpopulations but also to tease apart different sources of gene expression heterogeneity in single-cell transcriptomes.
 
-Maintainer note: Alignment and quantification metrics are stored in a nested `metrics` data frame in the column data. Molecule counts for ERCC spike-ins are computed based on a volume of 1 nL per cell and a dilution of 1:1000",
+Maintainer note: alignment and quantification metrics are stored in a nested `metrics` data frame in the column data. Molecule counts for ERCC spike-ins are computed based on a volume of 1 nL per cell and a dilution of 1:1000.",
     taxonomy_id="10090",
     genome="GRCm38",
     sources=list(
@@ -121,10 +120,10 @@ Maintainer note: Alignment and quantification metrics are stored in a nested `me
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(genes, "finished", meta)
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

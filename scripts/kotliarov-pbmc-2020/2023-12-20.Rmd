@@ -49,44 +49,62 @@ adt.mat <- seuratObj@assay$CITE@raw.data
 dim(adt.mat)
 ```
 
-# Save for upload
+# Assembly into a `SingleCellExperiment`
  
 We assemble this into a `SingleCellExperiment`:
 
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=rna.mat), colData=coldata)
-altExp(sce, "ADT") <- SummarizedExperiment(list(counts=adt.mat))
+```
 
+Adding the ADTs, with some clean-ups to the row data:
+
+```{r}
+se <- SummarizedExperiment(list(counts=adt.mat))
+
+targets <- sub("_.*$", "", rownames(se))
+targets <- gsub(" ", "", targets)
+targets <- sub("k(:appa)?isotype$", "κ", targets, ignore.case=TRUE)
+rowData(se)$target <- targets
+targets
+
+rowData(se)$isotype <- grepl("isotype", rownames(se), ignore.case=TRUE)
+altExp(sce, "ADT") <- se
+rowData(se)
+```
+
+# Save for upload
+
+We perform some polishing to optimize for space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
 ```
 
-And we save it:
+And we save it with some metadata:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Broad immune activation underlies shared set point signatures for vaccine responsiveness in healthy individuals and disease activity in lupus patients",
-        description="Responses to vaccination and to diseases vary widely across individuals, which may be partly due to baseline immune variations. Identifying such baseline predictors of immune responses and their biological basis are of broad interest given their potential importance for cancer immunotherapy, disease outcomes, vaccination and infection responses. Here we uncover baseline blood transcriptional signatures predictive of antibody responses to both influenza and yellow fever vaccinations in healthy subjects. These same signatures evaluated at clinical quiescence are correlated with disease activity in systemic lupus erythematosus patients with plasmablast-associated flares. CITE-seq profiling of 82 surface proteins and transcriptomes of 53,201 single cells from healthy high and low influenza-vaccination responders revealed that our signatures reflect the extent of activation in a plasmacytoid dendritic cell—Type I IFN—T/B lymphocyte network. Our findings raise the prospect that modulating such immune baseline states may improve vaccine responsiveness and mitigate undesirable autoimmune disease activities.",
-        taxonomy.id="9606",
-        genome="GRCh37",
-        sources=list(
-            list(provider="PubMed", id="32094927"),
-            list(provider="other", id=url)
-        ),
-        maintainer.name="Stephany Orjuela",
-        maintainer.email="sorjuelal@gmail.com"
-    )
+meta <- list(
+    title="Broad immune activation underlies shared set point signatures for vaccine responsiveness in healthy individuals and disease activity in lupus patients",
+    description="Responses to vaccination and to diseases vary widely across individuals, which may be partly due to baseline immune variations. Identifying such baseline predictors of immune responses and their biological basis are of broad interest given their potential importance for cancer immunotherapy, disease outcomes, vaccination and infection responses. Here we uncover baseline blood transcriptional signatures predictive of antibody responses to both influenza and yellow fever vaccinations in healthy subjects. These same signatures evaluated at clinical quiescence are correlated with disease activity in systemic lupus erythematosus patients with plasmablast-associated flares. CITE-seq profiling of 82 surface proteins and transcriptomes of 53,201 single cells from healthy high and low influenza-vaccination responders revealed that our signatures reflect the extent of activation in a plasmacytoid dendritic cell—Type I IFN—T/B lymphocyte network. Our findings raise the prospect that modulating such immune baseline states may improve vaccine responsiveness and mitigate undesirable autoimmune disease activities.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="PubMed", id="32094927"),
+        list(provider="other", id=url)
+    ),
+    maintainer_name="Stephany Orjuela",
+    maintainer_email="sorjuelal@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session info
+# Session information {-}
 
 ```{r}
 sessionInfo()
 ```
-
-# References

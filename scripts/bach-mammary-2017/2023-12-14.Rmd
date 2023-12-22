@@ -129,7 +129,7 @@ meta <- list(
 saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

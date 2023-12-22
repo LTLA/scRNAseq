@@ -172,7 +172,7 @@ copy$genome <- "GRCm38"
 saveDataset(sce, file.path("finished", "mouse"), copy)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

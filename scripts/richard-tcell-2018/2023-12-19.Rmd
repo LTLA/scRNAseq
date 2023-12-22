@@ -125,24 +125,23 @@ sce
 We save these to disk in preparation for upload:
 
 ```{r}
-unlink('finished', recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="T cell cytolytic capacity is independent of initial stimulation strength",
-        description="How cells respond to myriad stimuli with finite signaling machinery is central to immunology. In naive T cells, the inherent effect of ligand strength on activation pathways and endpoints has remained controversial, confounded by environmental fluctuations and intercellular variability within populations. Here we studied how ligand potency affected the activation of CD8+ T cells in vitro, through the use of genome-wide RNA, multi-dimensional protein and functional measurements in single cells. Our data revealed that strong ligands drove more efficient and uniform activation than did weak ligands, but all activated cells were fully cytolytic. Notably, activation followed the same transcriptional pathways regardless of ligand potency. Thus, stimulation strength did not intrinsically dictate the T cell-activation route or phenotype; instead, it controlled how rapidly and simultaneously the cells initiated activation, allowing limited machinery to elicit wide-ranging responses.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="ArrayExpress", id="E-MTAB-6051"),
-            list(provider="PubMed", id="30013148")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="T cell cytolytic capacity is independent of initial stimulation strength",
+    description="How cells respond to myriad stimuli with finite signaling machinery is central to immunology. In naive T cells, the inherent effect of ligand strength on activation pathways and endpoints has remained controversial, confounded by environmental fluctuations and intercellular variability within populations. Here we studied how ligand potency affected the activation of CD8+ T cells in vitro, through the use of genome-wide RNA, multi-dimensional protein and functional measurements in single cells. Our data revealed that strong ligands drove more efficient and uniform activation than did weak ligands, but all activated cells were fully cytolytic. Notably, activation followed the same transcriptional pathways regardless of ligand potency. Thus, stimulation strength did not intrinsically dictate the T cell-activation route or phenotype; instead, it controlled how rapidly and simultaneously the cells initiated activation, allowing limited machinery to elicit wide-ranging responses.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-6051"),
+        list(provider="PubMed", id="30013148")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

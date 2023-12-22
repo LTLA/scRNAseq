@@ -152,22 +152,31 @@ stopifnot(identical(colnames(combined.counts), libnames))
 
 # Saving for upload 
 
-We assemble it all into a `SingleCellExperiment` with spike-ins stored in an alternative experiment:
+We assemble it all into a `SingleCellExperiment`:
 
 ```{r}
 library(scRNAseq)
 sce <- SingleCellExperiment(list(counts=combined.counts), colData=coldata, 
     rowData=DataFrame(Length=gene.length, row.names=gene.names))
+```
 
-# Splitting off the ERCCs:
+We split off the spike-ins into an alternative experiment:
+
+```{r}
 spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
 sce <- splitAltExps(sce, spike.type, ref="endogenous")
 spike.exp <- altExp(sce, "ERCC")
-spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25000000)
+
+spikedata <- countErccMolecules(volume = 1, dilution = 25000000)
 spikedata <- spikedata[rownames(spike.exp), ]
 rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
 altExp(sce, "ERCC") <- spike.exp
+spike.exp
+```
 
+And apply some polish to save disk space:
+
+```{r}
 sce <- polishDataset(sce)
 sce
 ```
@@ -175,26 +184,25 @@ sce
 We save these to file in preparation for upload:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished", 
-    createMetadata(
-        title="Transcriptional Heterogeneity in Naive and Primed Human Pluripotent Stem Cells at Single-Cell Resolution",
-        description="Conventional human embryonic stem cells are considered to be primed pluripotent but can be induced to enter a naive state. However, the transcriptional features associated with naive and primed pluripotency are still not fully understood. Here we used single-cell RNA sequencing to characterize the differences between these conditions. We observed that both naive and primed populations were mostly homogeneous with no clear lineage-related structure and identified an intermediate subpopulation of naive cells with primed-like expression. We found that the naive-primed pluripotency axis is preserved across species, although the timing of the transition to a primed state is species specific. We also identified markers for distinguishing human naive and primed pluripotency as well as strong co-regulatory relationships between lineage markers and epigenetic regulators that were exclusive to naive cells. Our data provide valuable insights into the transcriptional landscape of human pluripotency at a cellular and genome-wide resolution.
-        
-This dataset is represented by a `SingleCelLExperiment` where technical replicates for the same cell have been summed together. The spike-in counts are also stored in an alternative experiment.",
-        taxonomy.id="9606",
-        genome="GRCh38",
-        sources=list(
-            list(provider="PubMed", id="30673604"),
-            list(provider="ArrayExpress", id="E-MTAB-6819")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com" 
-    )
+meta <- list(
+    title="Transcriptional Heterogeneity in Naive and Primed Human Pluripotent Stem Cells at Single-Cell Resolution",
+    description="Conventional human embryonic stem cells are considered to be primed pluripotent but can be induced to enter a naive state. However, the transcriptional features associated with naive and primed pluripotency are still not fully understood. Here we used single-cell RNA sequencing to characterize the differences between these conditions. We observed that both naive and primed populations were mostly homogeneous with no clear lineage-related structure and identified an intermediate subpopulation of naive cells with primed-like expression. We found that the naive-primed pluripotency axis is preserved across species, although the timing of the transition to a primed state is species specific. We also identified markers for distinguishing human naive and primed pluripotency as well as strong co-regulatory relationships between lineage markers and epigenetic regulators that were exclusive to naive cells. Our data provide valuable insights into the transcriptional landscape of human pluripotency at a cellular and genome-wide resolution.
+
+Maintainer note: technical replicates for the same cell have been summed together.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="PubMed", id="30673604"),
+        list(provider="ArrayExpress", id="E-MTAB-6819")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com" 
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

@@ -66,23 +66,23 @@ sce
 We now save all of the components to disk in preparation for upload.
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="A molecular census of arcuate hypothalamus and median eminence cell types",
-        description="The hypothalamic arcuate-median eminence complex (Arc-ME) controls energy balance, fertility and growth through molecularly distinct cell types, many of which remain unknown. To catalog cell types in an unbiased way, we profiled gene expression in 20,921 individual cells in and around the adult mouse Arc-ME using Drop-seq. We identify 50 transcriptionally distinct Arc-ME cell populations, including a rare tanycyte population at the Arc-ME diffusion barrier, a new leptin-sensing neuron population, multiple agouti-related peptide (AgRP) and pro-opiomelanocortin (POMC) subtypes, and an orexigenic somatostatin neuron population. We extended Drop-seq to detect dynamic expression changes across relevant physiological perturbations, revealing cell type-specific responses to energy status, including distinct responses in AgRP and POMC neuron subtypes. Finally, integrating our data with human genome-wide association study data implicates two previously unknown neuron populations in the genetic control of obesity. This resource will accelerate biological discovery by providing insights into molecular and cell type diversity from which function can be inferred.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id='GSE93374'),
-            list(provider="PubMed", id="28166221")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="A molecular census of arcuate hypothalamus and median eminence cell types",
+    description="The hypothalamic arcuate-median eminence complex (Arc-ME) controls energy balance, fertility and growth through molecularly distinct cell types, many of which remain unknown. To catalog cell types in an unbiased way, we profiled gene expression in 20,921 individual cells in and around the adult mouse Arc-ME using Drop-seq. We identify 50 transcriptionally distinct Arc-ME cell populations, including a rare tanycyte population at the Arc-ME diffusion barrier, a new leptin-sensing neuron population, multiple agouti-related peptide (AgRP) and pro-opiomelanocortin (POMC) subtypes, and an orexigenic somatostatin neuron population. We extended Drop-seq to detect dynamic expression changes across relevant physiological perturbations, revealing cell type-specific responses to energy status, including distinct responses in AgRP and POMC neuron subtypes. Finally, integrating our data with human genome-wide association study data implicates two previously unknown neuron populations in the genetic control of obesity. This resource will accelerate biological discovery by providing insights into molecular and cell type diversity from which function can be inferred.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id='GSE93374'),
+        list(provider="PubMed", id="28166221")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

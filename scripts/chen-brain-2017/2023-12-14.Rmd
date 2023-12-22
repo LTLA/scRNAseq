@@ -18,7 +18,7 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- paste0("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE87nnn/GSE87544/suppl/"
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE87nnn/GSE87544/suppl/"
 count.file <- bfcrpath(bfc, paste0(base.url, "GSE87544_Merged_17samples_14437cells_count.txt.gz"))
 ```
 
@@ -49,6 +49,21 @@ coldata <- coldata[m,]
 stopifnot(identical(colnames(counts), rownames(coldata)))
 ```
 
+Looks like the first column isn't really necessary:
+
+```{r}
+stopifnot(identical(colnames(counts), coldata[,1]))
+coldata <- coldata[,-1,drop=FALSE]
+```
+
+We hack out some of the sample attributes from the cell names:
+
+```{r}
+coldata$batch <- as.integer(sub("^B([0-9]+).*", "\\1", rownames(coldata)))
+coldata$treatment <- sub(".*_([a-zA-Z]+)[^a-zA-Z]*$", "\\1", rownames(coldata))
+table(coldata$batch, coldata$treatment, useNA="always")
+```
+
 # Saving to file 
 
 We slap together a `SingleCellExperiment` object:
@@ -63,23 +78,23 @@ sce
 Now, saving to disk:
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Single-Cell RNA-Seq Reveals Hypothalamic Cell Diversity",
-        description="The hypothalamus is one of the most complex brain structures involved in homeostatic regulation. Defining cell composition and identifying cell-type-specific transcriptional features of the hypothalamus is essential for understanding its functions and related disorders. Here, we report single-cell RNA sequencing results of adult mouse hypothalamus, which defines 11 non-neuronal and 34 neuronal cell clusters with distinct transcriptional signatures. Analyses of cell-type-specific transcriptomes reveal gene expression dynamics underlying oligodendrocyte differentiation and tanycyte subtypes. Additionally, data analysis provides a comprehensive view of neuropeptide expression across hypothalamic neuronal subtypes and uncover Crabp1+ and Pax6+ neuronal populations in specific hypothalamic sub-regions. Furthermore, we found food deprivation exhibited differential transcriptional effects among the different neuronal subtypes, suggesting functional specification of various neuronal subtypes. Thus, the work provides a comprehensive transcriptional perspective of adult hypothalamus, which serves as a valuable resource for dissecting cell-type-specific functions of this complex brain region.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id='GSE87544'),
-            list(provider="PubMed", id='28355573')
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Single-Cell RNA-Seq Reveals Hypothalamic Cell Diversity",
+    description="The hypothalamus is one of the most complex brain structures involved in homeostatic regulation. Defining cell composition and identifying cell-type-specific transcriptional features of the hypothalamus is essential for understanding its functions and related disorders. Here, we report single-cell RNA sequencing results of adult mouse hypothalamus, which defines 11 non-neuronal and 34 neuronal cell clusters with distinct transcriptional signatures. Analyses of cell-type-specific transcriptomes reveal gene expression dynamics underlying oligodendrocyte differentiation and tanycyte subtypes. Additionally, data analysis provides a comprehensive view of neuropeptide expression across hypothalamic neuronal subtypes and uncover Crabp1+ and Pax6+ neuronal populations in specific hypothalamic sub-regions. Furthermore, we found food deprivation exhibited differential transcriptional effects among the different neuronal subtypes, suggesting functional specification of various neuronal subtypes. Thus, the work provides a comprehensive transcriptional perspective of adult hypothalamus, which serves as a valuable resource for dissecting cell-type-specific functions of this complex brain region.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id='GSE87544'),
+        list(provider="PubMed", id='28355573')
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

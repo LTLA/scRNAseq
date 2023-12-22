@@ -30,6 +30,15 @@ counts <- readSparseCounts(count.file)
 dim(counts)
 ```
 
+We hack out the metrics:
+
+```{r}
+is.metric <- startsWith(rownames(counts), "__")
+metrics <- DataFrame(t(as.matrix(counts[is.metric,])))
+counts <- counts[!is.metric,]
+metrics
+```
+
 # Downloading the per-cell metadata
 
 We download the per-cell metadata from the website.
@@ -72,7 +81,11 @@ for (x in c("MPP1", "MPP2", "MPP3", "STHSC")) {
     stopifnot(all(is.na(fine.mpp.subtype[chosen])))
     fine.mpp.subtype[chosen] <- x
 }
+```
 
+This gives us the following:
+
+```{r}
 coldata <- DataFrame(
     row.names=rownames(celltype),
     gate=sub("_[0-9]+$", "", rownames(celltype)),
@@ -85,6 +98,15 @@ coldata <- DataFrame(
     projected=celltype[,"Projected"] == 1
 )
 ```
+
+We slap in the metrics:
+
+```{r}
+coldata$metrics <- metrics
+coldata
+```
+
+# Obtaining some more stuff
 
 We also obtain a matrix of flow cytometry intensities:
 
@@ -102,13 +124,24 @@ colnames(flowcyt)[is.facs]
 
 # Saving to file 
 
-We assemble all of this into a `SingleCellExperiment` object:
+We assemble this into a `SingleCellExperiment` object, splitting off the spike-ins:
 
 ```{r}
 sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
+sce <- splitAltExps(sce, status)
+```
+
+We add some more bits and pieces:
+
+```{r}
 reducedDim(sce, "diffusion") <- flowcyt[,is.diffusion]
 altExp(sce, "FACS") <- SummarizedExperiment(list(intensities=t(flowcyt[,is.facs])))
+```
 
+We run some polish to save disk space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -117,27 +150,26 @@ sce
 And then we save it to disk.
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="A single-cell resolution map of mouse hematopoietic stem and progenitor cell differentiation",
-        description="Maintenance of the blood system requires balanced cell fate decisions by hematopoietic stem and progenitor cells (HSPCs). Because cell fate choices are executed at the individual cell level, new single-cell profiling technologies offer exciting possibilities for mapping the dynamic molecular changes underlying HSPC differentiation. Here, we have used single-cell RNA sequencing to profile more than 1600 single HSPCs, and deep sequencing has enabled detection of an average of 6558 protein-coding genes per cell. Index sorting, in combination with broad sorting gates, allowed us to retrospectively assign cells to 12 commonly sorted HSPC phenotypes while also capturing intermediate cells typically excluded by conventional gating. We further show that independently generated single-cell data sets can be projected onto the single-cell resolution expression map to directly compare data from multiple groups and to build and refine new hypotheses. Reconstruction of differentiation trajectories reveals dynamic expression changes associated with early lymphoid, erythroid, and granulocyte-macrophage differentiation. The latter two trajectories were characterized by common upregulation of cell cycle and oxidative phosphorylation transcriptional programs. By using external spike-in controls, we estimate absolute messenger RNA (mRNA) levels per cell, showing for the first time that despite a general reduction in total mRNA, a subset of genes shows higher expression levels in immature stem cells consistent with active maintenance of the stem-cell state. Finally, we report the development of an intuitive Web interface as a new community resource to permit visualization of gene expression in HSPCs at single-cell resolution for any gene of choice.
+meta <- list(
+    title="A single-cell resolution map of mouse hematopoietic stem and progenitor cell differentiation",
+    description="Maintenance of the blood system requires balanced cell fate decisions by hematopoietic stem and progenitor cells (HSPCs). Because cell fate choices are executed at the individual cell level, new single-cell profiling technologies offer exciting possibilities for mapping the dynamic molecular changes underlying HSPC differentiation. Here, we have used single-cell RNA sequencing to profile more than 1600 single HSPCs, and deep sequencing has enabled detection of an average of 6558 protein-coding genes per cell. Index sorting, in combination with broad sorting gates, allowed us to retrospectively assign cells to 12 commonly sorted HSPC phenotypes while also capturing intermediate cells typically excluded by conventional gating. We further show that independently generated single-cell data sets can be projected onto the single-cell resolution expression map to directly compare data from multiple groups and to build and refine new hypotheses. Reconstruction of differentiation trajectories reveals dynamic expression changes associated with early lymphoid, erythroid, and granulocyte-macrophage differentiation. The latter two trajectories were characterized by common upregulation of cell cycle and oxidative phosphorylation transcriptional programs. By using external spike-in controls, we estimate absolute messenger RNA (mRNA) levels per cell, showing for the first time that despite a general reduction in total mRNA, a subset of genes shows higher expression levels in immature stem cells consistent with active maintenance of the stem-cell state. Finally, we report the development of an intuitive Web interface as a new community resource to permit visualization of gene expression in HSPCs at single-cell resolution for any gene of choice.
 
-This dataset is represented as a `SingleCellExperiment` where the FACS data is stored as an alternative experiment and the diffusion map is stored in the reduced dimension. The cell type assignments are stored in the column data, transformed from the identity matrix provided by the authors into a more user-friendly form. The gating strategy for FACS is inferred from the cell names: Prog (Lin- Sca1- c-Kit+), HSPC (Lin- Sca1+ c-Kit+) and LT-HSC (Lin- c-Kit+ Sca1+ CD34- Flk2-).",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE81682"),
-            list(provider="PubMed", id="27365425"),
-            list(provider="other", id="https://blood.stemcells.cam.ac.uk/data")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+Maintainer note: FACS data is stored as an alternative experiment and the diffusion map components are stored as reduced dimensions. The cell type assignments are stored in the column data, transformed from the identity matrix provided by the authors into a more user-friendly form. The gating strategy for FACS is inferred from the cell names: Prog (Lin- Sca1- c-Kit+), HSPC (Lin- Sca1+ c-Kit+) and LT-HSC (Lin- c-Kit+ Sca1+ CD34- Flk2-).",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE81682"),
+        list(provider="PubMed", id="27365425"),
+        list(provider="other", id="https://blood.stemcells.cam.ac.uk/data")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

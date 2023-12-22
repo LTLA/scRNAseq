@@ -145,26 +145,26 @@ sce
 We now save all of this to file.
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Single-Cell Mapping of Progressive Fetal-to-Adult Transition in Human Naive T Cells",
-        description="Whereas the human fetal immune system is poised to generate immune tolerance and suppress inflammation in utero, an adult-like immune system emerges to orchestrate anti-pathogen immune responses in post-natal life. It has been posited that cells of the adult immune system arise as a discrete ontological “layer” of hematopoietic stem-progenitor cells (HSPCs) and their progeny; evidence supporting this model in humans has, however, been inconclusive. Here, we combine bulk and single-cell transcriptional profiling of lymphoid cells, myeloid cells, and HSPCs from fetal, perinatal, and adult developmental stages to demonstrate that the fetal-to-adult transition occurs progressively along a continuum of maturity—with a substantial degree of inter-individual variation at the time of birth—rather than via a transition between discrete waves. These findings have important implications for the design of strategies for prophylaxis against infection in the newborn and for the use of umbilical cord blood (UCB) in the setting of transplantation.
+meta <- list(
+    title="Single-Cell Mapping of Progressive Fetal-to-Adult Transition in Human Naive T Cells",
+    description="Whereas the human fetal immune system is poised to generate immune tolerance and suppress inflammation in utero, an adult-like immune system emerges to orchestrate anti-pathogen immune responses in post-natal life. It has been posited that cells of the adult immune system arise as a discrete ontological “layer” of hematopoietic stem-progenitor cells (HSPCs) and their progeny; evidence supporting this model in humans has, however, been inconclusive. Here, we combine bulk and single-cell transcriptional profiling of lymphoid cells, myeloid cells, and HSPCs from fetal, perinatal, and adult developmental stages to demonstrate that the fetal-to-adult transition occurs progressively along a continuum of maturity—with a substantial degree of inter-individual variation at the time of birth—rather than via a transition between discrete waves. These findings have important implications for the design of strategies for prophylaxis against infection in the newborn and for the use of umbilical cord blood (UCB) in the setting of transplantation.
 
 Maintainer note: the count matrix contains all possible CellRanger barcodes, but only those with entries in the \"best\" supplementary file (i.e., reported by Demuxlet) are retained in the `SingleCellExperiment` to save space. Of these, only a further subset of cells were actually used in further analysis; the identities of these analyzed cells are captured in the `retained` column data field. The `DevStageScoring` column is a nested data frame that contains the applied results (`<cell_type>_scores`) of random forest regression trained on the fetal (score = 0) and adult (score = 1) cells of individual cell types indicated by `<cell_type>_inTraining`.",
-        taxonomy.id="9606",
-        genome="GRCh38",
-        sources=list(
-            list(provider="GEO", id="GSE158490"),
-            list(provider="PubMed", id="33406429"),
-            list(provider="other", id="https://ndownloader.figshare.com/files/25953740")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="GEO", id="GSE158490"),
+        list(provider="PubMed", id="33406429"),
+        list(provider="other", id="https://ndownloader.figshare.com/files/25953740")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

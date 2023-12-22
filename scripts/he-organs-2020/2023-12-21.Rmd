@@ -46,9 +46,8 @@ We obtain the metadata from the GitHub repository accompanying the study
 (see [here](https://github.com/bei-lab/scRNA-AHCA/tree/master/Cell_barcode_and_corresponding_cell_types_of_AHCA)).
 
 ```{r}
-meta.path <- bfcrpath(bfc,
-    "https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/Annotation_AHCA_alltissues_meta.data_84363_cell.txt")
-meta <- read.delim(meta.path)
+meta.path <- bfcrpath(bfc, "https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/Annotation_AHCA_alltissues_meta.data_84363_cell.txt")
+meta <- read.delim(meta.path, row.names=1)
 meta <- DataFrame(meta, check.names=FALSE)
 meta
 ```
@@ -56,8 +55,6 @@ meta
 This requires some serious clean-up to make it look presentable.
 
 ```{r}
-rownames(meta) <- meta$X
-meta <- meta[,-1]
 colnames(meta)[1] <- "Tissue"
 meta$Tissue <- sub("_cDNA", "", meta$Tissue)
 meta$Color_of_tissues <- NULL # Don't need this crap.
@@ -68,7 +65,7 @@ ref.names <- paste0(rep(names(all.counts), lengths(ref.names)), "_cDNA_", unlist
 stopifnot(identical(sort(ref.names), sort(rownames(meta))))
 ```
 
-We extract the reduced dimensions into their own category.
+We extract the reduced dimensions into a separate matrix.
 
 ```{r}
 tsne <- cbind(meta$tSNE_1, meta$tSNE_2)
@@ -100,7 +97,7 @@ meta$reclustered.fine <- fine.anno
 
 # Saving to file
 
-We assemble each organ-specific `SingleCellExperiment`:
+We assemble each organ-specific `SingleCellExperiment`, with some polishing to save space.
 
 ```{r}
 library(scRNAseq)
@@ -117,9 +114,10 @@ for (tissue in names(all.counts)) {
 
     sce <- SingleCellExperiment(list(counts=current))
     colData(sce) <- cbind(colData(sce), meta[m,])
-    reducedDim(sce, "TSNE", withDimnames=FALSE) <- tsne[ref.names,]
+    curtsne <- tsne[m,]
+    stopifnot(identical(rownames(curtsne), ref.names))
+    reducedDim(sce, "TSNE", withDimnames=FALSE) <- curtsne
 
-    # Adding some polish to save space.
     all.sce[[tissue]] <- polishDataset(sce)
 }
 ```
@@ -127,8 +125,7 @@ for (tissue in names(all.counts)) {
 We create some template metadata:
 
 ```{r}
-library(scRNAseq)
-meta <- createMetadata(
+meta <- list(
     title="Single-cell transcriptome profiling of an adult human cell atlas of 15 major organs [%s only]",
     description="Background: As core units of organ tissues, cells of various types play their harmonious rhythms to maintain the homeostasis of the human body. It is essential to identify the characteristics of cells in human organs and their regulatory networks for understanding the biological mechanisms related to health and disease. However, a systematic and comprehensive single-cell transcriptional profile across multiple organs of a normal human adult is missing.
 
@@ -137,15 +134,15 @@ Results: We perform single-cell transcriptomes of 84,363 cells derived from 15 t
 Conclusions: The adult human cell atlas reveals the inter- and intra-organ heterogeneity of cell characteristics and provides a useful resource in uncovering key events during the development of human diseases in the context of the heterogeneity of cells and organs.
 
 Maintainer note: this dataset contains only the cells from the %s. Additional metadata has been added from the GitHub repository accompanying the paper.",
-    taxonomy.id="9606",
+    taxonomy_id="9606",
     genome="GRCh38",
     sources=list(
         list(provider="GEO", id="GSE159929"),
         list(provider="PubMed", id="33287869"),
         list(provider="other", id="https://github.com/bei-lab/scRNA-AHCA")
     ),
-    maintainer.name="Aaron Lun",
-    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 ```
 
@@ -163,7 +160,7 @@ for (tissue in names(all.counts)) {
 }
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()

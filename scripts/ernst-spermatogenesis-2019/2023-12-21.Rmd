@@ -17,7 +17,7 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-6946/"
+base.url <- "ftp://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/946/E-MTAB-6946/Files/"
 ```
 
 We read each of the count matrices into memory.
@@ -63,18 +63,20 @@ Adding cell-level metadata.
 ```{r}
 cell.path <- bfcrpath(bfc, paste0(base.url, "cell_metadata.txt"))
 cell.info <- read.table(cell.path, check.names=FALSE)
+rownames(cell.info) <- NULL # these are just useless indices
 colData(cellranger) <- DataFrame(cell.info, check.names=FALSE)
 colData(cellranger)
 
 cell.path <- bfcrpath(bfc, paste0(base.url, "cell_metadata_emptyDrops.txt"))
 cell.info <- read.table(cell.path)
+rownames(cell.info) <- NULL # more useless indices
 colData(emptydrops) <- DataFrame(cell.info, check.names=FALSE)
 colData(emptydrops)
 ```
 
 # Saving to file
 
-We polish the datasets to optimaize for space.
+We polish the datasets to optimize for space.
 
 ```{r}
 library(scRNAseq)
@@ -85,19 +87,19 @@ emptydrops <- polishDataset(emptydrops)
 We create a metadata template to save each object:
 
 ```{r}
-meta <- createMetadata(
+meta <- list(
     title="Staged developmental mapping and X chromosome transcriptional dynamics during mouse spermatogenesis. [%s calls only]",
     description="Male gametes are generated through a specialised differentiation pathway involving a series of developmental transitions that are poorly characterised at the molecular level. Here, we use droplet-based single-cell RNA-Sequencing to profile spermatogenesis in adult animals and at multiple stages during juvenile development. By exploiting the first wave of spermatogenesis, we both precisely stage germ cell development and enrich for rare somatic cell-types and spermatogonia. To capture the full complexity of spermatogenesis including cells that have low transcriptional activity, we apply a statistical tool that identifies previously uncharacterised populations of leptotene and zygotene spermatocytes. Focusing on post-meiotic events, we characterise the temporal dynamics of X chromosome re-activation and profile the associated chromatin state using CUT&RUN. This identifies a set of genes strongly repressed by H3K9me3 in spermatocytes, which then undergo extensive chromatin remodelling post-meiosis, thus acquiring an active chromatin state and spermatid-specific expression.
 
 Maintainer note: this dataset contains the cells that were called as cells via the %s algorithm.",
-    taxonomy.id="10090",
+    taxonomy_id="10090",
     genome="GRCm38",
     sources=list(
         list(provider="ArrayExpress", id="E-MTAB-6946"),
         list(provider="PubMed", id="30890697")
     ),
-    maintainer.name="Aaron Lun",
-    maintainer.email="infinite.monkeys.with.keyboards.gmail.com"
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 ```
 
@@ -110,12 +112,12 @@ dir.create("finished")
 copy <- meta
 copy$title <- sprintf(copy$title, "CellRanger")
 copy$description <- sprintf(copy$description, "CellRanger")
-saveMetadata(cellranger, file.path("finished", "cellranger"), copy)
+saveDataset(cellranger, file.path("finished", "cellranger"), copy)
 
 copy <- meta
 copy$title <- sprintf(copy$title, "EmptyDrops")
 copy$description <- sprintf(copy$description, "EmptyDrops")
-saveMetadata(cellranger, file.path("finished", "emptydrops"), copy)
+saveDataset(cellranger, file.path("finished", "emptydrops"), copy)
 ```
 
 # Session information {-}

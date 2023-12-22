@@ -33,7 +33,7 @@ dim(counts)
 We also extract the pure symbols:
 
 ```{r}
-rowdata <- DataFrame(symbol=sub("_loc[0-9]+$", "", rownames(counts)))
+rowdata <- DataFrame(symbol=sub("_loc[0-9]+$", "", rownames(counts)), row.names=rownames(counts))
 rowdata
 ```
 
@@ -69,8 +69,10 @@ coldata <- coldata[,nlevels > 1L]
 We also remove the columns related to the GEO accession itself, as well as some redundant fields.
 
 ```{r}
+stopifnot(identical(coldata$title, colnames(counts)))
+rownames(coldata) <- coldata$title
 coldata <- coldata[,! colnames(coldata) %in%
-    c("geo_accession", "relation", "relation.1")]
+    c("geo_accession", "relation", "relation.1", "title")]
 coldata <- coldata[,!grepl("^characteristics_ch", colnames(coldata))]
 ```
 
@@ -88,7 +90,7 @@ coldata
 
 # Saving to file 
 
-We now assemble the components into a `SingleCellExperiment`.
+We now assemble the components into a `SingleCellExperiment`, with some polishing to save disk space:
 
 ```{r}
 library(scRNAseq)
@@ -100,24 +102,23 @@ sce
 We then save it to disk:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Oligodendrocyte heterogeneity in the mouse juvenile and adult central nervous system",
-        description="Oligodendrocytes have been considered as a functionally homogeneous population in the central nervous system (CNS). We performed single-cell RNA sequencing on 5072 cells of the oligodendrocyte lineage from 10 regions of the mouse juvenile and adult CNS. Thirteen distinct populations were identified, 12 of which represent a continuum from Pdgfra(+) oligodendrocyte precursor cells (OPCs) to distinct mature oligodendrocytes. Initial stages of differentiation were similar across the juvenile CNS, whereas subsets of mature oligodendrocytes were enriched in specific regions in the adult brain. Newly formed oligodendrocytes were detected in the adult CNS and were responsive to complex motor learning. A second Pdgfra(+) population, distinct from OPCs, was found along vessels. Our study reveals the dynamics of oligodendrocyte differentiation and maturation, uncoupling them at a transcriptional level and highlighting oligodendrocyte heterogeneity in the CNS.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE75330"),
-            list(provider="PubMed", id="27284195")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Oligodendrocyte heterogeneity in the mouse juvenile and adult central nervous system",
+    description="Oligodendrocytes have been considered as a functionally homogeneous population in the central nervous system (CNS). We performed single-cell RNA sequencing on 5072 cells of the oligodendrocyte lineage from 10 regions of the mouse juvenile and adult CNS. Thirteen distinct populations were identified, 12 of which represent a continuum from Pdgfra(+) oligodendrocyte precursor cells (OPCs) to distinct mature oligodendrocytes. Initial stages of differentiation were similar across the juvenile CNS, whereas subsets of mature oligodendrocytes were enriched in specific regions in the adult brain. Newly formed oligodendrocytes were detected in the adult CNS and were responsive to complex motor learning. A second Pdgfra(+) population, distinct from OPCs, was found along vessels. Our study reveals the dynamics of oligodendrocyte differentiation and maturation, uncoupling them at a transcriptional level and highlighting oligodendrocyte heterogeneity in the CNS.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE75330"),
+        list(provider="PubMed", id="27284195")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
