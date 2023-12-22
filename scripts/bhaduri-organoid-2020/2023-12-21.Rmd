@@ -143,20 +143,20 @@ sce
 We now save everything to disk in preparation for upload:
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Cell stress in cortical organoids impairs molecular subtype specification",
-        description="Cortical organoids are self-organizing three-dimensional cultures that model features of the developing human cerebral cortex. However, the fidelity of organoid models remains unclear. Here we analyse the transcriptomes of individual primary human cortical cells from different developmental periods and cortical areas. We find that cortical development is characterized by progenitor maturation trajectories, the emergence of diverse cell subtypes and areal specification of newborn neurons. By contrast, organoids contain broad cell classes, but do not recapitulate distinct cellular subtype identities and appropriate progenitor maturation. Although the molecular signatures of cortical areas emerge in organoid neurons, they are not spatially segregated. Organoids also ectopically activate cellular stress pathways, which impairs cell-type specification. However, organoid stress and subtype defects are alleviated by transplantation into the mouse cortex. Together, these datasets and analytical tools provide a framework for evaluating and improving the accuracy of cortical organoids as models of human brain development.",
-        taxonomy.id="9606",
-        genome="GRCh38",
-        sources=list(
-            list(provider="GEO", id="GSE132672"),
-            list(provider="PubMed", id="31996853")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Cell stress in cortical organoids impairs molecular subtype specification",
+    description="Cortical organoids are self-organizing three-dimensional cultures that model features of the developing human cerebral cortex. However, the fidelity of organoid models remains unclear. Here we analyse the transcriptomes of individual primary human cortical cells from different developmental periods and cortical areas. We find that cortical development is characterized by progenitor maturation trajectories, the emergence of diverse cell subtypes and areal specification of newborn neurons. By contrast, organoids contain broad cell classes, but do not recapitulate distinct cellular subtype identities and appropriate progenitor maturation. Although the molecular signatures of cortical areas emerge in organoid neurons, they are not spatially segregated. Organoids also ectopically activate cellular stress pathways, which impairs cell-type specification. However, organoid stress and subtype defects are alleviated by transplantation into the mouse cortex. Together, these datasets and analytical tools provide a framework for evaluating and improving the accuracy of cortical organoids as models of human brain development.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="GEO", id="GSE132672"),
+        list(provider="PubMed", id="31996853")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
 # Session information

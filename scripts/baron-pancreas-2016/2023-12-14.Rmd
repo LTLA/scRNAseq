@@ -31,20 +31,17 @@ untar(tarball, exdir=temp)
 We set up the metadata template to be used for each subdataset (for each species):
 
 ```{r}
-library(scRNAseq)
-meta <- createMetadata(
+meta <- list(
     title="A Single-Cell Transcriptomic Map of the Human and Mouse Pancreas Reveals Inter- and Intra-cell Population Structure [%s cells only]",
     description="Although the function of the mammalian pancreas hinges on complex interactions of distinct cell types, gene expression profiles have primarily been described with bulk mixtures. Here we implemented a droplet-based, single-cell RNA-seq method to determine the transcriptomes of over 12,000 individual pancreatic cells from four human donors and two mouse strains. Cells could be divided into 15 clusters that matched previously characterized cell types: all endocrine cell types, including rare epsilon-cells; exocrine cell types; vascular cells; Schwann cells; quiescent and activated stellate cells; and four types of immune cells. We detected subpopulations of ductal cells with distinct expression profiles and validated their existence with immuno-histochemistry stains. Moreover, among human beta- cells, we detected heterogeneity in the regulation of genes relating to functional maturation and levels of ER stress. Finally, we deconvolved bulk gene expression samples using the single-cell data to detect disease-associated differential expression. Our dataset provides a resource for the discovery of novel cell type-specific transcription factors, signaling receptors, and medically relevant genes.
 
 Maintainer note: this dataset contains only the %s cells from the study.",
-    taxonomy.id=NULL,
-    genome=NULL,
     sources=list(
         list(provider="GEO", id="GSE84133"),
         list(provider="PubMed", id="27667365")
     ),
-    maintainer.name="Aaron Lun",
-    maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 ```
 
@@ -103,11 +100,13 @@ coldata <- DataFrame(donor=donor, label=labels)
 coldata
 ```
 
-We slap together a `SingleCellExperiment`.
+We slap together a `SingleCellExperiment`, with some polishing to optimize disk usage.
 
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+
+library(scRNAseq)
 sce <- polishDataset(sce)
 sce
 ```
@@ -120,7 +119,7 @@ copy$title <- sprintf(copy$title, "human")
 copy$description <- sprintf(copy$description, "human")
 copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh38"
-saveDataset(sce, "finished/human", copy)
+saveDataset(sce, file.path("finished", "human"), copy)
 ```
 
 # Reading in mouse data
@@ -170,7 +169,7 @@ copy$title <- sprintf(copy$title, "mouse")
 copy$description <- sprintf(copy$description, "mouse")
 copy$taxonomy_id <- "10090"
 copy$genome <- "GRCm38"
-saveDataset(sce, "finished/mouse", copy)
+saveDataset(sce, file.path("finished", "mouse"), copy)
 ```
 
 # Session information

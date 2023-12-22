@@ -152,22 +152,22 @@ sce
 We now save all of the relevant components to file for upload:
 
 ```{r}
-saveDataset(sce, "finished",
-    createMetadata(
-        title="Low-Avidity CD4+ T Cell Responses to SARS-CoV-2 in Unexposed Individuals and Humans with Severe COVID-19",
-        description="CD4+ T cells reactive against SARS-CoV-2 can be found in unexposed individuals, and these are suggested to arise in response to common cold coronavirus (CCCoV) infection. Here, we utilized SARS-CoV-2-reactive CD4+ T cell enrichment to examine the antigen avidity and clonality of these cells, as well as the relative contribution of CCCoV cross-reactivity. SARS-CoV-2-reactive CD4+ memory T cells were present in virtually all unexposed individuals examined, displaying low functional avidity and multiple, highly variable cross-reactivities that were not restricted to CCCoVs. SARS-CoV-2-reactive CD4+ T cells from COVID-19 patients lacked cross-reactivity to CCCoVs, irrespective of strong memory T cell responses against CCCoV in all donors analyzed. In severe but not mild COVID-19, SARS-CoV-2-specific T cells displayed low functional avidity and clonality, despite increased frequencies. Our findings identify low-avidity CD4+ T cell responses as a hallmark of severe COVID-19 and argue against a protective role for CCCoV-reactive T cells in SARS-CoV-2 infection.
+meta <- list(
+    title="Low-Avidity CD4+ T Cell Responses to SARS-CoV-2 in Unexposed Individuals and Humans with Severe COVID-19",
+    description="CD4+ T cells reactive against SARS-CoV-2 can be found in unexposed individuals, and these are suggested to arise in response to common cold coronavirus (CCCoV) infection. Here, we utilized SARS-CoV-2-reactive CD4+ T cell enrichment to examine the antigen avidity and clonality of these cells, as well as the relative contribution of CCCoV cross-reactivity. SARS-CoV-2-reactive CD4+ memory T cells were present in virtually all unexposed individuals examined, displaying low functional avidity and multiple, highly variable cross-reactivities that were not restricted to CCCoVs. SARS-CoV-2-reactive CD4+ T cells from COVID-19 patients lacked cross-reactivity to CCCoVs, irrespective of strong memory T cell responses against CCCoV in all donors analyzed. In severe but not mild COVID-19, SARS-CoV-2-specific T cells displayed low functional avidity and clonality, despite increased frequencies. Our findings identify low-avidity CD4+ T cell responses as a hallmark of severe COVID-19 and argue against a protective role for CCCoV-reactive T cells in SARS-CoV-2 infection.
 
 Maintainer note: the column data contains an additional `retained` field, indicating whether the cell was listed in the author-supplied metadata. (If not, it was presumably filtered out during their analysis.) We have also taken the liberty of filling in some of the sample-level attributes for the filtered cells by extrapolating from those in the same sample.",
-        taxonomy.id="9606",
-        genome="GRCh38",
-        sources=list(
-            list(provider="PubMed", id="33296686"),
-            list(provider="GEO", id="GSE162086")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="PubMed", id="33296686"),
+        list(provider="GEO", id="GSE162086")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
 # Session information
