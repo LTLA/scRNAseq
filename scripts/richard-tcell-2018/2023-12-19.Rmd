@@ -104,20 +104,27 @@ combined <- combined[,m]
 Slapping this together into a `SingleCellExperiment` object:
 
 ```{r}
-library(scRNAseq)
+library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=combined), colData=coldata)
+```
 
-# Split off the ERCCs:
+We split off the ERCCs and add some concentrations.
+
+```{r}
 spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
 sce <- splitAltExps(sce, spike.type, ref="endogenous")
 
 spike.exp <- altExp(sce, "ERCC")
-spikedata <- ERCCSpikeInConcentrations(volume = 1000, dilution = 3e07)
+spikedata <- scRNAseq::countErccMolecules(volume = 1000, dilution = 3e07)
 spikedata <- spikedata[rownames(spike.exp), ]
 rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
 altExp(sce, "ERCC") <- spike.exp
 
-# Added some polish:
+spike.exp
+```
+
+```{r}
+library(scRNAseq)
 sce <- polishDataset(sce)
 sce
 ```
@@ -127,7 +134,9 @@ We save these to disk in preparation for upload:
 ```{r}
 meta <- list(
     title="T cell cytolytic capacity is independent of initial stimulation strength",
-    description="How cells respond to myriad stimuli with finite signaling machinery is central to immunology. In naive T cells, the inherent effect of ligand strength on activation pathways and endpoints has remained controversial, confounded by environmental fluctuations and intercellular variability within populations. Here we studied how ligand potency affected the activation of CD8+ T cells in vitro, through the use of genome-wide RNA, multi-dimensional protein and functional measurements in single cells. Our data revealed that strong ligands drove more efficient and uniform activation than did weak ligands, but all activated cells were fully cytolytic. Notably, activation followed the same transcriptional pathways regardless of ligand potency. Thus, stimulation strength did not intrinsically dictate the T cell-activation route or phenotype; instead, it controlled how rapidly and simultaneously the cells initiated activation, allowing limited machinery to elicit wide-ranging responses.",
+    description="How cells respond to myriad stimuli with finite signaling machinery is central to immunology. In naive T cells, the inherent effect of ligand strength on activation pathways and endpoints has remained controversial, confounded by environmental fluctuations and intercellular variability within populations. Here we studied how ligand potency affected the activation of CD8+ T cells in vitro, through the use of genome-wide RNA, multi-dimensional protein and functional measurements in single cells. Our data revealed that strong ligands drove more efficient and uniform activation than did weak ligands, but all activated cells were fully cytolytic. Notably, activation followed the same transcriptional pathways regardless of ligand potency. Thus, stimulation strength did not intrinsically dictate the T cell-activation route or phenotype; instead, it controlled how rapidly and simultaneously the cells initiated activation, allowing limited machinery to elicit wide-ranging responses.
+
+Maintainer note: ERCC molecule counts were computed based on a 1000 nL volume per cell of a 1:30000000 dilution for mix 1.",
     taxonomy_id="10090",
     genome="GRCm38",
     sources=list(

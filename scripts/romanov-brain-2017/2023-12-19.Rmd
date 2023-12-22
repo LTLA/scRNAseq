@@ -51,14 +51,22 @@ rownames(coldata) <- NULL
 library(S4Vectors)
 coldata <- DataFrame(coldata)
 colnames(coldata) <- colfields
+```
 
+A great deal of sanitization is required to obtain the desired types for each column:
+
+```{r}
 for (i in c("level2 cluster number (neurons only)", "total molecules")) {
     coldata[,i] <- as.integer(coldata[,i])
 }
 for (i in c("age (days postnatal)", "cell diameter")) {
     coldata[,i] <- as.numeric(coldata[,i])
 }
+```
 
+We fix the `sex` so that it's more informative than +/-1.
+
+```{r}
 is.sex <- colnames(coldata) == "sex (female=1,male=-1)"
 sex.status <- coldata[,is.sex]
 replacement.sex <- rep('unknown', nrow(coldata))
@@ -66,26 +74,37 @@ replacement.sex[sex.status == "1"] <- "female"
 replacement.sex[sex.status == "-1"] <- "male"
 coldata[,is.sex] <- replacement.sex
 colnames(coldata)[is.sex] <- "sex"
+table(sex.status, useNA="always")
+```
 
+The stress indicator could also be improved to a logical vector:
+
+```{r}
 is.stress <- colnames(coldata) == "acute stress (true=1)"
 coldata[,is.stress] <- coldata[,is.stress] == "1"
 colnames(coldata)[is.stress] <- "acute stress"
+```
 
-for (i in c("age (days postnatal)", "cell diameter")) {
-    coldata[,i] <- as.numeric(coldata[,i])
-}
+This gives us something a bit cleaner:
+
+```{r}
 coldata
 ```
 
+# Extracting the counts
+
 The next three rows are empty, so we just skip them.
-We convert the remaining counts into a matrix.
 
 ```{r}
 raw.counts <- all.data[-(1:12),]
+```
+
+We convert the remaining counts into a matrix.
+
+```{r}
 counts <- as.matrix(raw.counts[,-1])
 storage.mode(counts) <- "double"
 rownames(counts) <- raw.counts[,1,drop=TRUE]
-colnames(counts) <- NULL
 dim(counts)
 ```
 
@@ -96,11 +115,18 @@ Putting everything together into a `SingleCellExperiment`:
 ```{r}
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+```
 
-# Splitting off the ERCCs.
+We split off the ERCCs into an alternative experiment:
+
+```{r}
 status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
 sce <- splitAltExps(sce, status, ref="endogenous")
+```
 
+We apply some polish to optimize disk space:
+
+```{r}
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
@@ -109,24 +135,23 @@ sce
 We now save the object to disk in preparation for upload.
 
 ```{r}
-unlink("finished", recursive=TRUE)
-saveDataset(sce, "finished", 
-    createMetadata(
-        title="Molecular interrogation of hypothalamic organization reveals distinct dopamine neuronal subtypes",
-        description="The hypothalamus contains the highest diversity of neurons in the brain. Many of these neurons can co-release neurotransmitters and neuropeptides in a use-dependent manner. Investigators have hitherto relied on candidate protein-based tools to correlate behavioral, endocrine and gender traits with hypothalamic neuron identity. Here we map neuronal identities in the hypothalamus by single-cell RNA sequencing. We distinguished 62 neuronal subtypes producing glutamatergic, dopaminergic or GABAergic markers for synaptic neurotransmission and harboring the ability to engage in task-dependent neurotransmitter switching. We identified dopamine neurons that uniquely coexpress the Onecut3 and Nmur2 genes, and placed these in the periventricular nucleus with many synaptic afferents arising from neuromedin S+ neurons of the suprachiasmatic nucleus. These neuroendocrine dopamine cells may contribute to the dopaminergic inhibition of prolactin secretion diurnally, as their neuromedin S+ inputs originate from neurons expressing Per2 and Per3 and their tyrosine hydroxylase phosphorylation is regulated in a circadian fashion. Overall, our catalog of neuronal subclasses provides new understanding of hypothalamic organization and function.",
-        taxonomy.id="10090",
-        genome="GRCm38",
-        sources=list(
-            list(provider="GEO", id="GSE74672"),
-            list(provider="PubMed", id="27991900")
-        ),
-        maintainer.name="Aaron Lun",
-        maintainer.email="infinite.monkeys.with.keyboards@gmail.com"
-    )
+meta <- list(
+    title="Molecular interrogation of hypothalamic organization reveals distinct dopamine neuronal subtypes",
+    description="The hypothalamus contains the highest diversity of neurons in the brain. Many of these neurons can co-release neurotransmitters and neuropeptides in a use-dependent manner. Investigators have hitherto relied on candidate protein-based tools to correlate behavioral, endocrine and gender traits with hypothalamic neuron identity. Here we map neuronal identities in the hypothalamus by single-cell RNA sequencing. We distinguished 62 neuronal subtypes producing glutamatergic, dopaminergic or GABAergic markers for synaptic neurotransmission and harboring the ability to engage in task-dependent neurotransmitter switching. We identified dopamine neurons that uniquely coexpress the Onecut3 and Nmur2 genes, and placed these in the periventricular nucleus with many synaptic afferents arising from neuromedin S+ neurons of the suprachiasmatic nucleus. These neuroendocrine dopamine cells may contribute to the dopaminergic inhibition of prolactin secretion diurnally, as their neuromedin S+ inputs originate from neurons expressing Per2 and Per3 and their tyrosine hydroxylase phosphorylation is regulated in a circadian fashion. Overall, our catalog of neuronal subclasses provides new understanding of hypothalamic organization and function.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE74672"),
+        list(provider="PubMed", id="27991900")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
