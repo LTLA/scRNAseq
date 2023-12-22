@@ -12,7 +12,8 @@ saveDataset(x, path, metadata)
 \item{path}{String containing the path to a new directory in which to save \code{x}.
 Any existing directory is removed before saving \code{x}.}
 
-\item{metadata}{Named list containing metadata, usually generated using \code{\link{createMetadata}} or \code{\link{fetchMetadata}}.}
+\item{metadata}{Named list containing metadata for this dataset,
+see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}("bioconductor")}.}
 }
 \value{
 \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
@@ -26,14 +27,14 @@ sce <- SingleCellExperiment(list(counts=matrix(rpois(1000, lambda=1), 100, 10)))
 rownames(sce) <- sprintf("GENE_\%i", seq_len(nrow(sce)))
 colnames(sce) <- head(LETTERS, 10)
 
-meta <- createMetadata(
+meta <- list(
     title="My dataset",
     description="This is my dataset",
-    taxonomy.id="10090",
+    taxonomy_id="10090",
     genome="GRCh38",
     sources=list(list(provider="GEO", id="GSE12345")),
-    maintainer.name="Shizuka Mogami",
-    maintainer.email="mogami.shizuka@765pro.com"
+    maintainer_name="Shizuka Mogami",
+    maintainer_email="mogami.shizuka@765pro.com"
 )
 
 tmp <- tempfile()

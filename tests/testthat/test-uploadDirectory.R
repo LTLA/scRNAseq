@@ -7,14 +7,14 @@ rownames(sce) <- sprintf("GENE_%i", seq_len(nrow(sce)))
 colnames(sce) <- head(LETTERS, 10)
 
 test_that("file listing works as expected without any special elements", {
-    meta <- createMetadata(
+    meta <- list(
         title="My dataset",
         description="This is my dataset",
-        taxonomy="10090",
+        taxonomy_id="10090",
         genome="GRCh38",
         sources=list(list(provider="GEO", id="GSE12345")),
-        maintainer.name="Shizuka Mogami",
-        maintainer.email="mogami.shizuka@765pro.com"
+        maintainer_name="Shizuka Mogami",
+        maintainer_email="mogami.shizuka@765pro.com"
     )
 
     tmp <- tempfile()
@@ -39,14 +39,14 @@ test_that("file listing works with ScrnaseqMatrices", {
         seed=matrix(0, 100, 10)
     )
 
-    meta <- createMetadata(
+    meta <- list(
         title="My dataset",
         description="This is my dataset",
-        taxonomy=c("10090", "9606"),
+        taxonomy_id=c("10090", "9606"),
         genome=c("GRCh38", "GRCm38"),
         sources=list(list(provider="GEO", id="GSE12345"), list(provider="DOI", id="123asd/231.123")),
-        maintainer.name="Kaori Sakuramori",
-        maintainer.email="sakuramori.kaori@765pro.com"
+        maintainer_name="Kaori Sakuramori",
+        maintainer_email="sakuramori.kaori@765pro.com"
     )
 
     tmp <- tempfile()
@@ -64,14 +64,14 @@ test_that("the actual upload works correctly", {
     gh_token <- gypsum::accessToken(request=NULL)
     skip_if(is.null(gh_token))
 
-    meta <- createMetadata(
+    meta <- list(
         title="My dataset",
         description="This is my dataset",
-        taxonomy="10090",
+        taxonomy_id="10090",
         genome="GRCh38",
         sources=list(list(provider="GEO", id="GSE12345")),
-        maintainer.name="Shizuka Mogami",
-        maintainer.email="mogami.shizuka@765pro.com"
+        maintainer_name="Shizuka Mogami",
+        maintainer_email="mogami.shizuka@765pro.com"
     )
 
     tmp <- tempfile()

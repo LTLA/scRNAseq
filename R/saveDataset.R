@@ -5,7 +5,8 @@
 #' @param x A \linkS4class{SummarizedExperiment} or one of its subclasses.
 #' @param path String containing the path to a new directory in which to save \code{x}.
 #' Any existing directory is removed before saving \code{x}.
-#' @param metadata Named list containing metadata, usually generated using \code{\link{createMetadata}} or \code{\link{fetchMetadata}}.
+#' @param metadata Named list containing metadata for this dataset,
+#' see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}("bioconductor")}.
 #'
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
 #'
@@ -23,14 +24,14 @@
 #' rownames(sce) <- sprintf("GENE_%i", seq_len(nrow(sce)))
 #' colnames(sce) <- head(LETTERS, 10)
 #'
-#' meta <- createMetadata(
+#' meta <- list(
 #'     title="My dataset",
 #'     description="This is my dataset",
-#'     taxonomy.id="10090",
+#'     taxonomy_id="10090",
 #'     genome="GRCh38",
 #'     sources=list(list(provider="GEO", id="GSE12345")),
-#'     maintainer.name="Shizuka Mogami",
-#'     maintainer.email="mogami.shizuka@765pro.com"
+#'     maintainer_name="Shizuka Mogami",
+#'     maintainer_email="mogami.shizuka@765pro.com"
 #' )
 #' 
 #' tmp <- tempfile()
@@ -42,6 +43,9 @@
 #' @importFrom alabaster.base saveObject
 #' @importMethodsFrom alabaster.sce saveObject
 saveDataset <- function(x, path, metadata) {
+    if (is.null(metadata$bioconductor_version)) {
+        metadata$bioconductor_version <- as.character(BiocManager::version())
+    }
     metadata$taxonomy_id <- I(metadata$taxonomy_id)
     metadata$genome <- I(metadata$genome)
     contents <- jsonlite::toJSON(metadata, pretty=4, auto_unbox=TRUE)
