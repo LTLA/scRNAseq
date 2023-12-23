@@ -1,12 +1,6 @@
 ---
 title: Processing the Zeisel nervous system dataset
 author: Aaron Lun
-date: 5 January 2021
-output:
-  BiocStyle::html_document:
-    titlecaps: false
-    toc_float: true
-bibliography: ../ref.bib
 ---
 
 ```{r style, echo=FALSE, results='hide', message=FALSE}
@@ -16,14 +10,15 @@ knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Downloading the data
 
-We obtain a single-cell RNA sequencing dataset of the mouse nervous system from @zeisel2018molecular.
+We obtain a single-cell RNA sequencing dataset of the mouse nervous system from [Zeisel et al. (2018)](https://doi.org/10.1016/j.cell.2018.06.021).
 Counts for endogenous genes are available from http://mousebrain.org/downloads.html as a `loom` file.
 We download and cache it using the `r Biocpkg("BiocFileCache")` package.
 
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-loom.path <- bfcrpath(bfc, "https://storage.googleapis.com/linnarsson-lab-loom/l5_all.loom")
+loom.url <- "https://storage.googleapis.com/linnarsson-lab-loom/l5_all.loom"
+loom.path <- bfcrpath(bfc, loom.url)
 ```
 
 We load this into our R session using the `r Biocpkg("LoomExperiment")` package.
@@ -35,17 +30,21 @@ scle
 ```
 
 Then it's just a matter of peeling apart the bits that we need.
-We do need to clean up the `rowData`:
+For starters, let's clean up the `rowData` by moving the gene IDs to the row names:
 
 ```{r}
 rd <- rowData(scle)
 colnames(rd) <- sub("^X_", "", colnames(rd))
 rownames(rd) <- rd$Accession
+rd$Accession <- NULL
 rd
 ```
 
+# Cleaning up column annotations
+
 We also need to clean up the `colData`.
-This is, sadly, a gargantuan effort - so much for `loom` being a ready-to-use file format!
+This is, sadly, a gargantuan manual effort - so much for `loom` being a ready-to-use file format!
+We start by stripping out non-informative or redundant fields: 
 
 ```{r}
 cd <- colData(scle)
@@ -73,10 +72,12 @@ cd$Sample_Index <- NULL
 cd$Seq_Comment <- NULL
 cd$Seq_Lib_Date <- NULL
 cd$Seq_Lib_Ok <- NULL
+```
 
-# Converting various character fields into numbers, where applicable.
-# On occassion, we have to get rid of some nonsense fields with quotation marks;
-# something probably got corrupted when the file was saved.
+Converting various character fields into numbers, where applicable.
+On occassion, we have to get rid of some nonsense fields with quotation marks; something probably got corrupted when the file was saved.
+
+```{r}
 options(warn=2)
 for (i in colnames(cd)) {
     current <- cd[[i]]
@@ -116,8 +117,11 @@ for (i in colnames(cd)) {
     }
 }
 options(warn=1)
+```
 
-# Replacing the 'nan's with NA's.
+We replace the variuos `nan` strings with `NA`s in the character columns.
+
+```{r}
 for (i in colnames(cd)) {
     current <- cd[[i]]
     if (is.character(current) && any(lost <- current=="nan")) {
@@ -125,16 +129,21 @@ for (i in colnames(cd)) {
         cd[[i]] <- current
     }    
 }
+```
 
-# Stripping out the class probabilities into a nested matrix.
+We shift the class probabilities into a nested data frame.
+
+```{r}
 clcols <- grep("ClassProbability", colnames(cd))
 clprobs <- cd[,clcols]
-clprobs <- as.matrix(clprobs)
 colnames(clprobs) <- sub("ClassProbability_", "", colnames(clprobs))
 cd <- cd[,-clcols]
 cd$ClassProbability <- clprobs
+```
 
-# Hacking out the reduced dimensions.
+We also hack out the reduced dimensions.
+
+```{r}
 pca.cols <- c("X_PC1", "X_PC2")
 tsne.cols <- c("X_tSNE1", "X_tSNE2")
 other.cols <- c("X_X", "X_Y")
@@ -144,42 +153,58 @@ reddim <- list(
     unnamed=as.matrix(cd[,other.cols])
 )
 cd <- cd[,!colnames(cd) %in% c(pca.cols, tsne.cols, other.cols)]
+```
 
-# Why the prefixing with X_? Well, whatever.
+Finally, we get rid of the prefixing with `X_`.
+Don't know why it's there but, well, whatever.
+
+```{r}
 colnames(cd) <- sub("X_", "", colnames(cd))
-
 cd
 ```
 
 # Saving to file
 
-We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+We now create a new `SingleCellExperiment` object.
+I'm not storing the cell-cell graph, though, because I don't want to.
 
 ```{r}
-path <- file.path("scRNAseq", "zeisel-nervous", "2.6.0")
-dir.create(path, showWarnings=FALSE, recursive=TRUE)
-saveRDS(rd, file=file.path(path, "rowdata.rds"))
-saveRDS(cd, file=file.path(path, "coldata.rds"))
-saveRDS(reddim, file=file.path(path, "reddims.rds"))
+sce <- SingleCellExperiment(
+    list(counts=as(assay(scle), 'dgCMatrix')),
+    rowData=rd,
+    colData=cd
+)
 ```
 
-The column pairs are a bit tricky, but we just coerce them into `SelfHits` objects and save that.
+We apply some polish to save disk space:
 
 ```{r}
-colpairs <- lapply(colGraphs(scle), function(x) as(x, "SelfHits"))
-saveRDS(colpairs, file=file.path(path, "colpairs.rds"))
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce 
 ```
 
-The trickiest part is resaving the HDF5 file as a sparse matrix.
+We then save it to disk in preparation for upload:
 
 ```{r}
-saveRDS(as(assay(scle), 'dgCMatrix'), file=file.path(path, "counts.rds"))
+meta <- list(
+    title="Molecular Architecture of the Mouse Nervous System",
+    description="The mammalian nervous system executes complex behaviors controlled by specialized, precisely positioned, and interacting cell types. Here, we used RNA sequencing of half a million single cells to create a detailed census of cell types in the mouse nervous system. We mapped cell types spatially and derived a hierarchical, data-driven taxonomy. Neurons were the most diverse and were grouped by developmental anatomical units and by the expression of neurotransmitters and neuropeptides. Neuronal diversity was driven by genes encoding cell identity, synaptic connectivity, neurotransmission, and membrane conductance. We discovered seven distinct, regionally restricted astrocyte types that obeyed developmental boundaries and correlated with the spatial distribution of key glutamate and glycine neurotransmitters. In contrast, oligodendrocytes showed a loss of regional identity followed by a secondary diversification. The resource presented here lays a solid foundation for understanding the molecular architecture of the mammalian nervous system and enables genetic manipulation of specific cell types.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="30096314"),
+        list(provider="other", id=loom.url)
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "finished", meta)
 ```
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
 ```
-
-# References
