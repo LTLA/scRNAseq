@@ -1,7 +1,10 @@
+# scRNAseq package
 
-# scRNAseq
+This package provides functions for retrieving SingleCellExperiment
+representations of data from 55 single-cell RNA-seq experiments.
 
-Here are the datasets
+Functions to call after running `library(scRNAseq)` are
+listed in the 'call' column of the table:
 
 </head>
 <body><table border="1">
@@ -132,5 +135,5 @@ Here are the datasets
 <td>Mus musculus</td><td>lung</td><td>Single-Cell Transcriptomics of Human and Mouse Lung Cancers Reveals Conserved Myeloid Populations across Individuals and Species</td><td> 17549</td><td><a href='https://pubmed.ncbi.nlm.nih.gov/30979687'>30979687</a></td><td>ZilionisLungData('mouse')</td></tr>
 </table>
 
-<br/><br/><font size="-2">(Page generated on Mon Feb 12 10:04:31 2024 by <a href="http://www.embl.de/~gpau/hwriter/index.html">hwriter</a> 1.3.2.1)</font><br/>
+<br/><br/><font size="-2">(Page generated on Mon Feb 12 10:21:11 2024 by <a href="http://www.embl.de/~gpau/hwriter/index.html">hwriter</a> 1.3.2.1)</font><br/>
 </body></html>
