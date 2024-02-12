@@ -35,7 +35,7 @@ bib_to_data.frame = function(bibfile, has.pmids=TRUE) {
 #' @export
 enhanceListDatasets = function() {
   bibref = system.file("scripts", "ref.bib", package="scRNAseq")
-  bibdf = bib_to_data.frame("ref.bib")
+  bibdf = bib_to_data.frame(bibref)
   bibdf$tag = rownames(bibdf)
   ndf = as.data.frame(scRNAseq::listDatasets())
   ndf$tag = sub("@", "", ndf$Reference)
