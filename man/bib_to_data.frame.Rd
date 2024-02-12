@@ -2,21 +2,21 @@
 % Please edit documentation in R/process_bib.R
 \name{bib_to_data.frame}
 \alias{bib_to_data.frame}
-\title{transform a bibtex file to data.frame
-bibfile character(1) path to bibtex
-has.pmids logical(1) if TRUE, href tags will be generated using the pmid attribute
-of entries}
+\title{transform a bibtex file to data.frame}
 \usage{
 bib_to_data.frame(bibfile, has.pmids = TRUE)
+}
+\arguments{
+\item{bibfile}{character(1) path to bibtex}
+
+\item{has.pmids}{logical(1) if TRUE, href tags will be generated using the pmid attribute
+of entries}
 }
 \value{
 data.frame with rownames given by the bibtex tags
 }
 \description{
 transform a bibtex file to data.frame
-bibfile character(1) path to bibtex
-has.pmids logical(1) if TRUE, href tags will be generated using the pmid attribute
-of entries
 }
 \examples{
 bibref = system.file("scripts", "ref.bib", package="scRNAseq")

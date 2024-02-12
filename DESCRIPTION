@@ -29,7 +29,10 @@ Imports:
     AnnotationHub,
     AnnotationDbi,
     ensembldb,
-    GenomicFeatures
+    GenomicFeatures, 
+    dplyr, 
+    bibtex,
+    DT
 Suggests: 
     BiocStyle, 
     knitr, 
@@ -37,7 +40,8 @@ Suggests:
     BiocFileCache,
     testthat,
     rappdirs,
-    tools
+    tools,
+    hwriter
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 
