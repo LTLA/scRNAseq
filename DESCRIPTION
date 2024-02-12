@@ -1,7 +1,7 @@
 Package: scRNAseq
 Title: Collection of Public Single-Cell RNA-Seq Datasets
-Version: 2.7.3
-Date: 2024-02-07
+Version: 2.7.4
+Date: 2024-02-12
 Authors@R: c(
     person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cph")),
     person("Michael", "Cole", role="aut"),
@@ -48,4 +48,4 @@ biocViews:
     RNASeqData,
     SingleCellData
 BuildResaveData: no
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.1
