@@ -6,7 +6,7 @@
 #' @param path String containing the path to a new directory in which to save \code{x}.
 #' Any existing directory is removed before saving \code{x}.
 #' @param metadata Named list containing metadata for this dataset,
-#' see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}("bioconductor")}.
+#' see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}()}.
 #'
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
 #'
@@ -43,17 +43,38 @@
 #' @importFrom alabaster.base saveObject
 #' @importMethodsFrom alabaster.sce saveObject
 saveDataset <- function(x, path, metadata) {
+    schema <- gypsum::fetchMetadataSchema()
+
     if (is.null(metadata$bioconductor_version)) {
         metadata$bioconductor_version <- as.character(BiocManager::version())
     }
     metadata$taxonomy_id <- I(metadata$taxonomy_id)
     metadata$genome <- I(metadata$genome)
-    contents <- jsonlite::toJSON(metadata, pretty=4, auto_unbox=TRUE)
-    gypsum::validateMetadata(contents, schema=gypsum::fetchMetadataSchema())
+    gypsum::validateMetadata(metadata, schema) # First validation for user-supplied content.
 
     unlink(path, recursive=TRUE)
     alabaster.base::saveObject(x, path)
 
+    takane <- list(
+        type = readObjectFile(path)$type,
+        summarized_experiment = list(
+           rows = nrow(x),
+           columns = ncol(x),
+           assays = I(assayNames(x)),
+           column_annotations = I(colnames(colData(x)))
+        )
+    )
+    if (is(x, "SingleCellExperiment")) {
+        takane$single_cell_experiment <- list(
+            reduced_dimensions = I(reducedDimNames(x)),
+            alternative_experiments = I(altExpNames(x))
+        )
+    }
+    metadata$applications <- c(metadata$applications, list(takane=takane))
+
+    # Second validation with the takane metadata.
+    contents <- jsonlite::toJSON(metadata, pretty=4, auto_unbox=TRUE)
+    gypsum::validateMetadata(contents, schema=schema)
     write(contents, file=file.path(path, "_bioconductor.json"))
     invisible(NULL)
 }
