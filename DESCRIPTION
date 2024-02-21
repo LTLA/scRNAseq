@@ -35,7 +35,9 @@ Imports:
     alabaster.base,
     alabaster.matrix,
     DelayedArray,
-    alabaster.sce
+    alabaster.sce,
+    gypsum,
+    jsonlite
 Suggests: 
     BiocStyle, 
     knitr, 
@@ -44,7 +46,6 @@ Suggests:
     testthat,
     rappdirs,
     tools,
-    gypsum,
     jsonvalidate,
     digest
 VignetteBuilder: knitr
@@ -57,4 +58,4 @@ biocViews:
     RNASeqData,
     SingleCellData
 BuildResaveData: no
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

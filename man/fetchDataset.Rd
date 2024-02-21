@@ -7,7 +7,7 @@
 fetchDataset(
   name,
   version,
-  subpath = NULL,
+  path = ".",
   package = "scRNAseq",
   cache = NULL,
   overwrite = FALSE,
@@ -19,7 +19,8 @@ fetchDataset(
 
 \item{version}{String containing the version of the dataset.}
 
-\item{subpath}{String containing the path to a subdataset, if \code{name} contains multiple datasets.}
+\item{path}{String containing the path to a subdataset, if \code{name} contains multiple datasets.
+Defaults to \code{"."} if no subdatasets are present.}
 
 \item{package}{String containing the name of the package.}
 
@@ -36,8 +37,8 @@ fetchDataset(
 Fetch a dataset (or its metadata) from the gypsum backend.
 }
 \examples{
-fetchDataset("zeisel-brain-2015", "2.17.1")
-fetchMetadata("zeisel-brain-2015", "2.17.1")
+fetchDataset("zeisel-brain-2015", "2023-12-14")
+fetchMetadata("zeisel-brain-2015", "2023-12-14")
 
 }
 \seealso{

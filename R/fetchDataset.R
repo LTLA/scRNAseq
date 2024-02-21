@@ -4,7 +4,8 @@
 #'
 #' @param name String containing the name of the dataset.
 #' @param version String containing the version of the dataset.
-#' @param subpath String containing the path to a subdataset, if \code{name} contains multiple datasets.
+#' @param path String containing the path to a subdataset, if \code{name} contains multiple datasets.
+#' Defaults to \code{"."} if no subdatasets are present.
 #' @param package String containing the name of the package.
 #' @param cache,overwrite Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.
 #' @param ... Further arguments to pass to \code{\link{readObject}}.
@@ -22,43 +23,42 @@
 #' 
 #' @author Aaron Lun
 #' @examples
-#' fetchDataset("zeisel-brain-2015", "2.17.1")
-#' fetchMetadata("zeisel-brain-2015", "2.17.1")
+#' fetchDataset("zeisel-brain-2015", "2023-12-14")
+#' fetchMetadata("zeisel-brain-2015", "2023-12-14")
 #'
 #' @export
 #' @importFrom alabaster.base altReadObjectFunction readObject
-fetchDataset <- function(name, version, subpath=NULL, package="scRNAseq", cache=NULL, overwrite=FALSE, ...) {
+fetchDataset <- function(name, version, path=".", package="scRNAseq", cache=NULL, overwrite=FALSE, ...) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
-    vpath <- gypsum::saveVersion(package, name, version, cache=cache, overwrite=overwrite)
-    provenance <- list(name=name, version=version, package=package, root=vpath)
+    version_path <- gypsum::saveVersion(package, name, version, cache=cache, overwrite=overwrite)
+    provenance <- list(name=name, version=version, package=package, root=version_path)
 
-    opath <- vpath
-    if (!is.null(subpath)) {
-        subpath <- gsub("/*$", "", subpath)
-        opath <- file.path(vpath, subpath)
+    obj_path <- version_path
+    if (path != ".") {
+        obj_path <- file.path(version_path, gsub("/*$", "", path))
     }
 
     old <- altReadObjectFunction(scLoadObject)
     on.exit(altReadObjectFunction(old))
-    readObject(opath, scrnaseqmatrix.provenance=provenance, ...)
+    readObject(obj_path, scrnaseqmatrix.provenance=provenance, ...)
 }
 
 #' @export
-fetchMetadata <- function(name, version, path=NULL, package="scRNAseq", cache=NULL, overwrite=FALSE) {
+fetchMetadata <- function(name, version, path=".", package="scRNAseq", cache=NULL, overwrite=FALSE) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
 
-    if (is.null(path)) {
-        path <- "_bioconductor.json"
+    if (path == ".") {
+        remote_path <- "_bioconductor.json"
     } else {
-        path <- paste0(path, "/_bioconductor.json")
+        remote_path <- paste0(path, "/_bioconductor.json")
     }
 
-    mpath <- gypsum::saveFile(package, name, version, path, cache=cache, overwrite=overwrite)
-    jsonlite::fromJSON(mpath, simplifyVector=FALSE)
+    local_path <- gypsum::saveFile(package, name, version, remote_path, cache=cache, overwrite=overwrite)
+    jsonlite::fromJSON(local_path, simplifyVector=FALSE)
 }
 
 #' @importFrom alabaster.base readObjectFile
