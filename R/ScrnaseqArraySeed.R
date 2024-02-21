@@ -59,8 +59,8 @@ ScrnaseqArray <- function(path, seed=NULL, ...) {
 setClass("ScrnaseqArraySeed", contains="WrapperArraySeed", slots=c(name="character", version="character", path="character", cached="character", package="character"))
 
 #' @export
-#' @importClassesFrom DelayedArray DelayedArray
-setClass("ScrnaseqArray", contains="DelayedArray", slots=c(seed = "ScrnaseqArraySeed"))
+#' @importClassesFrom alabaster.matrix WrapperArray
+setClass("ScrnaseqArray", contains="WrapperArray", slots=c(seed = "ScrnaseqArraySeed"))
 
 #' @export
 #' @importClassesFrom DelayedArray DelayedMatrix
