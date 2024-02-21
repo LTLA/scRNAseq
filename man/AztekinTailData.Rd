@@ -4,7 +4,11 @@
 \alias{AztekinTailData}
 \title{Obtain the Aztekin tail data}
 \usage{
-AztekinTailData()
+AztekinTailData(legacy = FALSE)
+}
+\arguments{
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
