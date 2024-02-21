@@ -40,8 +40,8 @@ Maintainer note: concentrations were obtained from the Thermo Fisher Scientific 
     taxonomy_id=list(),
     genome=list(),
     sources=list(
-        list(provider="other", id=url),
-        list(provider="other", id="https://www.thermofisher.com/order/catalog/product/4456740") # links to the former
+        list(provider="URL", id=url),
+        list(provider="URL", id="https://www.thermofisher.com/order/catalog/product/4456740") # links to the former
     ),
     maintainer_name="Alan O'Callaghan",
     maintainer_email="alan.ocallaghan@outlook.com"

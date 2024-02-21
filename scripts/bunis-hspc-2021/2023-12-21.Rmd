@@ -94,7 +94,8 @@ colData(sce)
 From the fully processed objects shared on figshare, we will obtain cell type annotations and developmental stage scores.
 
 ```{r}
-full.path <- bfcrpath(bfc, "https://ndownloader.figshare.com/files/25953740")
+figshare.url <- "https://ndownloader.figshare.com/files/25953740"
+full.path <- bfcrpath(bfc, figshare.url)
 raw_meta <- readRDS(full.path)@meta.data
 stopifnot(all(rownames(raw_meta) %in% colnames(sce)))
 dim(raw_meta)
@@ -155,7 +156,7 @@ Maintainer note: the count matrix contains all possible CellRanger barcodes, but
     sources=list(
         list(provider="GEO", id="GSE158490"),
         list(provider="PubMed", id="33406429"),
-        list(provider="other", id="https://ndownloader.figshare.com/files/25953740")
+        list(provider="URL", id=figshare.url)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

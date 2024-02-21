@@ -160,7 +160,7 @@ Maintainer note: FACS data is stored as an alternative experiment and the diffus
     sources=list(
         list(provider="GEO", id="GSE81682"),
         list(provider="PubMed", id="27365425"),
-        list(provider="other", id="https://blood.stemcells.cam.ac.uk/data")
+        list(provider="URL", id="https://blood.stemcells.cam.ac.uk/data")
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

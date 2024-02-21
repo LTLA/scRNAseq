@@ -163,7 +163,7 @@ Maintainer note: cluster labels were obtained from the corresponding code reposi
     sources=list(
         list(provider="GEO", id="GSE95601"),
         list(provider="PubMed", id="28506465"),
-        list(provider="other", id=cluster_url)
+        list(provider="URL", id=cluster_url)
     ),
     maintainer_name="Davide Risso",
     maintainer_email="risso.davide@gmail.com"

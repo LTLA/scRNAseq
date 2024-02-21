@@ -46,7 +46,10 @@ We obtain the metadata from the GitHub repository accompanying the study
 (see [here](https://github.com/bei-lab/scRNA-AHCA/tree/master/Cell_barcode_and_corresponding_cell_types_of_AHCA)).
 
 ```{r}
-meta.path <- bfcrpath(bfc, "https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/Annotation_AHCA_alltissues_meta.data_84363_cell.txt")
+hash <- "45c4b104e66f82729b008cda8919f0b0aad5903d"
+repo <- "bei-lab/scRNA-AHCA"
+base.url <- sprintf("https://github.com/%s/raw/%s/Cell_barcode_and_corresponding_cell_types_of_AHCA/", repo, hash)
+meta.path <- bfcrpath(bfc, paste0(base.url, "Annotation_AHCA_alltissues_meta.data_84363_cell.txt"))
 meta <- read.delim(meta.path, row.names=1)
 meta <- DataFrame(meta, check.names=FALSE)
 meta
@@ -82,7 +85,7 @@ for (sub in c("B_and_plasma.meta.data.txt", "CD4_meta.data.txt", "CD8_meta.data.
     "Endothelial_cell.meta.data.txt", "Epithelial_cells.meta.data.txt", 
     "FibSmo.meta.data.txt", "Myeloid.meta.data.txt")) 
 {
-    sub.path <- bfcrpath(bfc, paste0("https://github.com/bei-lab/scRNA-AHCA/raw/master/Cell_barcode_and_corresponding_cell_types_of_AHCA/", sub))
+    sub.path <- bfcrpath(bfc, paste0(base.url, sub))
     sub.df <- read.delim(sub.path)
     m <- match(sub.df$X, rownames(meta))
     stopifnot(all(is.na(fine.anno[m])))
@@ -139,7 +142,7 @@ Maintainer note: this dataset contains only the cells from the %s. Additional me
     sources=list(
         list(provider="GEO", id="GSE159929"),
         list(provider="PubMed", id="33287869"),
-        list(provider="other", id="https://github.com/bei-lab/scRNA-AHCA")
+        list(provider="GitHub", id=repo, version=hash)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

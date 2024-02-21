@@ -194,7 +194,7 @@ meta <- list(
     genome="GRCm38",
     sources=list(
         list(provider="PubMed", id="30096314"),
-        list(provider="other", id=loom.url)
+        list(provider="URL", id=loom.url)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

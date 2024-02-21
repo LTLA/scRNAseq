@@ -94,7 +94,7 @@ meta <- list(
     genome="GRCh37",
     sources=list(
         list(provider="PubMed", id="32094927"),
-        list(provider="other", id=url)
+        list(provider="URL", id=url)
     ),
     maintainer_name="Stephany Orjuela",
     maintainer_email="sorjuelal@gmail.com"

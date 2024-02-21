@@ -66,7 +66,7 @@ meta <- list(
     taxonomy_id="9606",
     genome="GRCh37",
     sources=list(
-        list(provider="other", id="https://www.pollenlab.org/datasets"),
+        list(provider="URL", id="https://www.pollenlab.org/datasets"),
         list(provider="PubMed", id="26406371")
     ),
     maintainer_name="Aaron Lun",

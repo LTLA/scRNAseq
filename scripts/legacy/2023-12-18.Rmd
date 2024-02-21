@@ -104,7 +104,7 @@ Maintainer note: this dataset was processed by Michael Cole and included in olde
     sources=list(
         list(provider="PubMed", id="25086649"),
         list(provider="SRA", id="SRP041736"),
-        list(provider="other", id=source.url)
+        list(provider="URL", id=source.url)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
@@ -126,7 +126,7 @@ Maintainer note: this dataset is a subset (379 cells) of the full data in the st
     sources=list(
         list(provider="PubMed", id="26727548"),
         list(provider="SRA", id="SRP061902"),
-        list(provider="other", id=source.url)
+        list(provider="URL", id=source.url)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
@@ -148,7 +148,7 @@ Maintainer note: this dataset was processed by Michael Cole and included in olde
     sources=list(
         list(provider="PubMed", id="24813893"),
         list(provider="ArrayExpress", id="E-MTAB-2512"),
-        list(provider="other", id=source.url)
+        list(provider="URL", id=source.url)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

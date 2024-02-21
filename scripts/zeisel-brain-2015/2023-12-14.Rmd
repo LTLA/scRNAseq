@@ -147,10 +147,10 @@ Maintainer note: ERCC molecule counts are computed using a volume of 9 nL per ce
     taxonomy_id="10090",
     genome="GRCm38",
     sources=list(
-        list(provider="other", id=mRNA.url),
-        list(provider="other", id=rep.url),
-        list(provider="other", id=spike.url),
-        list(provider="other", id=mito.url),
+        list(provider="URL", id=mRNA.url),
+        list(provider="URL", id=rep.url),
+        list(provider="URL", id=spike.url),
+        list(provider="URL", id=mito.url),
         list(provider="PubMed", id="25700174")
     ),
     maintainer_name="Aaron Lun",

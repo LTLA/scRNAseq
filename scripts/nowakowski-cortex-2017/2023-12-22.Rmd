@@ -101,8 +101,8 @@ meta <- list(
     taxonomy_id="9606",
     genome="GRCh38",
     sources=list(
-        list(provider="other", id=expr.url),
-        list(provider="other", id=meta.url),
+        list(provider="URL", id=expr.url),
+        list(provider="URL", id=meta.url),
         list(provider="PubMed", id="29217575")
     ),
     maintainer_name="Aaron Lun",

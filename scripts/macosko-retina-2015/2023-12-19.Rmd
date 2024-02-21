@@ -78,7 +78,7 @@ meta <- list(
     sources=list(
         list(provider="GEO", id="GSE63472"),
         list(provider="PubMed", id="26000488"),
-        list(provider="other", id=meta.url)
+        list(provider="URL", id=meta.url)
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

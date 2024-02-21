@@ -93,7 +93,7 @@ Maintainer note: alignment metrics are stored as a nested data frame in the colu
     taxonomy_id="10090",
     genome="GRCm38",
     sources=list(
-        list(provider="other", id=url),
+        list(provider="URL", id=url),
         list(provider="PubMed", id="26431182")
     ),
     maintainer_name="Aaron Lun",
