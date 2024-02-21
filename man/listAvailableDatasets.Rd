@@ -4,7 +4,7 @@
 \alias{listAvailableDatasets}
 \title{List available datasets}
 \usage{
-listAvailableDatasets(cache = NULL, overwrite = FALSE)
+listAvailableDatasets(cache = NULL, overwrite = FALSE, latest = TRUE)
 }
 \arguments{
 \item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{fetchMetadataDatabase}}.}

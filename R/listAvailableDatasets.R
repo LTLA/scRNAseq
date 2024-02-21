@@ -15,50 +15,87 @@
 #' 
 #' @export
 #' @importFrom S4Vectors DataFrame
-listAvailableDatasets <- function(cache=NULL, overwrite=FALSE) {
+listAvailableDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
-    bpath <- gypsum::fetchMetadataDatabase("bioconductor", cache=cache, overwrite=overwrite)
-    spath <- gypsum::fetchMetadataDatabase("scRNAseq", cache=cache, overwrite=overwrite)
+    bpath <- gypsum::fetchMetadataDatabase(cache=cache, overwrite=overwrite)
+    con <- DBI::dbConnect(RSQLite::SQLite(), bpath)
 
-    bcon <- DBI::dbConnect(RSQLite::SQLite(), bpath)
-    bcore <- DBI::dbReadTable(bcon, "core", check.names=FALSE)
-    bfree <- DBI::dbReadTable(bcon, "free_text", check.names=FALSE)
-    btaxid <- DBI::dbReadTable(bcon, "multi_taxonomy_id", check.names=FALSE)
-    bgenome <- DBI::dbReadTable(bcon, "multi_genome", check.names=FALSE)
-    bsources <- DBI::dbReadTable(bcon, "multi_sources", check.names=FALSE)
+    stmt <- "SELECT json_extract(metadata, '$') AS meta, versions.project AS project, versions.asset AS asset, versions.version AS version, path";
+    if (!latest) {
+        stmt <- paste0(stmt, ", versions.latest AS latest")
+    }
+    stmt <- paste0(stmt, " FROM paths LEFT JOIN versions ON paths.vid = versions.vid WHERE versions.project = 'scRNAseq'")
+    if (latest) {
+        stmt <- paste0(stmt, " AND versions.latest = 1")
+    }
+    everything <- DBI::dbGetQuery(con, stmt)
 
-    scon <- DBI::dbConnect(RSQLite::SQLite(), spath)
-    score <- DBI::dbReadTable(scon, "core", check.names=FALSE)
-    sass <- DBI::dbReadTable(scon, "multi_assay_names", check.names=FALSE)
-    sred <- DBI::dbReadTable(scon, "multi_reduced_dimension_names", check.names=FALSE)
-    salt <- DBI::dbReadTable(scon, "multi_alternative_experiment_names", check.names=FALSE)
-
-    keys <- bcore$`_key`
-    m_free2core <- match(keys, bfree$`_key`)
-    m_s2core <- match(keys, bfree$`_key`)
-
-    DataFrame(
-        asset = bcore$`_asset`,
-        version = bcore$`_version`,
-        path = bcore$`_path`,
-        object = bcore$`_object`,
-
-        title = bfree$title[m_free2core],
-        description = bfree$description[m_free2core],
-        taxonomy_id = splitAsList(btaxid$item, factor(btaxid$`_key`, keys)),
-        genome = splitAsList(bgenome$item, factor(bgenome$`_key`, keys)),
-        sources = S4Vectors::I(splitAsList(DataFrame(bsources[,c("provider", "id")]), factor(bsources$`_key`, keys))),
-
-        nrow = score$nrow[m_s2core],
-        ncol = score$ncol[m_s2core],
-        assay_names = splitAsList(sass$item, factor(sass$`_key`, keys)),
-        reduced_dimension_names = splitAsList(sred$item, factor(sred$`_key`, keys)),
-        alternative_experiment_names = splitAsList(salt$item, factor(salt$`_key`, keys)),
-
-        bioconductor_version = bcore$bioconductor_version,
-        maintainer_name = bfree$maintainer_name[m_free2core],
-        maintainer_email = bcore$maintainer_email
+    output <- DataFrame(
+        asset = everything$asset,
+        version = everything$version,
+        path = everything$path
     )
+    if (!latest) {
+        output$latest <- everything$latest == 1
+    }
+
+    all_meta <- lapply(everything$meta, jsonlite::fromJSON, simplifyVector=FALSE)
+    output$object <- extract_atomic_from_json(all_meta, function(x) x$takane$type, "character") 
+    output$title <- extract_atomic_from_json(all_meta, function(x) x$title, "character")
+    output$description <- extract_atomic_from_json(all_meta, function(x) x$title, "character")
+    output$taxonomy_id <- extract_charlist_from_json(all_meta, function(x) x$taxonomy_id)
+    output$genome <- extract_charlist_from_json(all_meta, function(x) x$genome)
+
+    output$rows <- extract_atomic_from_json(all_meta, function(x) x$takane$summarized_experiment$rows, "integer")
+    output$columns <- extract_atomic_from_json(all_meta, function(x) x$takane$summarized_experiment$columns, "integer")
+    output$assays <- extract_charlist_from_json(all_meta, function(x) x$takane$summarized_experiment$assays)
+    output$column_annotations <- extract_charlist_from_json(all_meta, function(x) x$takane$summarized_experiment$column_annotations)
+    output$reduced_dimensions <- extract_charlist_from_json(all_meta, function(x) x$takane$single_cell_experiment$reduced_dimensions)
+    output$alternative_experiments <- extract_charlist_from_json(all_meta, function(x) x$takane$single_cell_experiment$alternative_experiments)
+
+    output$bioconductor_version < extract_atomic_from_json(all_meta, function(x) x$bioconductor_version, "character")
+    output$maintainer_name < extract_atomic_from_json(all_meta, function(x) x$maintainer_name, "character")
+    output$maintainer_email < extract_atomic_from_json(all_meta, function(x) x$maintainer_email, "character")
+
+    sources <- vector("list", length(all_meta))
+    for (i in seq_along(all_meta)) {
+        cursources <- all_meta[[i]]$sources
+        if (is.null(cursources)) {
+            sources[[i]] <- DataFrame(provider=character(0), id=character(0), version=character(0))
+        } else {
+            sources[[i]] <- DataFrame(
+                provider = extract_atomic_from_json(cursources, function(x) x$provider, "character"),
+                id = extract_atomic_from_json(cursources, function(x) x$id, "character"),
+                version = extract_atomic_from_json(cursources, function(x) x$version, "character")
+            )
+        }
+    }
+    output$sources <- as(sources, "CompressedList")
+
+    output
+}
+
+extract_atomic_from_json <- function(metadata, extract, type) {
+    vapply(metadata, function(y) {
+        x <- extract(y)
+        if (is.null(x)) {
+            as(NA, type)
+        } else {
+            x
+        }
+    }, vector(type, 1))
+}
+
+extract_charlist_from_json <- function(metadata, extract) {
+    output <- lapply(metadata, function(y) {
+        x <- extract(y)
+        if (is.null(y)) {
+            character(0)
+        } else {
+            x
+        }
+    })
+    as(output, "CompressedList")
 }
