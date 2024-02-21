@@ -156,7 +156,7 @@ Maintainer note: the count matrix contains all possible CellRanger barcodes, but
     sources=list(
         list(provider="GEO", id="GSE158490"),
         list(provider="PubMed", id="33406429"),
-        list(provider="URL", id=figshare.url)
+        list(provider="URL", id=figshare.url, version=as.character(Sys.Date()))
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

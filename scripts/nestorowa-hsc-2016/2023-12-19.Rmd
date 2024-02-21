@@ -44,7 +44,8 @@ metrics
 We download the per-cell metadata from the website.
 
 ```{r}
-celltype.file <- bfcrpath(bfc, "http://blood.stemcells.cam.ac.uk/data/all_cell_types.txt")
+base.url <- "http://blood.stemcells.cam.ac.uk/data"
+celltype.file <- bfcrpath(bfc, paste0(base.url, "/all_cell_types.txt"))
 celltype <- read.delim(celltype.file)
 celltype <- celltype[match(colnames(counts), rownames(celltype)),]
 stopifnot(identical(colnames(counts), rownames(celltype)))
@@ -111,7 +112,7 @@ coldata
 We also obtain a matrix of flow cytometry intensities:
 
 ```{r}
-flowcyt.file <- bfcrpath(bfc, "http://blood.stemcells.cam.ac.uk/data/coordinates_gene_counts_flow_cytometry.txt.gz")
+flowcyt.file <- bfcrpath(bfc, paste0(base.url, "/coordinates_gene_counts_flow_cytometry.txt.gz"))
 flowcyt <- as.matrix(read.delim(flowcyt.file, row.names=1))
 flowcyt <- flowcyt[match(colnames(counts), rownames(flowcyt)),]
 rownames(flowcyt) <- colnames(counts)
@@ -160,7 +161,7 @@ Maintainer note: FACS data is stored as an alternative experiment and the diffus
     sources=list(
         list(provider="GEO", id="GSE81682"),
         list(provider="PubMed", id="27365425"),
-        list(provider="URL", id="https://blood.stemcells.cam.ac.uk/data")
+        list(provider="URL", id=base.url, version=as.character(Sys.Date()))
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"

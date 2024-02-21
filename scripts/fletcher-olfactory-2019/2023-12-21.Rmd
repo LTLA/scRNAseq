@@ -86,7 +86,9 @@ rowdata
 Downloading the cluster results from the original analysis:
 
 ```{r}
-cluster_url <- "https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/oeHBCdiff_clusterLabels.txt"
+repo <- "rufletch/p63-HBC-diff"
+hash <- "86dea4ea81826481e6754cc4759c180ea5f7f0c7"
+cluster_url <- sprintf("https://raw.githubusercontent.com/%s/%s/ref/oeHBCdiff_clusterLabels.txt", repo, hash)
 cluster_file <- bfcrpath(bfc, cluster_url)
 cluster_id <- read.table(cluster_file, col.names = c("sample_id", "cluster_id"))
 ```
@@ -163,7 +165,7 @@ Maintainer note: cluster labels were obtained from the corresponding code reposi
     sources=list(
         list(provider="GEO", id="GSE95601"),
         list(provider="PubMed", id="28506465"),
-        list(provider="URL", id=cluster_url)
+        list(provider="GitHub", id=repo, version=hash)
     ),
     maintainer_name="Davide Risso",
     maintainer_email="risso.davide@gmail.com"

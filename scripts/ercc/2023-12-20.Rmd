@@ -32,6 +32,7 @@ tab <- tab[,-(1:2)]
 And then saving it again:
 
 ```{r}
+curdate <- as.character(Sys.Date())
 meta <- list(
     title="ERCC RNA Spike-In Mix",
     description="Variation in RNA expression data can be attributed to a variety of factors including the quality of the starting material, the level of cellularity and RNA yield, the platform employed, and the person performing the experiment. To control for these sources of variability, a common set of external RNA controls has been developed by the External RNA Controls Consortium (ERCC), an ad-hoc group of academic, private, and public organizations hosted by the National Institute of Standards and Technology (NIST). The controls consist of a set of unlabeled, polyadenylated transcripts designed to be added to an RNA analysis experiment after sample isolation, in order to measure against defined performance criteria. Up until the design of such universally accepted controls, it has been difficult to execute a thorough investigation of fundamental analytical performance metrics. From the trusted brand of quality RNA reagents, Ambion™ ERCC Spike-In Control Mixes are commercially available, pre-formulated blends of 92 transcripts, derived and traceable from NIST-certified DNA plasmids. The transcripts are designed to be 250 to 2,000 nt in length, which mimic natural eukaryotic mRNAs.
@@ -40,8 +41,8 @@ Maintainer note: concentrations were obtained from the Thermo Fisher Scientific 
     taxonomy_id=list(),
     genome=list(),
     sources=list(
-        list(provider="URL", id=url),
-        list(provider="URL", id="https://www.thermofisher.com/order/catalog/product/4456740") # links to the former
+        list(provider="URL", id=url, version=curdate),
+        list(provider="URL", id="https://www.thermofisher.com/order/catalog/product/4456740", version=curdate) # links to the former
     ),
     maintainer_name="Alan O'Callaghan",
     maintainer_email="alan.ocallaghan@outlook.com"

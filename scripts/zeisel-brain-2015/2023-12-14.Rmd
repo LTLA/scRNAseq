@@ -139,6 +139,7 @@ sce
 We now save all of the relevant components of `sce` to file for upload.
 
 ```{r}
+curdate <- as.character(Sys.Date())
 meta <- list(
     title="Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq",
     description="The mammalian cerebral cortex supports cognitive functions such as sensorimotor integration, memory, and social behaviors. Normal brain function relies on a diverse set of differentiated cell types, including neurons, glia, and vasculature. Here, we have used large-scale single-cell RNA sequencing (RNA-seq) to classify cells in the mouse somatosensory cortex and hippocampal CA1 region. We found 47 molecularly distinct subclasses, comprising all known major cell types in the cortex. We identified numerous marker genes, which allowed alignment with known cell types, morphology, and location. We found a layer I interneuron expressing Pax6 and a distinct postmitotic oligodendrocyte subclass marked by Itpr2. Across the diversity of cortical cell types, transcription factors formed a complex, layered regulatory code, suggesting a mechanism for the maintenance of adult cell type identity.
@@ -147,10 +148,10 @@ Maintainer note: ERCC molecule counts are computed using a volume of 9 nL per ce
     taxonomy_id="10090",
     genome="GRCm38",
     sources=list(
-        list(provider="URL", id=mRNA.url),
-        list(provider="URL", id=rep.url),
-        list(provider="URL", id=spike.url),
-        list(provider="URL", id=mito.url),
+        list(provider="URL", id=mRNA.url, version=curdate),
+        list(provider="URL", id=rep.url, version=curdate),
+        list(provider="URL", id=spike.url, version=curdate),
+        list(provider="URL", id=mito.url, version=curdate),
         list(provider="PubMed", id="25700174")
     ),
     maintainer_name="Aaron Lun",
