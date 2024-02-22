@@ -54,6 +54,8 @@ cell.hto.mat <- t(as.matrix(read.csv(cell.hto, row.names=1)))
 dim(cell.hto.mat)
 ```
 
+# Preparing output directories
+
 We set up some metadata to attach to the output:
 
 ```{r}
@@ -74,11 +76,16 @@ We also clear out any existing output directory.
 ```{r}
 unlink("finished", recursive=TRUE)
 dir.create("finished")
+dir.create(file.path("finished", "pbmc"))
+dir.create(file.path("finished", "mixture"))
 ```
 
-# Preparing the PBMC data
+# Processing the PBMC data
 
-Somehow, none of the matrices have the same set of columns!
+## RNA 
+
+None of the matrices have the same set of columns, which is unfortunate.
+That's okay, we'll just save them separately.
 Incredible.
 
 ```{r}
@@ -87,39 +94,34 @@ length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.adt2.mat)))
 length(intersect(colnames(pbmc.hto.mat), colnames(pbmc.rna.mat)))
 ```
 
-We take the intersection, because otherwise it's not going to be very useful for downstream users.
+We start with the RNA data.
+Note that this dataset contains both human and mouse genes, but there is no unambiguous way to identify them.
+It is left to the user to decide how to separate them, e.g., based on capitalization conventions.
 
 ```{r}
-common <- Reduce(intersect, 
-    list(
-        colnames(pbmc.rna.mat), 
-        colnames(pbmc.hto.mat), 
-        colnames(pbmc.adt1.mat), 
-        colnames(pbmc.adt2.mat)
-    )
-)
-length(common)
+pbmc.rna.sce <- SingleCellExperiment(list(counts=pbmc.rna.mat))
 ```
 
-Now we start to put together a `SingleCellExperiment`.
-This dataset contains both human and mouse transcripts; let's try to figure out which is which based on capitalization and the fact that the cell line data is human-only.
-Even this is not straightforward because the cell line data does not have the full set of human features!
+We apply some polishing to optimize for disk space.
 
 ```{r}
-sce <- SingleCellExperiment(list(counts=pbmc.rna.mat[,common]))
-
-probably.human <- !grepl("[a-z]+", rownames(pbmc.rna.mat)) |
-    grepl("^hsa-", rownames(pbmc.rna.mat)) |
-    rownames(pbmc.rna.mat) %in% rownames(cell.rna.mat)
-summary(probably.human)
-head(rownames(pbmc.rna.mat)[probably.human])
-tail(rownames(pbmc.rna.mat)[probably.human])
-
-head(rownames(pbmc.rna.mat)[!probably.human])
-tail(rownames(pbmc.rna.mat)[!probably.human])
-
-rowData(sce)$probably.human <- probably.human
+library(scRNAseq)
+pbmc.rna.sce <- polishDataset(pbmc.rna.sce)
+pbmc.rna.sce
 ```
+
+And finally saving it:
+
+```{r}
+copy <- meta
+copy$taxonomy_id <- c("10090", "9606")
+copy$genome <- c("GRCm38", "GRCh37")
+copy$title <- paste0(copy$title, " [PBMC RNA only]")
+copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC RNA data from this study.")
+saveDataset(pbmc.rna.sce, file.path("finished", "pbmc", "rna"), copy)
+```
+
+## HTO
 
 Continuing with the theme of odd formatting, we notice that the HTO and ADT matrices contain metrics as rows, so we need to extract them.
 Let's whip up a little function to do so.
@@ -132,36 +134,20 @@ extract_metrics <- function(x) {
 }
 ```
 
-Now we can progressively add the HTOs, for multiplexed batches:
+Now we can process the HTOs, for multiplexed batches:
 
 ```{r}
-hto.shifted <- extract_metrics(pbmc.hto.mat[,common])
+hto.shifted <- extract_metrics(pbmc.hto.mat)
 hto.se <- SummarizedExperiment(list(counts=hto.shifted$x))
 colData(hto.se)$metrics <- DataFrame(hto.shifted$metrics)
 rowData(hto.se)$batch <- sub("Batch([A-Z]+)-.*", "\\1", rownames(hto.se))
-altExp(sce, "HTO") <- hto.se
 ```
 
-And then the ADTs, for surface marker quantification:
+Polishing:
 
 ```{r}
-adt1.shifted <- extract_metrics(pbmc.adt1.mat[,common])
-adt2.shifted <- extract_metrics(pbmc.adt2.mat[,common])
-adt.se <- SummarizedExperiment(list(counts=rbind(adt1.shifted$x, adt2.shifted$x)))
-colData(adt.se)$control.metrics <- DataFrame(adt1.shifted$metrics)
-colData(adt.se)$surface.metrics <- DataFrame(adt2.shifted$metrics)
-rowData(adt.se)$target <- c(sub("_.*", "", rownames(adt1.shifted$x)), sub("-[ACTG]+$", "", rownames(adt2.shifted$x)))
-rowData(adt.se)$control <- rep(c(TRUE, FALSE), c(nrow(adt1.shifted$x), nrow(adt2.shifted$x)))
-altExp(sce, "ADT") <- adt.se
-```
-
-We apply some polishing to optimize for disk space.
-Note that we allow the alternative experiments to have their own column data due to the metrics.
-
-```{r}
-library(scRNAseq)
-sce <- polishDataset(sce, remove.altexp.coldata=FALSE)
-sce
+hto.se <- polishDataset(hto.se)
+hto.se
 ```
 
 And finally saving it:
@@ -170,36 +156,84 @@ And finally saving it:
 copy <- meta
 copy$taxonomy_id <- c("10090", "9606")
 copy$genome <- c("GRCm38", "GRCh37")
-copy$title <- paste0(copy$title, " [PBMCs only]")
-copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains the PBMCs from this study. ADTs and HTOs are stored in alternative experiments.")
-saveDataset(sce, file.path("finished", "pbmc"), copy)
+copy$title <- paste0(copy$title, " [PBMC HTO only]")
+copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC HTO data from this study.")
+saveDataset(hto.se, file.path("finished", "pbmc", "hto"), copy)
+```
+
+## IgG 
+
+And then the IgG controls:
+
+```{r}
+igg.shifted <- extract_metrics(pbmc.adt1.mat)
+igg.se <- SummarizedExperiment(list(counts=igg.shifted$x))
+colData(igg.se)$control.metrics <- DataFrame(igg.shifted$metrics)
+rowData(igg.se)$target <- sub("_.*", "", rownames(igg.se))
+```
+
+Polishing:
+
+```{r}
+igg.se <- polishDataset(igg.se)
+igg.se
+```
+
+And finally saving it:
+
+```{r}
+copy <- meta
+copy$taxonomy_id <- c("10090", "9606")
+copy$genome <- c("GRCm38", "GRCh37")
+copy$title <- paste0(copy$title, " [PBMC IgG only]")
+copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC IgG control data from this study.")
+saveDataset(igg.se, file.path("finished", "pbmc", "igg"), copy)
+```
+
+## ADT controls
+
+And then the ADTs themselves, for surface marker quantification:
+
+```{r}
+adt.shifted <- extract_metrics(pbmc.adt2.mat)
+adt.se <- SummarizedExperiment(list(counts=adt.shifted$x))
+colData(adt.se)$surface.metrics <- DataFrame(adt.shifted$metrics)
+rowData(adt.se)$target <- sub("-[ACTG]+$", "", rownames(adt.shifted$x))
+```
+
+Polishing:
+
+```{r}
+adt.se <- polishDataset(adt.se)
+adt.se
+```
+
+And finally saving it:
+
+```{r}
+copy <- meta
+copy$taxonomy_id <- c("10090", "9606")
+copy$genome <- c("GRCm38", "GRCh37")
+copy$title <- paste0(copy$title, " [PBMC ADT only]")
+copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC ADT data from this study.")
+saveDataset(atd.se, file.path("finished", "pbmc", "adt"), copy)
 ```
 
 # Preparing the cell mixture data
 
+## RNA 
+
 Again, the RNA and HTO matrices don't have the same set of columns!
-Some filtering is required.
+So we'll save them separately. 
 
 ```{r}
-common <- intersect(colnames(cell.rna.mat), colnames(cell.hto.mat))
-length(common)
+length(intersect(colnames(cell.rna.mat), colnames(cell.hto.mat)))
 ```
 
 Assembling the `SingleCellExperiment`; at least it's all human this time.
 
 ```{r}
-sce <- SingleCellExperiment(list(counts=cell.rna.mat[,common]))
-```
-
-Adding the HTO counts:
-
-```{r}
-hto.shifted <- extract_metrics(cell.hto.mat[,common])
-hto.se <- SummarizedExperiment(list(counts=hto.shifted$x))
-colData(hto.se)$metrics <- DataFrame(hto.shifted$metrics)
-rowData(hto.se)$cell_line <- sub("_.*", "\\1", rownames(hto.se))
-rowData(hto.se)$replicate <- sub(".*_", "\\1", rownames(hto.se))
-altExp(sce, "HTO") <- hto.se
+sce <- SingleCellExperiment(list(counts=cell.rna.mat))
 ```
 
 We apply some polishing to optimize for disk space.
@@ -215,9 +249,39 @@ And finally, saving it.
 copy <- meta
 copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh37"
-copy$title <- paste0(copy$title, " [cell line mixture only]")
-copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains the cell line mixture from this study. HTOs are stored in the alternative experiment.")
-saveDataset(sce, file.path("finished", "mixture"), copy)
+copy$title <- paste0(copy$title, " [cell line mixture, RNA only]")
+copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the cell line mixture RNA data from this study.")
+saveDataset(sce, file.path("finished", "mixture", "rna"), copy)
+```
+
+## HTO
+
+Now Adding the HTO counts:
+
+```{r}
+hto.shifted <- extract_metrics(cell.hto.mat)
+hto.se <- SummarizedExperiment(list(counts=hto.shifted$x))
+colData(hto.se)$metrics <- DataFrame(hto.shifted$metrics)
+rowData(hto.se)$cell_line <- sub("_.*", "\\1", rownames(hto.se))
+rowData(hto.se)$replicate <- sub(".*_", "\\1", rownames(hto.se))
+```
+
+We apply some polishing to optimize for disk space.
+
+```{r}
+hto.se <- polishDataset(hto.se)
+hto.se
+```
+
+And finally, saving it.
+
+```{r}
+copy <- meta
+copy$taxonomy_id <- "9606"
+copy$genome <- "GRCh37"
+copy$title <- paste0(copy$title, " [cell line mixture, HTO only]")
+copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the cell line mixture HTO data from this study.")
+saveDataset(sce, file.path("finished", "mixture", "hto"), copy)
 ```
 
 # Session information {-}

@@ -4,7 +4,7 @@
 \alias{ZhaoImmuneLiverData}
 \title{Obtain the Zhao immune liver data}
 \usage{
-ZhaoImmuneLiverData(location = TRUE, filter = FALSE)
+ZhaoImmuneLiverData(location = TRUE, filter = FALSE, legacy = FALSE)
 }
 \arguments{
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}

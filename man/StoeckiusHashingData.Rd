@@ -9,7 +9,8 @@ StoeckiusHashingData(
   mode = NULL,
   ensembl = FALSE,
   location = TRUE,
-  strip.metrics = TRUE
+  strip.metrics = TRUE,
+  legacy = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ StoeckiusHashingData(
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 
 \item{strip.metrics}{Logical scalar indicating whether quality control metrics should be removed from the HTO/ADT counts.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a matrix of UMI counts corresponding to the first \code{mode},
@@ -41,12 +45,14 @@ Present as the PBMC dataset is actually a mixture of human PBMCs and unlabelled 
 \item \code{"adt1"}, counts for the first set of ADTs (immunoglobulin controls).
 \item \code{"adt2"}, counts for the second set of ADTs (cell type-specific markers).
 }
+If \code{mode=NULL}, the default is to use \code{"human"}, \code{"mouse"} and \code{"hto"}.
 
 When \code{type="mixed"}, the \code{mode} can be one or more of:
 \itemize{
 \item \code{"rna"}, the RNA counts for the genes;
 \item \code{"hto"}, the HTO counts.
 }
+If \code{mode=NULL}, the default is to use \code{"rna"} and \code{"hto"}.
 
 If \code{ensembl=TRUE}, gene symbols for the RNA counts are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
