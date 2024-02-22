@@ -4,7 +4,12 @@
 \alias{MairPBMCData}
 \title{Obtain the Mair CITE-seq data}
 \usage{
-MairPBMCData(mode = c("rna", "adt"), ensembl = FALSE, location = TRUE)
+MairPBMCData(
+  mode = c("rna", "adt"),
+  ensembl = FALSE,
+  location = TRUE,
+  legacy = FALSE
+)
 }
 \arguments{
 \item{mode}{Character vector specifying whether to return either or both the RNA and ADT counts.}
@@ -12,6 +17,9 @@ MairPBMCData(mode = c("rna", "adt"), ensembl = FALSE, location = TRUE)
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts corresponding to the first \code{mode},

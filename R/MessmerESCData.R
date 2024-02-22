@@ -3,6 +3,8 @@
 #' Obtain the human embryonic stem cell single-cell RNA-seq data from Messmer et al. (2019).
 #'
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Row data contains a single \code{"Length"} field describing the total exonic length of each feature.
@@ -32,18 +34,23 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-MessmerESCData <- function(location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("messmer-esc", version))
+MessmerESCData <- function(location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("messmer-esc-2019", "2023-12-19", realize.assays=TRUE)
 
-    spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, spike.type, ref="endogenous")
-    
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25000000)
-    spikedata <- spikedata[rownames(spike.exp), ]
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    altExp(sce, "ERCC") <- spike.exp
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("messmer-esc", version))
+
+        spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, spike.type, ref="endogenous")
+        
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25000000)
+        spikedata <- spikedata[rownames(spike.exp), ]
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        altExp(sce, "ERCC") <- spike.exp
+    }
 
     .define_location_from_ensembl(sce, species="Hs", location=location)
 }

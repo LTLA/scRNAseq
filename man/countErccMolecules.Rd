@@ -7,7 +7,7 @@
 countErccMolecules(volume, dilution, mix = c("1", "2"), ...)
 }
 \arguments{
-\item{volume}{Numeric scalar specifying the added volume (in nanoliters) of ERCC spike-in mixture.}
+\item{volume}{Numeric scalar specifying the added volume (in microliters) of ERCC spike-in mixture.}
 
 \item{dilution}{Numeric scalar specifying the dilution factor used for the added volume of the spike-in mixture.}
 

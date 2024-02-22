@@ -72,7 +72,7 @@ for (type in c("ASC", "B", "Mo", "NKT")) {
     m <- match(out$Barcode, colnames(sce))
     stopifnot(all(!is.na(m)))
 
-    stopifnot(all(is.na(broad[m])))
+    stopifnot(all(is.na(broad[m]))) # check that there are no conflicts
     broad[m] <- type
     stopifnot(all(is.na(fine[m])))
     fine[m] <- out$Group

@@ -4,12 +4,15 @@
 \alias{XinPancreasData}
 \title{Obtain the Xin pancreas data}
 \usage{
-XinPancreasData(ensembl = FALSE, location = TRUE)
+XinPancreasData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of RPKMs.

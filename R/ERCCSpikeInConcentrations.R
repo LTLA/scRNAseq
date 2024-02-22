@@ -31,7 +31,7 @@
 #' @importFrom SingleCellExperiment splitAltExps
 ERCCSpikeInConcentrations <- function(volume = NULL, dilution = NULL, mix=c("1", "2"), legacy=FALSE) {
     if (!legacy) {
-        table <- fetchDataset("ercc", "2023-12-20", ...)
+        table <- fetchDataset("ercc", "2023-12-20")
     } else {
         version <- "2.0.0"
         hub <- .ExperimentHub()

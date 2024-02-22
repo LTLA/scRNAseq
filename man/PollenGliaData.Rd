@@ -4,12 +4,15 @@
 \alias{PollenGliaData}
 \title{Obtain the Pollen radial glia data}
 \usage{
-PollenGliaData(ensembl = FALSE, location = TRUE)
+PollenGliaData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

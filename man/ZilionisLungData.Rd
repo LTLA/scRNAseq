@@ -8,7 +8,8 @@ ZilionisLungData(
   which = c("human", "mouse"),
   ensembl = FALSE,
   location = TRUE,
-  filter = FALSE
+  filter = FALSE,
+  legacy = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,9 @@ ZilionisLungData(
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 
 \item{filter}{Logical scalar indicating if the filtered subset should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

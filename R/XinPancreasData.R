@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Row data contains fields for the Entrez ID and symbol for each gene.
@@ -33,9 +35,13 @@
 #' sce <- XinPancreasData()
 #' 
 #' @export
-XinPancreasData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("xin-pancreas", version), assays="rpkm")
+XinPancreasData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("xin-pancreas-2016", "2023-12-19", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("xin-pancreas", version), assays="rpkm")
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

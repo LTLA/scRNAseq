@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in External Table 2 of \url{http://linnarssonlab.org/drg/}.
@@ -35,11 +37,16 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData colData
-UsoskinBrainData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("usoskin-brain", version), assays="rpm")
+UsoskinBrainData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("usoskin-brain-2015", "2023-12-19", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("usoskin-brain", version), assays="rpm")
+        rownames(sce) <- rowData(sce)[,1]
+    }
+
     colnames(sce) <- colData(sce)[["Sample ID"]]
-    rownames(sce) <- rowData(sce)[,1]
     
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

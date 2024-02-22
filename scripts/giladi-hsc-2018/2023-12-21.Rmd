@@ -197,15 +197,17 @@ We now save all of the relevant components to file in preparation for upload.
 unlink("finished", recursive=TRUE)
 dir.create("finished")
 
-meta <- meta_raw
-meta$description <- sprintf(meta$description, "RNA", "RNA")
-meta$sources <- c(meta$sources, list(list(provider="GEO", id="GSE92575")))
-saveDataset(sce, file.path("finished", "rna"), meta)
+rna.meta <- meta_raw
+rna.meta$title <- sprintf(rna.meta$title, "RNA")
+rna.meta$description <- sprintf(rna.meta$description, "RNA")
+rna.meta$sources <- c(rna.meta$sources, list(list(provider="GEO", id="GSE92575")))
+saveDataset(sce, file.path("finished", "rna"), rna.meta)
 
-meta <- meta_raw
-meta$description <- sprintf(meta$description, "CRISPR", "CRISPR")
-meta$sources <- c(meta$sources, list(list(provider="GEO", id="GSE11349")))
-saveDataset(crisp.sce, file.path("finished", "crispr"), meta)
+crisp.meta <- meta_raw
+crisp.meta$title <- sprintf(crisp.meta$title, "CRISPR")
+crisp.meta$description <- sprintf(crisp.meta$description, "CRISPR")
+crisp.meta$sources <- c(crisp.meta$sources, list(list(provider="GEO", id="GSE11349")))
+saveDataset(crisp.sce, file.path("finished", "crispr"), crisp.meta)
 ```
 
 # Session information {-}

@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in GSE74672.
@@ -36,12 +38,16 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-RomanovBrainData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("romanov-brain", version), has.rowdata=FALSE)
+RomanovBrainData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("romanov-brain-2017", "2023-12-19", realize.assays=TRUE)
 
-    status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, status, ref="endogenous")
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("romanov-brain", version), has.rowdata=FALSE)
+        status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, status, ref="endogenous")
+    }
 
     .convert_to_ensembl(sce, 
         species="Mm", 

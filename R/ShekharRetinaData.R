@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata contains the cluster identities as reported in the paper.
@@ -32,9 +34,13 @@
 #' sce <- ShekharRetinaData()
 #' 
 #' @export
-ShekharRetinaData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("shekhar-retina", version), has.rowdata=FALSE)
+ShekharRetinaData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("shekhar-retina-2016", "2023-12-19", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("shekhar-retina", version), has.rowdata=FALSE)
+    }
 
     .convert_to_ensembl(sce, 
         species="Mm", 

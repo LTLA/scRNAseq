@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata includes the presumed cell type (\code{WGCNAcluster}), patient and tissue region of origin. 
@@ -33,13 +35,16 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment reducedDims<-
-NowakowskiCortexData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.6.0"
+NowakowskiCortexData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("nowakowski-cortex-2017", "2023-12-22", realize.assays=TRUE)
 
-    hub <- .ExperimentHub()
-    sce <- .create_sce(file.path("nowakowski-cortex", version), hub=hub, has.rowdata=FALSE, assays="tpm")
-
-    reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/nowakowski-cortex", version, "reddims.rds"))]]
+    } else {
+        version <- "2.6.0"
+        hub <- .ExperimentHub()
+        sce <- .create_sce(file.path("nowakowski-cortex", version), hub=hub, has.rowdata=FALSE, assays="tpm")
+        reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/nowakowski-cortex", version, "reddims.rds"))]]
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

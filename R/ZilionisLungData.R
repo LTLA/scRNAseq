@@ -6,6 +6,8 @@
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' @param filter Logical scalar indicating if the filtered subset should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is provided and contains information on the library, donor ID/animal ID, replicate and tissue.
@@ -43,36 +45,43 @@
 #' @export
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom SingleCellExperiment reducedDim<- reducedDims<- 
-ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE, filter=FALSE) {
-    version <- "2.4.0"
+ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE, filter=FALSE, legacy=FALSE) {
     which <- match.arg(which)
-    sce <- .create_sce(file.path("zilionis-lung", version), has.rowdata=FALSE, suffix=which)
 
-    if (filter) {
-        sce <- sce[,sce$Used]
+    if (!legacy) {
+        sce <- fetchDataset("zilionis-lung-2018")
+
+    } else {
+        version <- "2.4.0"
+        sce <- .create_sce(file.path("zilionis-lung", version), has.rowdata=FALSE, suffix=which)
+
+        if (filter) {
+            sce <- sce[,sce$Used]
+        }
+
+        cd <- colData(sce)
+        cn <- colnames(cd)
+        if (which=="human") {
+            which.x <- grep("^x_", cn)
+            which.y <- grep("^y_", cn)
+            grouping.x <- sub("^x_", "", cn[which.x])
+            grouping.y <- sub("^y_", "", cn[which.y])
+            stopifnot(identical(grouping.x, grouping.y)) # sanity check.
+
+            all.dims <- list()
+            for (i in seq_along(grouping.x)) {
+                all.dims[[paste0("SPRING_", grouping.x[i])]] <- cbind(x=cd[,which.x[i]], y=cd[,which.y[i]]) 
+            }
+            reducedDims(sce) <- all.dims
+        } else {
+            which.x <- which(cn=="x")
+            which.y <- which(cn=="y")
+            reducedDim(sce, "SPRING") <- cbind(x=cd[,which.x], y=cd[,which.y])
+        } 
+
+        colData(sce) <- colData(sce)[,-c(which.x, which.y)]
     }
 
-    cd <- colData(sce)
-    cn <- colnames(cd)
-    if (which=="human") {
-        which.x <- grep("^x_", cn)
-        which.y <- grep("^y_", cn)
-        grouping.x <- sub("^x_", "", cn[which.x])
-        grouping.y <- sub("^y_", "", cn[which.y])
-        stopifnot(identical(grouping.x, grouping.y)) # sanity check.
-
-        all.dims <- list()
-        for (i in seq_along(grouping.x)) {
-            all.dims[[paste0("SPRING_", grouping.x[i])]] <- cbind(x=cd[,which.x[i]], y=cd[,which.y[i]]) 
-        }
-        reducedDims(sce) <- all.dims
-    } else {
-        which.x <- which(cn=="x")
-        which.y <- which(cn=="y")
-        reducedDim(sce, "SPRING") <- cbind(x=cd[,which.x], y=cd[,which.y])
-    } 
-
-    colData(sce) <- colData(sce)[,-c(which.x, which.y)]
     .convert_to_ensembl(sce, 
         ensembl=ensembl,
         species=if (which=="human") "Hs" else "Mm",

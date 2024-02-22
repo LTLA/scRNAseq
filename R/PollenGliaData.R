@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata includes the anatomical source, sample of origin, presumed cell type and assorted alignment statistics.
@@ -30,10 +32,13 @@
 #' sce <- PollenGliaData()
 #' 
 #' @export
-PollenGliaData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.6.0"
-
-    sce <- .create_sce(file.path("pollen-glia", version), has.rowdata=FALSE)
+PollenGliaData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("pollen-glia-2015", "2023-12-22", realize.assays=TRUE)
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("pollen-glia", version), has.rowdata=FALSE)
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

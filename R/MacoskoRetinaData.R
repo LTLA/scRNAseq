@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata contains the cluster identity as reported in the paper.
@@ -34,9 +36,13 @@
 #' @export
 #' @importFrom AnnotationHub AnnotationHub
 #' @importFrom AnnotationDbi select keys
-MacoskoRetinaData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("macosko-retina", version), has.rowdata=FALSE)
+MacoskoRetinaData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("macosko-retina-2015", "2023-12-19", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("macosko-retina", version), has.rowdata=FALSE)
+    }
 
     if (ensembl) {
         # For some bizarre reason, this dataset has all-caps symbols... for mice.

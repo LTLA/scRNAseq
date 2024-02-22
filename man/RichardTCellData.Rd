@@ -4,10 +4,13 @@
 \alias{RichardTCellData}
 \title{Obtain the Richard T cell data}
 \usage{
-RichardTCellData(location = TRUE)
+RichardTCellData(location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
