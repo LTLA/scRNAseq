@@ -5,6 +5,8 @@
 #' @param tissue Character vector specifying the tissues to return.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column data contains the tissue of origin, a variety of per-cell QC metrics well as some cell type annotations.
@@ -44,27 +46,38 @@
 #' @importFrom SummarizedExperiment rowData
 HeOrganAtlasData <- function(tissue=c("Bladder", "Blood", "Common.bile.duct", "Esophagus", 
     "Heart", "Liver", "Lymph.node", "Marrow", "Muscle", "Rectum", "Skin", "Small.intestine", 
-    "Spleen", "Stomach", "Trachea"), ensembl=FALSE, location=TRUE)
+    "Spleen", "Stomach", "Trachea"), ensembl=FALSE, location=TRUE, legacy=FALSE)
 {
-    version <- "2.6.0"
-    tissue <- match.arg(tissue, several.ok=TRUE)
-    hub <- .ExperimentHub()
-    host <- file.path("he-organ-atlas", version)
-
-    all.sce <- lapply(tissue, function(x) .create_sce(host, has.rowdata=FALSE, suffix=x, hub=hub))
-    if (length(all.sce) > 1) {
-        common <- Reduce(intersect, lapply(all.sce, rownames))
-        for (i in seq_along(all.sce)) {
-            all.sce[[i]] <- all.sce[[i]][common,]
+    if (!legacy) {
+        all.sce <- lapply(tissue, function(x) fetchDataset("he-organ-2020", "2023-12-21", path=tolower(x), realize.assays=TRUE))
+        if (length(all.sce) > 1) {
+            common <- Reduce(intersect, lapply(all.sce, rownames))
+            for (i in seq_along(all.sce)) {
+                all.sce[[i]] <- all.sce[[i]][common,]
+            }
         }
+        sce <- do.call(cbind, all.sce)
+
+    } else {
+        version <- "2.6.0"
+        tissue <- match.arg(tissue, several.ok=TRUE)
+        hub <- .ExperimentHub()
+        host <- file.path("he-organ-atlas", version)
+
+        all.sce <- lapply(tissue, function(x) .create_sce(host, has.rowdata=FALSE, suffix=x, hub=hub))
+        if (length(all.sce) > 1) {
+            common <- Reduce(intersect, lapply(all.sce, rownames))
+            for (i in seq_along(all.sce)) {
+                all.sce[[i]] <- all.sce[[i]][common,]
+            }
+        }
+        sce <- do.call(cbind, all.sce)
+
+        # Pulling down reduced dimensions.
+        reddim <- hub[hub$rdatapath==file.path("scRNAseq", host, "reddim.rds")][[1]]
+        reddim <- lapply(reddim, function(x) x[colnames(sce),,drop=FALSE])
+        reducedDims(sce) <- reddim
     }
-
-    sce <- do.call(cbind, all.sce)
-
-    # Pulling down reduced dimensions.
-    reddim <- hub[hub$rdatapath==file.path("scRNAseq", host, "reddim.rds")][[1]]
-    reddim <- lapply(reddim, function(x) x[colnames(sce),,drop=FALSE])
-    reducedDims(sce) <- reddim
 
     .convert_to_ensembl(sce, 
         species="Hs", 

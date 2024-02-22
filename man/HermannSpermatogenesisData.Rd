@@ -4,13 +4,16 @@
 \alias{HermannSpermatogenesisData}
 \title{Obtain the Hermann spermatogenesis data}
 \usage{
-HermannSpermatogenesisData(strip = FALSE, location = TRUE)
+HermannSpermatogenesisData(strip = FALSE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{strip}{Logical scalar indicating whether to strip the \code{.X} notation from the row names.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.
 Only used if \code{strip=TRUE}.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with two matrices, containing spliced and unspliced counts, respectively.

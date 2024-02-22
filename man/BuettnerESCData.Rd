@@ -4,12 +4,15 @@
 \alias{BuettnerESCData}
 \title{Obtain the Buettner ESC data}
 \usage{
-BuettnerESCData(remove.htseq = TRUE, location = TRUE)
+BuettnerESCData(remove.htseq = TRUE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{remove.htseq}{Logical scalar indicating whether HT-seq alignment statistics should be removed.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

@@ -5,6 +5,8 @@
 #' @param which String specifying the species to get data for.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in GSE84133.
@@ -35,10 +37,15 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-BaronPancreasData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
+BaronPancreasData <- function(which=c("human", "mouse"), ensembl=FALSE, location=TRUE, legacy=FALSE) {
     which <- match.arg(which)
-    sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=which)
+
+    if (!legacy) {
+        sce <- fetchDataset("baron-pancreas-2016", which, realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=which)
+    }
 
     .convert_to_ensembl(sce, 
         ensembl=ensembl,

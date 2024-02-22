@@ -33,30 +33,39 @@
 #' sce <- BunisHSPCData()
 #' 
 #' @export
-BunisHSPCData <- function(filtered=TRUE) {
-    version <- "2.6.0"
+BunisHSPCData <- function(filtered=TRUE, legacy=FALSE) {
+    if (!legacy && !isFALSE(retained)) {
+        sce <- fetchDataset("bunis-hspc-2021", "2023-12-21", realize.assays=TRUE)
+        if (isTRUE(filtered)) {
+            sce <- sce[,sce$retained]
+            sce$retained <- NULL
+        }
 
-    sce <- .create_sce(file.path("bunis-hspc", version), has.rowdata = TRUE, has.coldata = FALSE)
-    
-    hub <- .ExperimentHub()
-    colData.path <- file.path("scRNAseq", "bunis-hspc", version, "coldata.rds")
-    colData <- hub[hub$rdatapath==colData.path][[1]]
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("bunis-hspc", version), has.rowdata = TRUE, has.coldata = FALSE)
 
-    if (isTRUE(filtered)) {
-        keep <- colnames(sce) %in% rownames(colData)[colData$retained]
-        sce <- sce[,keep]
-        colData$retained <- NULL
-    } else if (identical(filtered, "cells")) {
-        keep <- colnames(sce) %in% rownames(colData)
-        sce <- sce[,keep]
+        # Manually grabbing the colData as it doesn't have the right shape.
+        hub <- .ExperimentHub()
+        colData.path <- file.path("scRNAseq", "bunis-hspc", version, "coldata.rds")
+        colData <- hub[hub$rdatapath==colData.path][[1]]
+
+        if (isTRUE(filtered)) {
+            keep <- colnames(sce) %in% rownames(colData)[colData$retained]
+            sce <- sce[,keep]
+            colData$retained <- NULL
+        } else if (identical(filtered, "cells")) {
+            keep <- colnames(sce) %in% rownames(colData)
+            sce <- sce[,keep]
+        }
+
+        # Weird performance issue when directly subsetting with rownames.
+        # Also, preserve names when filtered=FALSE, though this takes some time.
+        m <- match(colnames(sce), rownames(colData))
+        colData <- colData[m,, drop = FALSE]
+        rownames(colData) <- colnames(sce)
+        colData(sce) <- colData
     }
-
-    # Weird performance issue when directly subsetting with rownames.
-    # Also, preserve names when filtered=FALSE, though this takes some time.
-    m <- match(colnames(sce), rownames(colData))
-    colData <- colData[m,, drop = FALSE]
-    rownames(colData) <- colnames(sce)
-    colData(sce) <- colData
 
     sce
 }

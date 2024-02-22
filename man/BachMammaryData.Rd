@@ -6,13 +6,17 @@
 \usage{
 BachMammaryData(
   samples = c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2"),
-  location = TRUE
+  location = TRUE,
+  legacy = FALSE
 )
 }
 \arguments{
 \item{samples}{A character vector with at least one element, specifying which samples(s) to retrieve.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

@@ -6,6 +6,8 @@
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers, when \code{mode} contains \code{"rna"}.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned, when \code{mode} contains \code{"rna"}.
 #' @param mode Character vector specifying which modalities should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata is scraped from GEO using the author-supplied TSV of per-cell annotations. 
@@ -46,14 +48,17 @@
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<-
 #' @importFrom SummarizedExperiment rowData rowData<-
 #' @importFrom BiocGenerics cbind
-GiladiHSCData <- function(mode=c("rna", "crispr"), filtered=TRUE, ensembl=FALSE, location=TRUE) {
+GiladiHSCData <- function(mode=c("rna", "crispr"), filtered=TRUE, ensembl=FALSE, location=TRUE, legacy=FALSE) {
     mode <- match.arg(mode, several.ok=TRUE)
-
     version <- "2.6.0"
 
     collated <- list()
     if ("rna" %in% mode) {
-        sce <- .create_sce(file.path("giladi-hsc", version), has.rowdata=FALSE, suffix="rna")
+        if (!legacy) {
+            sce <- fetchDataset("giladi-hsc-2018", "2023-12-21", path="rna", realize.assays=TRUE)
+        } else {
+            sce <- .create_sce(file.path("giladi-hsc", version), has.rowdata=FALSE, suffix="rna")
+        }
 
         if (filtered) {
             sce <- sce[,sce$retained]
@@ -70,7 +75,11 @@ GiladiHSCData <- function(mode=c("rna", "crispr"), filtered=TRUE, ensembl=FALSE,
     } 
 
     if ("crispr" %in% mode) {
-        sce <- .create_sce(file.path("giladi-hsc", version), suffix="crispr")
+        if (!legacy) {
+            sce <- fetchDataset("giladi-hsc-2018", "2023-12-21", path="crispr", realize.assays=TRUE)
+        } else {
+            sce <- .create_sce(file.path("giladi-hsc", version), suffix="crispr")
+        }
         collated$crispr <- sce
     }
 

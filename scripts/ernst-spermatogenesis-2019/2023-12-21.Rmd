@@ -110,8 +110,8 @@ unlink("finished", recursive=TRUE)
 dir.create("finished")
 
 copy <- meta
-copy$title <- sprintf(copy$title, "CellRanger")
-copy$description <- sprintf(copy$description, "CellRanger")
+copy$title <- sprintf(copy$title, "Cellranger")
+copy$description <- sprintf(copy$description, "Cellranger")
 saveDataset(cellranger, file.path("finished", "cellranger"), copy)
 
 copy <- meta

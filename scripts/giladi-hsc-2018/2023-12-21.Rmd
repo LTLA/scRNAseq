@@ -153,21 +153,14 @@ crisp.sce
 
 # Saving to file
 
-Unfortunately the RNA and CRISPR datasets don't have exactly the same set of cells.
-I'll make an executive decision here: we'll take the intersection to combine them into a single SCE.
+Unfortunately the RNA and CRISPR datasets don't have exactly the same set of cells, so we'll save them separately.
+We still check that the amplification batches are the same to ensure we're dealing with the same cells.
 
 ```{r}
 common <- intersect(colnames(sce), colnames(crisp.sce))
-sce <- sce[,common]
-altExp(sce, "CRISPR") <- crisp.sce[,common]
-length(common)
-```
-
-We check that the amplification batches are the same, in which case we don't need to save the CRISPR column data.
-
-```{r}
-stopifnot(identical(sce$Amp_batch_ID, altExp(sce)$amplification.batch))
-stopifnot(length(colnames(colData(altExp(sce)))) == 1L)
+mr <- match(common, colnames(sce))
+mc <- match(common, colnames(crisp.sce))
+stopifnot(identical(sce$Amp_batch_ID[mr], crisp.sce$amplification.batch[mc]))
 ```
 
 We perform polishing of the dataset to optimize for space.
@@ -176,28 +169,43 @@ We perform polishing of the dataset to optimize for space.
 library(scRNAseq)
 sce <- polishDataset(sce)
 sce
+crisp.sce <- polishDataset(crisp.sce)
+crisp.sce
 ```
 
-We now save all of the relevant components to file in preparation for upload.
+Setting up some metadata:
 
 ```{r}
-meta <- list(
-    title="Single-cell characterization of haematopoietic progenitors and their trajectories in homeostasis and perturbed haematopoiesis",
+meta_raw <- list(
+    title="Single-cell characterization of haematopoietic progenitors and their trajectories in homeostasis and perturbed haematopoiesis [%s only]",
     description="The dynamics of haematopoietic stem cell differentiation and the hierarchy of oligopotent stem cells in the bone marrow remain controversial. Here we dissect haematopoietic progenitor populations at single cell resolution, deriving an unbiased reference model of transcriptional states in normal and perturbed murine bone marrow. We define the signature of the naive haematopoietic stem cell and find a continuum of core progenitor states. Core cell populations mix transcription of pre-myeloid and pre-lymphoid programs, but do not mix erythroid or megakaryocyte programs with other fates. CRISP-seq perturbation analysis confirms our models and reveals that Cebpa regulates entry into all myeloid fates, while Irf8 and PU.1 deficiency block later differentiation towards monocyte or granulocyte fates. Our transcriptional map defines a reference network model for blood progenitors and their differentiation trajectories during normal and perturbed haematopoiesis.
 
-Maintainer note: this object only contains cells that were present in both the RNA and CRISPR data from this study.",
+Maintainer note: this object only the %s data from this study.",
     taxonomy_id="10090",
     genome="MGSCv37",
     sources=list(
-        list(provider="GEO", id="GSE92575"),
-        list(provider="GEO", id="GSE11349"),
         list(provider="PubMed", id="29915358")
     ),
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+```
 
-saveDataset(sce, "finished", meta)
+We now save all of the relevant components to file in preparation for upload.
+
+```{r}
+unlink("finished", recursive=TRUE)
+dir.create("finished")
+
+meta <- meta_raw
+meta$description <- sprintf(meta$description, "RNA", "RNA")
+meta$sources <- c(meta$sources, list(list(provider="GEO", id="GSE92575")))
+saveDataset(sce, file.path("finished", "rna"), meta)
+
+meta <- meta_raw
+meta$description <- sprintf(meta$description, "CRISPR", "CRISPR")
+meta$sources <- c(meta$sources, list(list(provider="GEO", id="GSE11349")))
+saveDataset(crisp.sce, file.path("finished", "crispr"), meta)
 ```
 
 # Session information {-}

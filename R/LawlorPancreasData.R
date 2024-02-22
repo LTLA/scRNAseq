@@ -2,6 +2,9 @@
 #'
 #' Provides the human pancreas single-cell RNA-seq data from Lawlor et al. (2017).
 #'
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
+#'
 #' @details
 #' Column metadata is provided in the same form as supplied in GSE86469. 
 #' This contains information such as the cell type labels and patient status.
@@ -23,8 +26,12 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-LawlorPancreasData <- function() {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("lawlor-pancreas", version), has.rowdata=FALSE)
+LawlorPancreasData <- function(legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("lawlor-pancreas-2017", "2023-12-17", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("lawlor-pancreas", version), has.rowdata=FALSE)
+    }
     sce
 }

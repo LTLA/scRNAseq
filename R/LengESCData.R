@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether gene symbols should be converted to Ensembl annotation.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata contains the cell line, experiment number and experimentally determined cell cycle phase for each cell.
@@ -27,9 +29,14 @@
 #' sce <- LengESCData()
 #' 
 #' @export
-LengESCData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("leng-esc", version), assays="normcounts", has.rowdata=FALSE)
+LengESCData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("leng-esc-2015", "2023-12-18", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("leng-esc", version), assays="normcounts", has.rowdata=FALSE)
+    }
+
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 
         species="Hs",

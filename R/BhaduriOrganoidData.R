@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column data contains sample-level information.
@@ -35,10 +37,14 @@
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<- reducedDims<- colPairs<-
 #' @importFrom SummarizedExperiment rowData rowData<- assayNames<-
 #' @importFrom BiocGenerics cbind
-BhaduriOrganoidData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.6.0"
-    sce <- .create_sce(file.path("bhaduri-organoid", version), has.rowdata=FALSE)
-    assayNames(sce) <- "normalized"
+BhaduriOrganoidData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("bhaduri-organoid-2020", "2023-12-21", realize.assays=TRUE)
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("bhaduri-organoid", version), has.rowdata=FALSE)
+        assayNames(sce) <- "normalized"
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

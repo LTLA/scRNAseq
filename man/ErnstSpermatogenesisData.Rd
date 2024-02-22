@@ -6,13 +6,17 @@
 \usage{
 ErnstSpermatogenesisData(
   method = c("emptyDrops", "Cellranger"),
-  location = TRUE
+  location = TRUE,
+  legacy = FALSE
 )
 }
 \arguments{
 \item{method}{String indicating which cell caller to obtain results for.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

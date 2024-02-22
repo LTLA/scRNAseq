@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Row metadata contains fields for the symbol and chromosomal location of each gene,
@@ -40,50 +42,54 @@
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment rowData<- colData<-
 #' @importFrom SingleCellExperiment splitAltExps
-GrunPancreasData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE, has.coldata=FALSE)
+GrunPancreasData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("grun-pancreas-2016", "2023-12-14", realize.assays=TRUE)
 
-    # Loading the column metadata
-    lib.names <- sub("_.*", "", colnames(sce))
-    donor.names <- sub("(D10|D17|D2|D3|D7).*", "\\1", lib.names)
-    treatment <- c(
-        D10631="CD63+ sorted cells",
-        D101="live sorted cells, library 1",
-        D102="live sorted cells, library 2",
-        D1713="CD13+ sorted cells",
-        D172444="CD24+ CD44+ live sorted cells",
-        D17All1="live sorted cells, library 1",
-        D17All2="live sorted cells, library 2",
-        D17TGFB="TGFBR3+ sorted cells",
-        D2ex="exocrine fraction, live sorted cells",
-        D3en1="live sorted cells, library 1",
-        D3en2="live sorted cells, library 2",
-        D3en3="live sorted cells, library 3",
-        D3en4="live sorted cells, library 4",
-        D3ex="exocrine fraction, live sorted cells",
-        D71="live sorted cells, library 1",
-        D72="live sorted cells, library 2",
-        D73="live sorted cells, library 3",
-        D74="live sorted cells, library 4"
-    )[lib.names]
-    colData(sce) <- DataFrame(donor=donor.names, sample=treatment, row.names=colnames(sce))
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("grun-pancreas", version), has.rowdata=FALSE, has.coldata=FALSE)
 
-    # Splitting up gene information.
-    symbol <- sub("__.*", "", rownames(sce))
-    loc <- sub(".*__", "", rownames(sce))
-    rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+        # Loading the column metadata
+        lib.names <- sub("_.*", "", colnames(sce))
+        donor.names <- sub("(D10|D17|D2|D3|D7).*", "\\1", lib.names)
+        treatment <- c(
+            D10631="CD63+ sorted cells",
+            D101="live sorted cells, library 1",
+            D102="live sorted cells, library 2",
+            D1713="CD13+ sorted cells",
+            D172444="CD24+ CD44+ live sorted cells",
+            D17All1="live sorted cells, library 1",
+            D17All2="live sorted cells, library 2",
+            D17TGFB="TGFBR3+ sorted cells",
+            D2ex="exocrine fraction, live sorted cells",
+            D3en1="live sorted cells, library 1",
+            D3en2="live sorted cells, library 2",
+            D3en3="live sorted cells, library 3",
+            D3en4="live sorted cells, library 4",
+            D3ex="exocrine fraction, live sorted cells",
+            D71="live sorted cells, library 1",
+            D72="live sorted cells, library 2",
+            D73="live sorted cells, library 3",
+            D74="live sorted cells, library 4"
+        )[lib.names]
+        colData(sce) <- DataFrame(donor=donor.names, sample=treatment, row.names=colnames(sce))
 
-    # Splitting spike-ins into an alternative experiment.
-    status <- ifelse(grepl("ERCC-[0-9]+", symbol), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, status, ref="endogenous")
+        # Splitting up gene information.
+        symbol <- sub("__.*", "", rownames(sce))
+        loc <- sub(".*__", "", rownames(sce))
+        rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
 
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 20, dilution = 50000)
-    spikedata <- spikedata[rownames(spike.exp), ]
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    altExp(sce, "ERCC") <- spike.exp
+        # Splitting spike-ins into an alternative experiment.
+        status <- ifelse(grepl("ERCC-[0-9]+", symbol), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, status, ref="endogenous")
 
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 20, dilution = 50000)
+        spikedata <- spikedata[rownames(spike.exp), ]
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        altExp(sce, "ERCC") <- spike.exp
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rowData(sce)$symbol, 

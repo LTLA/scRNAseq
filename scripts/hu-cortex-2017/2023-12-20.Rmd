@@ -98,7 +98,7 @@ sce$protocol <- rep(sub("-3T3$", "", names(counts.3T3)), vapply(counts.3T3, ncol
 table(sce$protocol)
 ```
 
-Adding some polisht o optimize for space:
+Adding some polish to optimize for space:
 
 ```{r}
 library(scRNAseq)

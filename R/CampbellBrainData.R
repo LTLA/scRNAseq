@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the row names of the returned object should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in GSE93374.
@@ -31,9 +33,13 @@
 #' sce <- CampbellBrainData()
 #' 
 #' @export
-CampbellBrainData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("campbell-brain", version), has.rowdata=FALSE)
+CampbellBrainData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("campbell-brain-2017", "2023-12-14", realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("campbell-brain", version), has.rowdata=FALSE)
+    }
 
     .convert_to_ensembl(sce, 
         species="Mm", 

@@ -4,6 +4,8 @@
 #'
 #' @param method String indicating which cell caller to obtain results for.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' This study contains two analyses done with datasets from different cell calling algorithms.
@@ -35,11 +37,15 @@
 #' }
 #' 
 #' @export
-ErnstSpermatogenesisData <- function(method=c("emptyDrops", "Cellranger"), location=TRUE) {
-    version <- "2.6.0"
-
+ErnstSpermatogenesisData <- function(method=c("emptyDrops", "Cellranger"), location=TRUE, legacy=FALSE) {
     method <- match.arg(method)
-    sce <- .create_sce(file.path("ernst-spermatogenesis", version), suffix=tolower(method))
+
+    if (!legacy) {
+        sce <- fetchDataset("ernst-spermatogenesis-2019", tolower(method), realize.assays=TRUE)
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("ernst-spermatogenesis", version), suffix=tolower(method))
+    }
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

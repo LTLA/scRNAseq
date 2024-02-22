@@ -7,6 +7,8 @@
 #' If specified, this overrides \code{mode}.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata includes the mode and sample corresponding to each cell/nuclei.
@@ -44,45 +46,54 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-HuCortexData <- function(mode=c("ctx", "3T3"), samples=NULL, ensembl=FALSE, location=TRUE)
-{
-    version <- "2.4.0"
+HuCortexData <- function(mode=c("ctx", "3T3"), samples=NULL, ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    mode <- match.arg(mode)
 
-    avail.samples <- c(
-        "cell-3T3", "nuclei-3T3",
-        sprintf("nuclei-ctx-%i", seq_len(13)),
-        "nuclei-ctx-saline1", "nuclei-ctx-PTZ1", "nuclei-ctx-saline2", "nuclei-ctx-PTZ2"
-    )
-    avail.modes <- sub("^[^-]+-", "", avail.samples)
-    avail.modes <- sub("-.*", "", avail.modes)
-    
-    if (!is.null(samples)) {
-        samples <- match.arg(samples, avail.samples, several.ok=TRUE)
+    if (!legacy) {
+        if (mode == "ctx") {
+            mode <- "cortex"
+        }
+        sce <- fetchDataset("hu-cortex-2017", "2023-12-20", path=mode, realize.assays=TRUE)
+
     } else {
-        mode <- match.arg(mode, several.ok=TRUE)
-        samples <- character(0)
-        for (m in mode) { # convoluted to respect ordering of 'mode'.
-            samples <- c(samples, avail.samples[avail.modes==m])
+        version <- "2.4.0"
+
+        avail.samples <- c(
+            "cell-3T3", "nuclei-3T3",
+            sprintf("nuclei-ctx-%i", seq_len(13)),
+            "nuclei-ctx-saline1", "nuclei-ctx-PTZ1", "nuclei-ctx-saline2", "nuclei-ctx-PTZ2"
+        )
+        avail.modes <- sub("^[^-]+-", "", avail.samples)
+        avail.modes <- sub("-.*", "", avail.modes)
+        
+        if (!is.null(samples)) {
+            samples <- match.arg(samples, avail.samples, several.ok=TRUE)
+        } else {
+            mode <- match.arg(mode, several.ok=TRUE)
+            samples <- character(0)
+            for (m in mode) { # convoluted to respect ordering of 'mode'.
+                samples <- c(samples, avail.samples[avail.modes==m])
+            }
         }
-    }
-    sample.idx <- match(samples, avail.samples)
+        sample.idx <- match(samples, avail.samples)
 
-    all.sce <- list()
-    for (s in sample.idx) {
-        current <- .create_sce(file.path("hu-cortex", version), has.rowdata=FALSE, has.coldata=FALSE, suffix=avail.samples[s])
-        current$Mode <- avail.modes[s]
-        current$Sample <- avail.samples[s]
-        all.sce <- c(all.sce, list(current))
-    }
-
-    if (length(all.sce) > 1) {
-        common <- Reduce(intersect, lapply(all.sce, rownames))
-        for (i in seq_along(all.sce)) {
-            all.sce[[i]] <- all.sce[[i]][common,]
+        all.sce <- list()
+        for (s in sample.idx) {
+            current <- .create_sce(file.path("hu-cortex", version), has.rowdata=FALSE, has.coldata=FALSE, suffix=avail.samples[s])
+            current$Mode <- avail.modes[s]
+            current$Sample <- avail.samples[s]
+            all.sce <- c(all.sce, list(current))
         }
-    }
 
-    sce <- do.call(cbind, all.sce)
+        if (length(all.sce) > 1) {
+            common <- Reduce(intersect, lapply(all.sce, rownames))
+            for (i in seq_along(all.sce)) {
+                all.sce[[i]] <- all.sce[[i]][common,]
+            }
+        }
+
+        sce <- do.call(cbind, all.sce)
+    }
 
     .convert_to_ensembl(sce, 
         species="Mm", 

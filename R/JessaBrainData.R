@@ -4,6 +4,8 @@
 #'
 #' @param filtered Logical scalar indicating whether to filter out cells that were not used by the authors.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' If \code{filtered=TRUE}, only the cells used by the authors in their final analysis are returned.
@@ -37,14 +39,18 @@
 #' } 
 #' @export
 #' @importFrom SingleCellExperiment reducedDims<-
-JessaBrainData <- function(filtered=TRUE, location=TRUE) {
-    version <- "2.6.0"
+JessaBrainData <- function(filtered=TRUE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("jessa-brain-2019", "2023-12-22", realize.assays=TRUE)
 
-    hub <- .ExperimentHub()
-    sce <- .create_sce(file.path("jessa-brain", version), hub=hub)
+    } else {
+        version <- "2.6.0"
+        hub <- .ExperimentHub()
+        sce <- .create_sce(file.path("jessa-brain", version), hub=hub)
 
-    reddims <- hub[hub$rdatapath==file.path("scRNAseq", "jessa-brain", version, "reddims.rds")][[1]]
-    reducedDims(sce) <- reddims
+        reddims <- hub[hub$rdatapath==file.path("scRNAseq", "jessa-brain", version, "reddims.rds")][[1]]
+        reducedDims(sce) <- reddims
+    }
 
     if (filtered) {
         sce <- sce[,sce$retained]

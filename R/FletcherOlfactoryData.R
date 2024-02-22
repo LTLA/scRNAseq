@@ -5,6 +5,8 @@
 #' @param filtered Logical scalar indicating whether to filter out cells that were not used by the authors.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details 
 #' Column metadata is scraped from GEO, using both the author-supplied \dQuote{phenoData} per-cell annotations and the author-supplied \dQuote{protocolData} per-cell annotations. 
@@ -39,10 +41,13 @@
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps 
 #' @importFrom SummarizedExperiment rowData 
-FletcherOlfactoryData <- function(filtered=TRUE, ensembl=FALSE, location=TRUE) {
-    version <- "2.6.0"
-
-    sce <- .create_sce(file.path("fletcher-olfactory", version), has.rowdata=TRUE)
+FletcherOlfactoryData <- function(filtered=TRUE, ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("fletcher-olfactory-2019", "2023-12-21", realize.assays=TRUE)
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("fletcher-olfactory", version), has.rowdata=TRUE)
+    }
 
     if (filtered) {
         sce <- sce[,sce$retained]

@@ -4,7 +4,7 @@
 \alias{BunisHSPCData}
 \title{Obtain the Bunis haematopoietic stem and progenitor cell data}
 \usage{
-BunisHSPCData(filtered = TRUE)
+BunisHSPCData(filtered = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{filtered}{Logical scalar or "cells" indicating whether to:

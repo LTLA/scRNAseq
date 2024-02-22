@@ -4,6 +4,8 @@
 #'
 #' @param remove.htseq Logical scalar indicating whether HT-seq alignment statistics should be removed.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Rows corresponding to HT-seq's alignment statistics are removed by default.
@@ -32,23 +34,28 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps 
-BuettnerESCData <- function(remove.htseq=TRUE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("buettner-esc", version), has.rowdata=TRUE)
+BuettnerESCData <- function(remove.htseq=TRUE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDatasets("buettner-esc-2015", "2023-12-14", realize.assays=TRUE)
 
-    if (remove.htseq) {
-        sce <- sce[grepl("^ENSMUS", rownames(sce)) | grepl("^ERCC", rownames(sce)),]
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("buettner-esc", version), has.rowdata=TRUE)
+
+        if (remove.htseq) {
+            sce <- sce[grepl("^ENSMUS", rownames(sce)) | grepl("^ERCC", rownames(sce)),]
+        }
+
+        status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, status, ref="endogenous")
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 1000)
+        spikedata <- spikedata[rownames(spike.exp),]
+
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
+        altExp(sce, "ERCC") <- spike.exp
     }
-
-    status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, status, ref="endogenous")
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 1000)
-    spikedata <- spikedata[rownames(spike.exp),]
-
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
-    altExp(sce, "ERCC") <- spike.exp
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

@@ -8,7 +8,8 @@ GiladiHSCData(
   mode = c("rna", "crispr"),
   filtered = TRUE,
   ensembl = FALSE,
-  location = TRUE
+  location = TRUE,
+  legacy = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,9 @@ GiladiHSCData(
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers, when \code{mode} contains \code{"rna"}.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned, when \code{mode} contains \code{"rna"}.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a matrix of UMI counts for the scRNA-seq or CRISPR-seq data.
