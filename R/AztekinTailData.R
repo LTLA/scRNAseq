@@ -31,7 +31,7 @@
 #' @importFrom SummarizedExperiment colData colData<-
 AztekinTailData <- function(legacy=FALSE) {
     if (!legacy) {
-        sce <- fetchDataset("aztekin-tail-2019", "2023-12-14")
+        sce <- fetchDataset("aztekin-tail-2019", "2023-12-14", rea)
         sce <- realize_assays(sce)
 
     } else {

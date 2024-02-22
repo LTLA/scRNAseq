@@ -11,6 +11,8 @@ fetchDataset(
   package = "scRNAseq",
   cache = NULL,
   overwrite = FALSE,
+  realize.assays = FALSE,
+  realize.reduced.dims = TRUE,
   ...
 )
 }
@@ -25,6 +27,9 @@ Defaults to \code{"."} if no subdatasets are present.}
 \item{package}{String containing the name of the package.}
 
 \item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.}
+
+\item{realize.assays, realize.reduced.dims}{Logical scalars indicating whether to realize assays and reduced dimensions into memory.
+Dense and sparse \linkS4class{ReloadedArray} objects are converted into ordinary arrays and \linkS4class{dgCMatrix} objects, respectively.}
 
 \item{...}{Further arguments to pass to \code{\link{readObject}}.}
 }

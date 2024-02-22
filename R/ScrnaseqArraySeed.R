@@ -81,7 +81,7 @@ setAs("ScrnaseqMatrix", "ScrnaseqArray", function(from) from)
 
 #' @export
 #' @importFrom alabaster.base saveObject
-setMethod("saveObject", "ScrnaseqArray", function(x, path, reloadedarray.reuse.files="link", ...) {
+setMethod("saveObject", "ScrnaseqArray", function(x, path, ...) {
     s <- x@seed
 
     manifest <- list.files(s@cached, recursive=TRUE)
