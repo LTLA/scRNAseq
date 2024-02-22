@@ -5,7 +5,7 @@
 #' @param name String containing the name of the dataset.
 #' @param version String containing the version of the dataset.
 #' @param path String containing the path to a subdataset, if \code{name} contains multiple datasets.
-#' Defaults to \code{"."} if no subdatasets are present.
+#' Defaults to \code{NULL} if no subdatasets are present.
 #' @param package String containing the name of the package.
 #' @param cache,overwrite Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.
 #' @param realize.assays,realize.reduced.dims Logical scalars indicating whether to realize assays and reduced dimensions into memory.
@@ -30,7 +30,7 @@
 #'
 #' @export
 #' @importFrom alabaster.base altReadObjectFunction altReadObject
-fetchDataset <- function(name, version, path=".", package="scRNAseq", cache=NULL, overwrite=FALSE, realize.assays=FALSE, realize.reduced.dims=TRUE, ...) {
+fetchDataset <- function(name, version, path=NULL, package="scRNAseq", cache=NULL, overwrite=FALSE, realize.assays=FALSE, realize.reduced.dims=TRUE, ...) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
@@ -38,7 +38,7 @@ fetchDataset <- function(name, version, path=".", package="scRNAseq", cache=NULL
     provenance <- list(name=name, version=version, package=package, root=normalizePath(version_path))
 
     obj_path <- version_path
-    if (path != ".") {
+    if (!is.null(path)) {
         obj_path <- file.path(version_path, gsub("/*$", "", path))
     }
 
@@ -48,12 +48,12 @@ fetchDataset <- function(name, version, path=".", package="scRNAseq", cache=NULL
 }
 
 #' @export
-fetchMetadata <- function(name, version, path=".", package="scRNAseq", cache=NULL, overwrite=FALSE) {
+fetchMetadata <- function(name, version, path=NULL, package="scRNAseq", cache=NULL, overwrite=FALSE) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
 
-    if (path == ".") {
+    if (is.null(path)) {
         remote_path <- "_bioconductor.json"
     } else {
         remote_path <- paste0(path, "/_bioconductor.json")
@@ -91,10 +91,16 @@ scLoadObject <- function(path, metadata=NULL, scRNAseq.array.provenance=NULL, sc
             dpath <- dirname(dpath)
         }
 
+        if (length(relative.path)) {
+            relative.path <- paste(relative.path, collapse="/")
+        } else {
+            relative.path <- NULL
+        }
+
         ans <- ScrnaseqArray(
             name=prov$name, 
             version=prov$version, 
-            path=paste(relative.path, collapse="/"), 
+            path=relative.path,
             cached=path, 
             package=prov$package, 
             seed=ans@seed@seed

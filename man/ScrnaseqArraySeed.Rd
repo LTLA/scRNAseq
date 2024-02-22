@@ -32,7 +32,8 @@ Alternatively an existing ScrnaseqArraySeed, which is returned without modificat
 
 \item{version}{String containing the version of the asset containing the array.}
 
-\item{path}{String containing the path to the array inside the asset.}
+\item{path}{String containing the path to the array inside the versinoed asset.
+If \code{NULL}, the array is present at the root of the version asset's directory.}
 
 \item{cached}{String containing the path to the locally cached representation of the array.}
 

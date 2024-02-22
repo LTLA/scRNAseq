@@ -7,7 +7,8 @@
 #' Alternatively an existing ScrnaseqArraySeed, which is returned without modification.
 #' @param version String containing the version of the asset containing the array.
 #' @param package String containing the name of the package containing the asset.
-#' @param path String containing the path to the array inside the asset.
+#' @param path String containing the path to the array inside the versinoed asset.
+#' If \code{NULL}, the array is present at the root of the version asset's directory.
 #' @param cached String containing the path to the locally cached representation of the array.
 #' @param seed Contents of the loaded array.
 #' If \code{NULL}, this is created by calling \code{\link{readObject}} on \code{cached}.
@@ -56,7 +57,8 @@ ScrnaseqArray <- function(path, seed=NULL, ...) {
 
 #' @export
 #' @importClassesFrom alabaster.matrix WrapperArraySeed
-setClass("ScrnaseqArraySeed", contains="WrapperArraySeed", slots=c(name="character", version="character", path="character", cached="character", package="character"))
+#' @importClassesFrom S4Vectors character_OR_NULL
+setClass("ScrnaseqArraySeed", contains="WrapperArraySeed", slots=c(name="character", version="character", path="character_OR_NULL", cached="character", package="character"))
 
 #' @export
 #' @importClassesFrom alabaster.matrix WrapperArray
