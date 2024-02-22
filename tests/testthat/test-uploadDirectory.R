@@ -30,15 +30,6 @@ test_that("file listing works with ScrnaseqMatrices", {
     tmp0 <- tempfile()
     alabaster.base::saveObject(sce, tmp0)
 
-    sce2 <- sce
-    assay(sce2, "foobar", withDimnames=FALSE) <- ScrnaseqArray(
-        name="test", 
-        version="foo", 
-        path="bar", 
-        cached=file.path(tmp0, "assays", "0"),
-        seed=matrix(0, 100, 10)
-    )
-
     meta <- list(
         title="My dataset",
         description="This is my dataset",
@@ -47,6 +38,15 @@ test_that("file listing works with ScrnaseqMatrices", {
         sources=list(list(provider="GEO", id="GSE12345"), list(provider="DOI", id="123asd/231.123")),
         maintainer_name="Kaori Sakuramori",
         maintainer_email="sakuramori.kaori@765pro.com"
+    )
+
+    sce2 <- sce
+    assay(sce2, "foobar", withDimnames=FALSE) <- ScrnaseqArray(
+        name="test", 
+        version="foo", 
+        path="bar", 
+        cached=file.path(tmp0, "assays", "0"),
+        seed=matrix(0, 100, 10)
     )
 
     tmp <- tempfile()
@@ -58,6 +58,26 @@ test_that("file listing works with ScrnaseqMatrices", {
 
     files <- data.frame(listing$files)
     expect_identical(sort(c(files$path, links$from.path, "assays/1/_link")), sort(list.files(tmp, recursive=TRUE)))
+
+    # Works in the pathological case where path = NULL. This shouldn't happen
+    # as there should always be a path to an SE's assay, but you never know.
+    {
+        sce2 <- sce
+        assay(sce2, "foobar", withDimnames=FALSE) <- ScrnaseqArray(
+            name="test", 
+            version="foo", 
+            path=NULL, 
+            cached=file.path(tmp0, "assays", "0"),
+            seed=matrix(0, 100, 10)
+        )
+
+        tmp <- tempfile()
+        saveDataset(sce2, tmp, meta)
+        listing <- scRNAseq:::list_files(tmp)
+        links <- data.frame(listing$links)
+        expect_identical(links$to.path, c("array.h5", "OBJECT"))
+        expect_identical(links$from.path, c("assays/1/array.h5", "assays/1/OBJECT"))
+    }
 })
 
 test_that("the actual upload works correctly", {

@@ -136,7 +136,7 @@ list_files <- function(full, relative=NULL, link=NULL) {
         if (stuff$isdir) {
             link2 <- link
             if (!is.null(link2)) {
-                link2$path <- paste0(link2$path, "/", f)
+                link2$path <- append_path_or_null(link2$path, f)
             }
             x <- list_files(f2, r2, link=link2)
             for (n in names(out.links)) {
