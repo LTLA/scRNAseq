@@ -55,19 +55,26 @@ saveDataset <- function(x, path, metadata) {
     unlink(path, recursive=TRUE)
     alabaster.base::saveObject(x, path)
 
-    takane <- list(
-        type = readObjectFile(path)$type,
-        summarized_experiment = list(
+    takane <- list(type = readObjectFile(path)$type)
+
+    if (is(x, "SummarizedExperiment")) {
+        takane$summarized_experiment = list(
            rows = nrow(x),
            columns = ncol(x),
            assays = I(assayNames(x)),
            column_annotations = I(colnames(colData(x)))
         )
-    )
-    if (is(x, "SingleCellExperiment")) {
-        takane$single_cell_experiment <- list(
-            reduced_dimensions = I(reducedDimNames(x)),
-            alternative_experiments = I(altExpNames(x))
+
+        if (is(x, "SingleCellExperiment")) {
+            takane$single_cell_experiment <- list(
+                reduced_dimensions = I(reducedDimNames(x)),
+                alternative_experiments = I(altExpNames(x))
+            )
+        }
+    } else if (is(x, "DataFrame")) {
+        takane$data_frame <- list(
+            rows=nrow(x),
+            column_names=I(colnames(x))
         )
     }
     metadata$applications <- c(metadata$applications, list(takane=takane))
