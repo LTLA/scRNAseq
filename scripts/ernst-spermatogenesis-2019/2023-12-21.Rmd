@@ -17,7 +17,7 @@ We download and cache them using the `r Biocpkg("BiocFileCache")` package.
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask = FALSE)
-base.url <- "ftp://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/946/E-MTAB-6946/Files/"
+base.url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-6946/Files/"
 ```
 
 We read each of the count matrices into memory.
