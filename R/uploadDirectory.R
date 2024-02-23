@@ -11,8 +11,11 @@
 #' @param version String containing the version of the asset. 
 #' This should not contain \code{/} or start with \code{..}.
 #' @param package String containing the package name.
-#' @param url String containing the URL to the gypsum REST API.
 #' @param probation Logical scalar indicating whether this should be a probational upload.
+#' @param url String containing the URL to the gypsum REST API.
+#' Defaults to \code{\link[gypsum]{restUrl}}.
+#' @param token String containing a GitHub access token for authentication.
+#' Defaults to \code{\link[gypsum]{accessToken}}.
 #' @param concurrent Integer scalar specifying the number of concurrent uploads.
 #' @param abort.failed Logical scalar indicating whether to abort the upload on any failure.
 #' Setting this to \code{FALSE} can be helpful for diagnosing upload problems.
@@ -63,9 +66,12 @@
 #' }
 #'
 #' @export
-uploadDirectory <- function(dir, name, version, package="scRNAseq", url=NULL, probation=FALSE, concurrent=1, abort.failed=TRUE) {
+uploadDirectory <- function(dir, name, version, package="scRNAseq", probation=FALSE, url=NULL, token=NULL, concurrent=1, abort.failed=TRUE) {
     if (is.null(url)) {
         url <- gypsum::restUrl()
+    }
+    if (is.null(token)) {
+        token <- gypsum::accessToken()
     }
 
     # Going through the directory contents and unpacking the explicit links.
@@ -79,7 +85,8 @@ uploadDirectory <- function(dir, name, version, package="scRNAseq", url=NULL, pr
         links=data.frame(listing$links),
         directory=dir,
         probation=probation,
-        url=url
+        url=url,
+        token=token
     )
 
     success <- FALSE

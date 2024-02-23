@@ -9,8 +9,9 @@ uploadDirectory(
   name,
   version,
   package = "scRNAseq",
-  url = NULL,
   probation = FALSE,
+  url = NULL,
+  token = NULL,
   concurrent = 1,
   abort.failed = TRUE
 )
@@ -28,9 +29,13 @@ This should not contain \code{/} or start with \code{..}.}
 
 \item{package}{String containing the package name.}
 
-\item{url}{String containing the URL to the gypsum REST API.}
-
 \item{probation}{Logical scalar indicating whether this should be a probational upload.}
+
+\item{url}{String containing the URL to the gypsum REST API.
+Defaults to \code{\link[gypsum]{restUrl}}.}
+
+\item{token}{String containing a GitHub access token for authentication.
+Defaults to \code{\link[gypsum]{accessToken}}.}
 
 \item{concurrent}{Integer scalar specifying the number of concurrent uploads.}
 
