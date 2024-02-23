@@ -169,7 +169,7 @@ Maintainer note: ERCC molecule counts were computed based on the addition of 25 
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "2023-12-19", meta)
+saveDataset(sce, "2023-12-19_output", meta)
 ```
 
 # Session information {-}

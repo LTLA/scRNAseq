@@ -100,7 +100,7 @@ Maintainer note: alignment metrics are stored as a nested data frame in the colu
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "2023-12-17", meta)
+saveDataset(sce, "2023-12-17_output", meta)
 ```
 
 # Session information {-}

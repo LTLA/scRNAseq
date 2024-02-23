@@ -125,7 +125,7 @@ meta <- list(
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "2023-12-17", meta)
+saveDataset(sce, "2023-12-17_output", meta)
 ```
 
 # Session information {-}

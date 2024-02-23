@@ -113,7 +113,7 @@ Maintainer note: this dataset contains only the pancreas cells from the study. T
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "2023-12-14", meta)
+saveDataset(sce, "2023-12-14_output", meta)
 ```
 
 # Session information {-}

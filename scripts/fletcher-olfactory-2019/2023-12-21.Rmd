@@ -171,7 +171,7 @@ Maintainer note: cluster labels were obtained from the corresponding code reposi
     maintainer_email="risso.davide@gmail.com"
 )
 
-saveDataset(sce, "2023-12-21", meta)
+saveDataset(sce, "2023-12-21_output", meta)
 ```
 
 # Session information {-}

@@ -1,0 +1,4 @@
+*.log
+*_output
+*_uploaded
+geo_cache/

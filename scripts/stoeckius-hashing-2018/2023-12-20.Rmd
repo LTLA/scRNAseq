@@ -74,10 +74,11 @@ meta <- list(
 We also clear out any existing output directory.
 
 ```{r}
-unlink("2023-12-20", recursive=TRUE)
-dir.create("2023-12-20")
-dir.create(file.path("2023-12-20", "pbmc"))
-dir.create(file.path("2023-12-20", "mixture"))
+output.dir <- "2023-12-20_output"
+unlink(output.dir, recursive=TRUE)
+dir.create(output.dir)
+dir.create(file.path(output.dir, "pbmc"))
+dir.create(file.path(output.dir, "mixture"))
 ```
 
 # Processing the PBMC data
@@ -118,7 +119,7 @@ copy$taxonomy_id <- c("10090", "9606")
 copy$genome <- c("GRCm38", "GRCh37")
 copy$title <- paste0(copy$title, " [PBMC RNA only]")
 copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC RNA data from this study.")
-saveDataset(pbmc.rna.sce, file.path("2023-12-20", "pbmc", "rna"), copy)
+saveDataset(pbmc.rna.sce, file.path(output.dir, "pbmc", "rna"), copy)
 ```
 
 ## HTO
@@ -158,7 +159,7 @@ copy$taxonomy_id <- c("10090", "9606")
 copy$genome <- c("GRCm38", "GRCh37")
 copy$title <- paste0(copy$title, " [PBMC HTO only]")
 copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC HTO data from this study.")
-saveDataset(hto.se, file.path("2023-12-20", "pbmc", "hto"), copy)
+saveDataset(hto.se, file.path(output.dir, "pbmc", "hto"), copy)
 ```
 
 ## IgG 
@@ -187,7 +188,7 @@ copy$taxonomy_id <- c("10090", "9606")
 copy$genome <- c("GRCm38", "GRCh37")
 copy$title <- paste0(copy$title, " [PBMC IgG only]")
 copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC IgG control data from this study.")
-saveDataset(igg.se, file.path("2023-12-20", "pbmc", "igg"), copy)
+saveDataset(igg.se, file.path(output.dir, "pbmc", "igg"), copy)
 ```
 
 ## ADT controls
@@ -216,7 +217,7 @@ copy$taxonomy_id <- c("10090", "9606")
 copy$genome <- c("GRCm38", "GRCh37")
 copy$title <- paste0(copy$title, " [PBMC ADT only]")
 copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the PBMC ADT data from this study.")
-saveDataset(adt.se, file.path("2023-12-20", "pbmc", "adt"), copy)
+saveDataset(adt.se, file.path(output.dir, "pbmc", "adt"), copy)
 ```
 
 # Preparing the cell mixture data
@@ -252,7 +253,7 @@ copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh37"
 copy$title <- paste0(copy$title, " [cell line mixture, RNA only]")
 copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the cell line mixture RNA data from this study.")
-saveDataset(sce, file.path("2023-12-20", "mixture", "rna"), copy)
+saveDataset(sce, file.path(output.dir, "mixture", "rna"), copy)
 ```
 
 ## HTO
@@ -282,7 +283,7 @@ copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh37"
 copy$title <- paste0(copy$title, " [cell line mixture, HTO only]")
 copy$description <- paste0(copy$description, "\n\nMaintainer note: this dataset contains only the cell line mixture HTO data from this study.")
-saveDataset(hto.se, file.path("2023-12-20", "mixture", "hto"), copy)
+saveDataset(hto.se, file.path(output.dir, "mixture", "hto"), copy)
 ```
 
 # Session information {-}

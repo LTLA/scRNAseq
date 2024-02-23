@@ -21,12 +21,9 @@ bfc <- BiocFileCache("raw_data", ask = FALSE)
 base <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-5522/"
 ```
 
-We set up some common metadata and a directory for creating outputs later:
+We set up some common metadata:
 
 ```{r}
-unlink("2023-12-18", recursive=TRUE)
-dir.create("2023-12-18")
-
 meta <- list(
     title="Assessing the reliability of spike-in normalization for analyses of single-cell RNA sequencing data [%s only]",
     description="By profiling the transcriptomes of individual cells, single-cell RNA sequencing provides unparalleled resolution to study cellular heterogeneity. However, this comes at the cost of high technical noise, including cell-specific biases in capture efficiency and library generation. One strategy for removing these biases is to add a constant amount of spike-in RNA to each cell and to scale the observed expression values so that the coverage of spike-in transcripts is constant across cells. This approach has previously been criticized as its accuracy depends on the precise addition of spike-in RNA to each sample. Here, we perform mixture experiments using two different sets of spike-in RNA to quantify the variance in the amount of spike-in RNA added to each well in a plate-based protocol. We also obtain an upper bound on the variance due to differences in behavior between the two spike-in sets. We demonstrate that both factors are small contributors to the total technical variance and have only minor effects on downstream analyses, such as detection of highly variable genes and clustering. Our results suggest that scaling normalization using spike-in transcripts is reliable enough for routine use in single-cell RNA sequencing data analyses.
@@ -41,6 +38,14 @@ Maintainer note: this dataset contains only the %s from this study.",
     maintainer_name="Aaron Lun",
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
+```
+
+And a directory for creating outputs later:
+
+```{r}
+output.dir <- "2023-12-18_output"
+unlink(output.dir, recursive=TRUE)
+dir.create(output.dir)
 ```
 
 # Reading in cell annotations
@@ -139,7 +144,7 @@ And saving it.
 copy <- meta
 copy$title <- sprintf(copy$title, "416B cells")
 copy$description <- sprintf(copy$description, "416B cells")
-saveDataset(sce.416b, "2023-12-18/416b", copy)
+saveDataset(sce.416b, file.path(output.dir, "416b"), copy)
 ```
 
 # Processing the trophoblast data
@@ -187,7 +192,7 @@ And we save it to file for upload.
 copy <- meta
 copy$title <- sprintf(copy$title, "trophoblasts")
 copy$description <- sprintf(copy$description, "trophoblasts")
-saveDataset(sce.tropho, "2023-12-18/tropho", copy)
+saveDataset(sce.tropho, file.path(output.dir, "tropho"), copy)
 ```
 
 # Session information {-}
