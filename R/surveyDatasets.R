@@ -30,7 +30,7 @@ surveyDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
     con <- DBI::dbConnect(RSQLite::SQLite(), bpath)
     on.exit(DBI::dbDisconnect(con))
 
-    stmt <- "SELECT json_extract(metadata, '$') AS meta, versions.project AS project, versions.asset AS asset, versions.version AS version, path";
+    stmt <- "SELECT json_extract(metadata, '$') AS meta, versions.asset AS asset, versions.version AS version, path";
     if (!latest) {
         stmt <- paste0(stmt, ", versions.latest AS latest")
     }
