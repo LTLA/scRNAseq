@@ -1,26 +1,34 @@
-#' List available datasets
+#' Survey of dataset metadata
 #'
-#' Summary information for all available datasets in the \pkg{scRNAseq} package.
+#' Metadata survey for all available datasets in the \pkg{scRNAseq} package.
 #'
 #' @param cache,overwrite Arguments to pass to \code{\link[gypsum]{fetchMetadataDatabase}}.
+#' @param latest Whether to only consider the latest version of each dataset.
 #'
 #' @return 
-#' A \linkS4class{DataFrame} where each row corresponds to a dataset, containing various pieces of metadata.
+#' A \linkS4class{DataFrame} where each row corresponds to a dataset, containing various columns of metadata.
 #' Some columns may be lists to capture 1:many mappings.
+#'
+#' @details
+#' The returned DataFrame contains the usual suspects like the title and description for each dataset,
+#' the number of rows and columns, the organisms and genome builds involved,
+#' whether the dataset has any pre-computed reduced dimensions, and so on.
+#' More details can be found in the Bioconductor metadata schema at \url{https://github.com/ArtifactDB/bioconductor-metadata-index}. 
 #'
 #' @author Aaron Lun
 #'
 #' @examples
-#' listAvailableDatasets()
+#' surveyDatasets()
 #' 
 #' @export
 #' @importFrom S4Vectors DataFrame
-listAvailableDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
+surveyDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
     bpath <- gypsum::fetchMetadataDatabase(cache=cache, overwrite=overwrite)
     con <- DBI::dbConnect(RSQLite::SQLite(), bpath)
+    on.exit(DBI::dbDisconnect(con))
 
     stmt <- "SELECT json_extract(metadata, '$') AS meta, versions.project AS project, versions.asset AS asset, versions.version AS version, path";
     if (!latest) {
