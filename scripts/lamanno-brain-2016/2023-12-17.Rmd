@@ -91,8 +91,8 @@ Rather frustratingly, each of the stages has a different set of genes, so we nee
 We set up a simple function do to so:
 
 ```{r}
-unlink('finished', recursive=TRUE)
-dir.create("finished")
+unlink('2023-12-17', recursive=TRUE)
+dir.create("2023-12-17")
 
 title <- "Molecular Diversity of Midbrain Development in Mouse, Human, and Stem Cells [%s only]"
 description <- "Understanding human embryonic ventral midbrain is of major interest for Parkinson’s disease. However, the cell types, their gene expression dynamics, and their relationship to commonly used rodent models remain to be defined. We performed single-cell RNA sequencing to examine ventral midbrain development in human and mouse. We found 25 molecularly defined human cell types, including five subtypes of radial glia-like cells and four progenitors. In the mouse, two mature fetal dopaminergic neuron subtypes diversified into five adult classes during postnatal development. Cell types and gene expression were generally conserved across species, but with clear differences in cell proliferation, developmental timing, and dopaminergic neuron development. Additionally, we developed a method to quantitatively assess the fidelity of dopaminergic neurons derived from human pluripotent stem cells, at a single-cell level. Thus, our study provides insight into the molecular programs controlling human midbrain development and provides a foundation for the development of cell replacement therapies.
@@ -100,7 +100,7 @@ description <- "Understanding human embryonic ventral midbrain is of major inter
 Maintainer note: this dataset contains only the %s from this study."
 
 savePart <- function(sce, short, long, human=TRUE) {
-    saveDataset(sce, file.path("finished", short), 
+    saveDataset(sce, file.path("2023-12-17", short), 
         list(
             title=sprintf(title, long),
             description=sprintf(description, long),

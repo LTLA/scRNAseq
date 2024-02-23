@@ -194,20 +194,20 @@ Maintainer note: this object only the %s data from this study.",
 We now save all of the relevant components to file in preparation for upload.
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-21", recursive=TRUE)
+dir.create("2023-12-21")
 
 rna.meta <- meta_raw
 rna.meta$title <- sprintf(rna.meta$title, "RNA")
 rna.meta$description <- sprintf(rna.meta$description, "RNA")
 rna.meta$sources <- c(rna.meta$sources, list(list(provider="GEO", id="GSE92575")))
-saveDataset(sce, file.path("finished", "rna"), rna.meta)
+saveDataset(sce, file.path("2023-12-21", "rna"), rna.meta)
 
 crisp.meta <- meta_raw
 crisp.meta$title <- sprintf(crisp.meta$title, "CRISPR")
 crisp.meta$description <- sprintf(crisp.meta$description, "CRISPR")
 crisp.meta$sources <- c(crisp.meta$sources, list(list(provider="GEO", id="GSE11349")))
-saveDataset(crisp.sce, file.path("finished", "crispr"), crisp.meta)
+saveDataset(crisp.sce, file.path("2023-12-21", "crispr"), crisp.meta)
 ```
 
 # Session information {-}

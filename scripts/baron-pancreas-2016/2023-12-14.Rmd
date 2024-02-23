@@ -48,8 +48,8 @@ Maintainer note: this dataset contains only the %s cells from the study.",
 We also flush any existing directory to remove previous artifacts. 
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-14", recursive=TRUE)
+dir.create("2023-12-14")
 ```
 
 # Reading in human data
@@ -119,7 +119,7 @@ copy$title <- sprintf(copy$title, "human")
 copy$description <- sprintf(copy$description, "human")
 copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh38"
-saveDataset(sce, file.path("finished", "human"), copy)
+saveDataset(sce, file.path("2023-12-14", "human"), copy)
 ```
 
 # Reading in mouse data
@@ -169,7 +169,7 @@ copy$title <- sprintf(copy$title, "mouse")
 copy$description <- sprintf(copy$description, "mouse")
 copy$taxonomy_id <- "10090"
 copy$genome <- "GRCm38"
-saveDataset(sce, file.path("finished", "mouse"), copy)
+saveDataset(sce, file.path("2023-12-14", "mouse"), copy)
 ```
 
 # Session information {-}

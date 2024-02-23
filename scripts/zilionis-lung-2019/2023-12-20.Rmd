@@ -31,8 +31,8 @@ untar(tarball, exdir=temp)
 We clean out any existing output directory:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-20", recursive=TRUE)
+dir.create("2023-12-20")
 ```
 
 We also set up a metadata template in preparation for saving:
@@ -204,7 +204,7 @@ copy$taxonomy_id <- "9606"
 copy$genome <- "GRCh38"
 copy$title <- sprintf(copy$title, "human")
 copy$description <- sprintf(copy$description, "human")
-saveDataset(sce, file.path("finished", "human"), copy)
+saveDataset(sce, file.path("2023-12-20", "human"), copy)
 ```
 
 ```{r, echo=FALSE, results="hide"}
@@ -336,7 +336,7 @@ copy$taxonomy_id <- "10090"
 copy$genome <- "GRCm38"
 copy$title <- sprintf(copy$title, "mouse")
 copy$description <- sprintf(copy$description, "mouse")
-saveDataset(sce, file.path("finished", "mouse"), copy)
+saveDataset(sce, file.path("2023-12-20", "mouse"), copy)
 ```
 
 # Session information {-}

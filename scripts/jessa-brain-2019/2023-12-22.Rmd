@@ -198,7 +198,7 @@ Maintainer note: this dataset consists of cells from all samples in this study. 
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "finished", meta)
+saveDataset(sce, "2023-12-22", meta)
 ```
 
 # Session information {-}

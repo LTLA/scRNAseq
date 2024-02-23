@@ -124,20 +124,20 @@ Conclusions: snRNA-seq achieves comparable gene detection to scRNA-seq in adult 
 Now saving them:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-20", recursive=TRUE)
+dir.create("2023-12-20")
 
 healthy.meta <- meta_raw
 healthy.meta$title <- sprintf(healthy.meta$title, "healthy")
 healthy.meta$description <- paste0(healthy.meta$description, "\n\n",
     "Maintainer note: this dataset only contains cells from healthy donors across multiple droplet technologies.")
-saveDataset(healthy.sce, "finished/healthy", healthy.meta)
+saveDataset(healthy.sce, "2023-12-20/healthy", healthy.meta)
 
 disease.meta <- meta_raw
 disease.meta$title <- sprintf(disease.meta$title, "disease")
 disease.meta$description <- paste0(disease.meta$description, "\n\n",
     "Maintainer note: this dataset only contains cells from diseased donors, generated using 10X Chromium snRNA-seq.")
-saveDataset(disease.sce, "finished/disease", disease.meta)
+saveDataset(disease.sce, "2023-12-20/disease", disease.meta)
 ```
 
 # Session information {-}

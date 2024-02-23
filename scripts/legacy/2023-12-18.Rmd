@@ -87,8 +87,8 @@ We need to set up the directory first:
 
 ```{r}
 library(scRNAseq)
-unlink('finished', recursive=TRUE)
-dir.create('finished')
+unlink('2023-12-18', recursive=TRUE)
+dir.create('2023-12-18')
 ```
 
 The original fluidigm dataset:
@@ -110,7 +110,7 @@ Maintainer note: this dataset was processed by Michael Cole and included in olde
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(fluidigm, "finished/fluidigm", meta)
+saveDataset(fluidigm, "2023-12-18/fluidigm", meta)
 ```
 
 A subset of the Allen brain dataset:
@@ -132,7 +132,7 @@ Maintainer note: this dataset is a subset (379 cells) of the full data in the st
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(allen, "finished/allen", meta)
+saveDataset(allen, "2023-12-18/allen", meta)
 ```
 
 And another one involving Th2 cells:
@@ -154,7 +154,7 @@ Maintainer note: this dataset was processed by Michael Cole and included in olde
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(th2, "finished/th2", meta)
+saveDataset(th2, "2023-12-18/th2", meta)
 ```
 
 # Session information {-}

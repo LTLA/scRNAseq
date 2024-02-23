@@ -106,18 +106,18 @@ Maintainer note: this dataset contains the cells that were called as cells via t
 We now do the saving.
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-21", recursive=TRUE)
+dir.create("2023-12-21")
 
 copy <- meta
 copy$title <- sprintf(copy$title, "Cellranger")
 copy$description <- sprintf(copy$description, "Cellranger")
-saveDataset(cellranger, file.path("finished", "cellranger"), copy)
+saveDataset(cellranger, file.path("2023-12-21", "cellranger"), copy)
 
 copy <- meta
 copy$title <- sprintf(copy$title, "EmptyDrops")
 copy$description <- sprintf(copy$description, "EmptyDrops")
-saveDataset(cellranger, file.path("finished", "emptydrops"), copy)
+saveDataset(cellranger, file.path("2023-12-21", "emptydrops"), copy)
 ```
 
 # Session information {-}

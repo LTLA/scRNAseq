@@ -24,8 +24,8 @@ base <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-5522/"
 We set up some common metadata and a directory for creating outputs later:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-18", recursive=TRUE)
+dir.create("2023-12-18")
 
 meta <- list(
     title="Assessing the reliability of spike-in normalization for analyses of single-cell RNA sequencing data [%s only]",
@@ -139,7 +139,7 @@ And saving it.
 copy <- meta
 copy$title <- sprintf(copy$title, "416B cells")
 copy$description <- sprintf(copy$description, "416B cells")
-saveDataset(sce.416b, "finished/416b", copy)
+saveDataset(sce.416b, "2023-12-18/416b", copy)
 ```
 
 # Processing the trophoblast data
@@ -187,7 +187,7 @@ And we save it to file for upload.
 copy <- meta
 copy$title <- sprintf(copy$title, "trophoblasts")
 copy$description <- sprintf(copy$description, "trophoblasts")
-saveDataset(sce.tropho, "finished/tropho", copy)
+saveDataset(sce.tropho, "2023-12-18/tropho", copy)
 ```
 
 # Session information {-}

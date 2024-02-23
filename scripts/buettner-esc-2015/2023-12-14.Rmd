@@ -120,7 +120,7 @@ Maintainer note: alignment and quantification metrics are stored in a nested `me
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "finished", meta)
+saveDataset(sce, "2023-12-14", meta)
 ```
 
 # Session information {-}

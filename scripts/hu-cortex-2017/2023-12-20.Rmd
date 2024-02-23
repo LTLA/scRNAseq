@@ -47,8 +47,8 @@ Maintainer note: this dataset contains only the %s cells from the study.",
 We clear out any existing output directory:
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-20", recursive=TRUE)
+dir.create("2023-12-20")
 ```
 
 # Processing the data
@@ -112,7 +112,7 @@ And saving it:
 copy <- meta
 copy$title <- sprintf(copy$title, "3T3")
 copy$description <- sprintf(copy$description, "3T3")
-saveDataset(sce, "finished/3T3", copy)
+saveDataset(sce, "2023-12-20/3T3", copy)
 ```
 
 # Saving the cortex data
@@ -191,7 +191,7 @@ And saving it:
 copy <- meta
 copy$title <- sprintf(copy$title, "cortex")
 copy$description <- sprintf(copy$description, "cortex")
-saveDataset(sce, "finished/cortex", copy)
+saveDataset(sce, "2023-12-20/cortex", copy)
 ```
 
 # Session information {-}

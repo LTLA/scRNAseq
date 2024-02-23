@@ -126,7 +126,7 @@ meta <- list(
     maintainer_email="milan.malfait94@gmail.com"
 )
 
-saveDataset(sce, "finished", meta)
+saveDataset(sce, "2023-12-20", meta)
 ```
 
 # Session information {-}

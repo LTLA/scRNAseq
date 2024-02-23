@@ -152,14 +152,14 @@ Maintainer note: this dataset contains only the cells from the %s. Additional me
 We now save each organ's SCE in preparation for upload.
 
 ```{r}
-unlink("finished", recursive=TRUE)
-dir.create("finished")
+unlink("2023-12-21", recursive=TRUE)
+dir.create("2023-12-21")
 for (tissue in names(all.counts)) {
     pretty <- gsub("\\.", " ", tolower(tissue))
     copy <- meta
     copy$title <- sprintf(copy$title, pretty)
     copy$description <- sprintf(copy$description, pretty)
-    saveDataset(sce, file.path("finished", gsub("\\.", "_", tolower(tissue))), copy)
+    saveDataset(sce, file.path("2023-12-21", gsub("\\.", "_", tolower(tissue))), copy)
 }
 ```
 

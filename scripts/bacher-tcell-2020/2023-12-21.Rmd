@@ -167,7 +167,7 @@ Maintainer note: the column data contains an additional `retained` field, indica
     maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
 )
 
-saveDataset(sce, "finished", meta)
+saveDataset(sce, "2023-12-21", meta)
 ```
 
 # Session information {-}
