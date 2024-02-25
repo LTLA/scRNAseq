@@ -118,7 +118,7 @@ saveDataset(cellranger, file.path(output.dir, "cellranger"), copy)
 copy <- meta
 copy$title <- sprintf(copy$title, "EmptyDrops")
 copy$description <- sprintf(copy$description, "EmptyDrops")
-saveDataset(cellranger, file.path(output.dir, "emptydrops"), copy)
+saveDataset(emptydrops, file.path(output.dir, "emptydrops"), copy)
 ```
 
 # Session information {-}
