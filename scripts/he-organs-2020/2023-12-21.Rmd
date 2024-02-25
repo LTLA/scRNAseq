@@ -160,7 +160,7 @@ for (tissue in names(all.counts)) {
     copy <- meta
     copy$title <- sprintf(copy$title, pretty)
     copy$description <- sprintf(copy$description, pretty)
-    saveDataset(sce, file.path(output.dir, gsub("\\.", "_", tolower(tissue))), copy)
+    saveDataset(all.sce[[tissue]], file.path(output.dir, gsub("\\.", "_", tolower(tissue))), copy)
 }
 ```
 
