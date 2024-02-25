@@ -53,7 +53,7 @@ saveDataset <- function(x, path, metadata) {
     gypsum::validateMetadata(metadata, schema) # First validation for user-supplied content.
 
     unlink(path, recursive=TRUE)
-    alabaster.base::saveObject(x, path)
+    alabaster.base::saveObject(x, path, ReloadedArray.reuse.files="symlink")
 
     takane <- list(type = readObjectFile(path)$type)
 

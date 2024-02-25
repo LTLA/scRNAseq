@@ -79,34 +79,7 @@ scLoadObject <- function(path, metadata=NULL, scRNAseq.array.provenance=NULL, sc
         ...
     )
 
-    if (is(ans, "ReloadedArray")) {
-        prov <- scRNAseq.array.provenance 
-
-        # Need to figure out the relative path inside the version. This assumes
-        # that 'prov$root' was also normalized so that paths are comparable.
-        relative.path <- character(0)
-        dpath <- normalizePath(path)
-        while (dirname(dpath) != prov$root) {
-            relative.path <- c(basename(dpath), relative.path)
-            dpath <- dirname(dpath)
-        }
-
-        if (length(relative.path)) {
-            relative.path <- paste(relative.path, collapse="/")
-        } else {
-            relative.path <- NULL
-        }
-
-        ans <- ScrnaseqArray(
-            name=prov$name, 
-            version=prov$version, 
-            path=relative.path,
-            cached=path, 
-            package=prov$package, 
-            seed=ans@seed@seed
-        )
-
-    } else if (is(ans, "SummarizedExperiment")) {
+    if (is(ans, "SummarizedExperiment")) {
         if (scRNAseq.realize.assays) {
             for (y in assayNames(ans)) {
                 assay(ans, y, withDimnames=FALSE) <- realize_array(assay(ans, y, withDimnames=FALSE))

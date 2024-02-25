@@ -21,13 +21,14 @@ test_that("file listing works as expected without any special elements", {
     saveDataset(sce, tmp, meta)
 
     listing <- scRNAseq:::list_files(tmp)
-    expect_identical(nrow(data.frame(listing$links)), 0L)
-    files <- data.frame(listing$files)
-    expect_identical(sort(files$path), sort(list.files(tmp, recursive=TRUE)))
+    expect_identical(nrow(listing$links), 0L)
+    expect_identical(sort(listing$files), sort(list.files(tmp, recursive=TRUE)))
 })
 
-test_that("file listing works with ScrnaseqMatrices", {
-    tmp0 <- tempfile()
+test_that("file listing works with ReloadedArrays", {
+    cache <- tempfile()
+    tmp0 <- file.path(cache, gypsum:::BUCKET_CACHE_NAME, "scRNAseq", "test", "foo")
+    dir.create(dirname(tmp0), recursive=TRUE)
     alabaster.base::saveObject(sce, tmp0)
 
     meta <- list(
@@ -41,43 +42,16 @@ test_that("file listing works with ScrnaseqMatrices", {
     )
 
     sce2 <- sce
-    assay(sce2, "foobar", withDimnames=FALSE) <- ScrnaseqArray(
-        name="test", 
-        version="foo", 
-        path="bar", 
-        cached=file.path(tmp0, "assays", "0"),
-        seed=matrix(0, 100, 10)
-    )
+    assay(sce2, "foobar", withDimnames=FALSE) <- alabaster.matrix::ReloadedArray(path=file.path(tmp0, "assays", "0"), seed=matrix(0, 100, 10))
 
     tmp <- tempfile()
     saveDataset(sce2, tmp, meta)
-    listing <- scRNAseq:::list_files(tmp)
-    links <- data.frame(listing$links)
-    expect_identical(links$to.path, c("bar/array.h5", "bar/OBJECT"))
-    expect_identical(links$from.path, c("assays/1/array.h5", "assays/1/OBJECT"))
+    expect_error(scRNAseq:::list_files(tmp), "failed to convert")
 
-    files <- data.frame(listing$files)
-    expect_identical(sort(c(files$path, links$from.path, "assays/1/_link")), sort(list.files(tmp, recursive=TRUE)))
-
-    # Works in the pathological case where path = NULL. This shouldn't happen
-    # as there should always be a path to an SE's assay, but you never know.
-    {
-        sce2 <- sce
-        assay(sce2, "foobar", withDimnames=FALSE) <- ScrnaseqArray(
-            name="test", 
-            version="foo", 
-            path=NULL, 
-            cached=file.path(tmp0, "assays", "0"),
-            seed=matrix(0, 100, 10)
-        )
-
-        tmp <- tempfile()
-        saveDataset(sce2, tmp, meta)
-        listing <- scRNAseq:::list_files(tmp)
-        links <- data.frame(listing$links)
-        expect_identical(links$to.path, c("array.h5", "OBJECT"))
-        expect_identical(links$from.path, c("assays/1/array.h5", "assays/1/OBJECT"))
-    }
+    listing <- scRNAseq:::list_files(tmp, cache=cache)
+    expect_identical(listing$links$to.path, c("assays/0/array.h5", "assays/0/OBJECT"))
+    expect_identical(listing$links$from.path, c("assays/1/array.h5", "assays/1/OBJECT"))
+    expect_identical(sort(c(listing$files, listing$links$from.path)), sort(list.files(tmp, recursive=TRUE)))
 })
 
 test_that("the actual upload works correctly", {

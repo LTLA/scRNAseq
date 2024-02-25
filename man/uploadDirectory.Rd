@@ -9,6 +9,7 @@ uploadDirectory(
   name,
   version,
   package = "scRNAseq",
+  cache = NULL,
   probation = FALSE,
   url = NULL,
   token = NULL,
@@ -28,6 +29,9 @@ This should not contain \code{/} or start with \code{..}.}
 This should not contain \code{/} or start with \code{..}.}
 
 \item{package}{String containing the package name.}
+
+\item{cache}{String containing the path to the same cache used in \code{\link{fetchDataset}}.
+Used to create upload links when an existing dataset is saved into \code{dir}, e.g., for updates.}
 
 \item{probation}{Logical scalar indicating whether this should be a probational upload.}
 

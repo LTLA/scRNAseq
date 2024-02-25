@@ -19,6 +19,8 @@
 #' @param concurrent Integer scalar specifying the number of concurrent uploads.
 #' @param abort.failed Logical scalar indicating whether to abort the upload on any failure.
 #' Setting this to \code{FALSE} can be helpful for diagnosing upload problems.
+#' @param cache String containing the path to the same cache used in \code{\link{fetchDataset}}.
+#' Used to create upload links when an existing dataset is saved into \code{dir}, e.g., for updates.
 #'
 #' @return On successful upload, \code{NULL} is invisibly returned.
 #'
@@ -66,7 +68,7 @@
 #' }
 #'
 #' @export
-uploadDirectory <- function(dir, name, version, package="scRNAseq", probation=FALSE, url=NULL, token=NULL, concurrent=1, abort.failed=TRUE) {
+uploadDirectory <- function(dir, name, version, package="scRNAseq", cache=NULL, probation=FALSE, url=NULL, token=NULL, concurrent=1, abort.failed=TRUE) {
     if (is.null(url)) {
         url <- gypsum::restUrl()
     }
@@ -74,15 +76,14 @@ uploadDirectory <- function(dir, name, version, package="scRNAseq", probation=FA
         token <- gypsum::accessToken()
     }
 
-    # Going through the directory contents and unpacking the explicit links.
-    listing <- list_files(dir)
+    listing <- list_files(dir, cache=cache)
 
     blob <- gypsum::startUpload(
         project=package,
         asset=name,
         version=version, 
-        files=data.frame(listing$files),
-        links=data.frame(listing$links),
+        files=listing$files,
+        links=listing$links,
         directory=dir,
         probation=probation,
         url=url,
@@ -113,59 +114,10 @@ append_path_or_null <- function(dir, base) {
     }
 }
 
-list_files <- function(full, relative=NULL, link=NULL) {
-    # Handle ScrnaseqMatrix objects.
-    collected <- list.files(full)
-    if ("_link" %in% collected) {
-        link <- jsonlite::fromJSON(file.path(full, "_link"), simplifyVector=FALSE)
-        collected <- setdiff(collected, '_link')
+list_files <- function(full, cache=NULL) {
+    if (is.null(cache)) {
+        cache <- gypsum::cacheDirectory()
     }
-
-    out.links <- list(
-        to.project=character(0), 
-        to.asset=character(0),
-        to.version=character(0),
-        to.path=character(0),
-        from.path=character(0)
-    )
-
-    out.files <- list(
-        path=character(0),
-        md5sum=character(0),
-        size=numeric(0)
-    )
-
-    for (f in collected) {
-        f2 <- file.path(full, f)
-        r2 <- append_path_or_null(relative, f)
-        stuff <- file.info(f2)
-
-        if (stuff$isdir) {
-            link2 <- link
-            if (!is.null(link2)) {
-                link2$path <- append_path_or_null(link2$path, f)
-            }
-            x <- list_files(f2, r2, link=link2)
-            for (n in names(out.links)) {
-                out.links[[n]] <- c(out.links[[n]], x$links[[n]])
-            }
-            for (n in names(out.files)) {
-                out.files[[n]] <- c(out.files[[n]], x$files[[n]])
-            }
-
-        } else if (is.null(link)) {
-            out.files$path <- c(out.files$path, r2)
-            out.files$md5sum <- c(out.files$md5sum, digest::digest(file=f2))
-            out.files$size <- c(out.files$size, stuff$size)
-
-        } else {
-            out.links$from.path <- c(out.links$from.path, r2) 
-            out.links$to.project <- c(out.links$to.project, link$project)
-            out.links$to.asset <- c(out.links$to.asset, link$asset)
-            out.links$to.version <- c(out.links$to.version, link$version)
-            out.links$to.path <- c(out.links$to.path, append_path_or_null(link$path, f))
-        }
-    }
-
-    list(links=out.links, files=out.files)
+    # Going through the directory contents and converting symlinks to upload links.
+    gypsum::prepareDirectoryUpload(full, links="always", cache=cache)
 }
