@@ -151,11 +151,11 @@ test_that("polishDataset strips out alternative experiment's colData", {
     altExp(sce, "ERCC", withDimnames=FALSE) <- sub
 
     y <- polishDataset(sce)
-    expect_identical(ncol(altExp(y)), 0L)
+    expect_identical(ncol(colData(altExp(y))), 0L)
 
     # Unless we disable it.
     y <- polishDataset(sce, remove.altexp.coldata=FALSE)
-    expect_identical(ncol(altExp(y)), 1L)
+    expect_identical(ncol(colData(altExp(y))), 1L)
 })
 
 test_that("polishDataset forbids highly nested altexps", {

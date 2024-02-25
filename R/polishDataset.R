@@ -4,7 +4,7 @@
 #' This performs some minor changes to improve storage efficiency.
 #'
 #' @param x A \linkS4class{SummarizedExperiment} or one of its subclasses.
-#' @param strip.names Logical scalar indicating whether to strip redundant names from internal objects, 
+#' @param strip.inner.names Logical scalar indicating whether to strip redundant names from internal objects, 
 #' e.g., dimnames of the assays, row names of reduced dimensions, column names of alternative experiments.
 #' This saves some space in the on-disk representation.
 #' @param reformat.assay.by.density Numeric scalar indicating whether to optimize assay formats based on the density of non-zero values.
@@ -44,6 +44,7 @@ polishDataset <- function(x, strip.inner.names=TRUE, reformat.assay.by.density=0
     )
 }
 
+#' @import methods
 #' @importFrom BiocGenerics mean
 #' @importFrom DelayedArray is_sparse type<- DelayedArray
 #' @importClassesFrom SparseArray SVT_SparseMatrix

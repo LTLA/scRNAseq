@@ -16,6 +16,10 @@ polishDataset(
 \arguments{
 \item{x}{A \linkS4class{SummarizedExperiment} or one of its subclasses.}
 
+\item{strip.inner.names}{Logical scalar indicating whether to strip redundant names from internal objects, 
+e.g., dimnames of the assays, row names of reduced dimensions, column names of alternative experiments.
+This saves some space in the on-disk representation.}
+
 \item{reformat.assay.by.density}{Numeric scalar indicating whether to optimize assay formats based on the density of non-zero values.
 Assays with densities above this number are converted to ordinary dense arrays (if they are not already), while those with lower densities are converted to sparse matrices.
 This can be disabled by setting it to \code{NULL}.}
@@ -28,10 +32,6 @@ This defaults to \code{TRUE} as the alternative experiment column data is usuall
 
 \item{forbid.nested.altexp}{Logical scalar indicating whether nested alternative experiments (i.e., alternative experiments of alternative experiments) should be forbidden.
 This defaults to \code{TRUE} as nested alternative experiments are usually the result of some mistake in \code{\link{altExp}} preparation.}
-
-\item{strip.names}{Logical scalar indicating whether to strip redundant names from internal objects, 
-e.g., dimnames of the assays, row names of reduced dimensions, column names of alternative experiments.
-This saves some space in the on-disk representation.}
 }
 \value{
 A modified copy of \code{x}.

@@ -49,8 +49,8 @@ test_that("file listing works with ReloadedArrays", {
     expect_error(scRNAseq:::list_files(tmp), "failed to convert")
 
     listing <- scRNAseq:::list_files(tmp, cache=cache)
-    expect_identical(listing$links$to.path, c("assays/0/array.h5", "assays/0/OBJECT"))
-    expect_identical(listing$links$from.path, c("assays/1/array.h5", "assays/1/OBJECT"))
+    expect_identical(sort(listing$links$to.path), c("assays/0/array.h5", "assays/0/OBJECT"))
+    expect_identical(sort(listing$links$from.path), c("assays/1/array.h5", "assays/1/OBJECT"))
     expect_identical(sort(c(listing$files, listing$links$from.path)), sort(list.files(tmp, recursive=TRUE)))
 })
 
@@ -75,8 +75,9 @@ test_that("the actual upload works correctly", {
     uploadDirectory(tmp, "test", version, probation=TRUE)
     on.exit(gypsum::rejectProbation("scRNAseq", "test", version))
 
-    roundtrip <- fetchDataset("test", version)
+    cache <- tempfile() # use a different cache to avoid pulling down the test.
+    roundtrip <- fetchDataset("test", version, cache=cache)
     expect_identical(colData(roundtrip), colData(sce))
     expect_identical(as.matrix(counts(roundtrip)), assay(sce))
-    expect_s4_class(counts(roundtrip, withDimnames=FALSE), "ScrnaseqMatrix")
+    expect_s4_class(counts(roundtrip, withDimnames=FALSE), "ReloadedMatrix")
 })

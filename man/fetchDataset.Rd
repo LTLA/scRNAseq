@@ -51,7 +51,7 @@ fetchMetadata("zeisel-brain-2015", "2023-12-14")
 
 \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
 
-\code{\link{listAvailableVersions}} and friends, to get options for \code{name} and \code{version}.
+\code{\link{surveyDatasets}} and \code{\link{listVersions}}, to get possible values for \code{name} and \code{version}.
 }
 \author{
 Aaron Lun

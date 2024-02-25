@@ -45,7 +45,7 @@
 LunSpikeInData <- function(which=c("416b", "tropho"), split.oncogene=FALSE, location=TRUE, legacy=FALSE) {
     which <- match.arg(which)
 
-    if (!legacy) {
+    if (!legacy && !split.oncogene) {
         sce <- fetchDataset("lun-spikein-2017", "2023-12-18", path=which, realize.assays=TRUE) 
 
     } else {

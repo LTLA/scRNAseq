@@ -44,11 +44,12 @@ WuKidneyData <- function(mode=c("healthy", "disease"), ensembl=FALSE, location=T
 
     if (!legacy) {
         for (m in mode) {
-            current <- fetchDataset("wu-kidney-2019", "2023-12-20", mode, realize.assays=TRUE)
+            current <- fetchDataset("wu-kidney-2019", "2023-12-20", m, realize.assays=TRUE)
             current$Status <- m
             if (m != "healthy") {
                 current$Technology <- "sNuc-10x"
             }
+            all.sce[[m]] <- current
         }
 
     } else {

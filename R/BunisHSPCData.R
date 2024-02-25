@@ -8,6 +8,8 @@
 #' \item \code{"cells"}: filter out empty droplets as filtered out by cell ranger.
 #' \item \code{FALSE}: no filtering
 #' }
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata is recreated from GEO using the author-supplied TSV of per-cell annotations, or retrieved from a processed version of the data shared by authors via figshare.

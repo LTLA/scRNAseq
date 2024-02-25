@@ -12,6 +12,8 @@ countErccMolecules(volume, dilution, mix = c("1", "2"), ...)
 \item{dilution}{Numeric scalar specifying the dilution factor used for the added volume of the spike-in mixture.}
 
 \item{mix}{String specifying whether to compute the number of molecules for mix 1 or 2.}
+
+\item{...}{Further arguments to pass to \code{\link{fetchDataset}}.}
 }
 \value{
 A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.

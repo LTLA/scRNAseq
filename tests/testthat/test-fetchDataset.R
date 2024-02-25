@@ -5,23 +5,22 @@ test_that("fetchDataset works as expected", {
     sce <- fetchDataset("zeisel-brain-2015", "2023-12-14")
     expect_s4_class(sce, "SingleCellExperiment")
 
-    # Correctly creates ScrnaseqMatrix objects.
+    # Correctly creates ReloadedMatrix objects.
     ass <- assay(sce, withDimnames=FALSE)
-    expect_s4_class(ass, "ScrnaseqMatrix")
+    expect_s4_class(ass, "ReloadedMatrix")
     expect_true(DelayedArray::is_sparse(ass))
-    expect_identical(ass@seed@name, "zeisel-brain-2015")
-    expect_identical(ass@seed@version, "2023-12-14")
-    expect_identical(ass@seed@path, "0")
+    expect_true(grepl("zeisel-brain-2015", ass@seed@path))
+    expect_true(grepl("2023-12-14", ass@seed@path))
 
     # Works with realization options.
     sce <- fetchDataset("zeisel-brain-2015", "2023-12-14", realize.assays=TRUE)
     expect_s4_class(assay(sce, withDimnames=FALSE), "dgCMatrix")
-    expect_s4_class(assay(altExp(sce), withDimnames=FALSE), "dgCMatrix")
+    expect_type(assay(altExp(sce), withDimnames=FALSE), "integer") # also realizes the alternative experiments.
 })
 
 test_that("fetchDataset realizes the reduced dimensions", {
     sce <- fetchDataset("aztekin-tail-2019", "2023-12-14", realize.reduced.dims=FALSE)
-    expect_s4_class(reducedDim(sce, withDimnames=FALSE), "ScrnaseqMatrix")
+    expect_s4_class(reducedDim(sce, withDimnames=FALSE), "ReloadedMatrix")
 
     sce <- fetchDataset("aztekin-tail-2019", "2023-12-14", realize.reduced.dims=TRUE)
     expect_type(reducedDim(sce, withDimnames=FALSE), "double")

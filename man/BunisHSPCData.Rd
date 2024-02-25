@@ -13,6 +13,9 @@ BunisHSPCData(filtered = TRUE, legacy = FALSE)
 \item \code{"cells"}: filter out empty droplets as filtered out by cell ranger.
 \item \code{FALSE}: no filtering
 }}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

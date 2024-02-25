@@ -21,7 +21,7 @@
 #'
 #' \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
 #'
-#' \code{\link{listAvailableVersions}} and friends, to get options for \code{name} and \code{version}.
+#' \code{\link{surveyDatasets}} and \code{\link{listVersions}}, to get possible values for \code{name} and \code{version}.
 #' 
 #' @author Aaron Lun
 #' @examples
@@ -35,7 +35,6 @@ fetchDataset <- function(name, version, path=NULL, package="scRNAseq", cache=NUL
         cache <- gypsum::cacheDirectory()
     }
     version_path <- gypsum::saveVersion(package, name, version, cache=cache, overwrite=overwrite)
-    provenance <- list(name=name, version=version, package=package, root=normalizePath(version_path))
 
     obj_path <- version_path
     if (!is.null(path)) {
@@ -44,7 +43,7 @@ fetchDataset <- function(name, version, path=NULL, package="scRNAseq", cache=NUL
 
     old <- altReadObjectFunction(scLoadObject)
     on.exit(altReadObjectFunction(old))
-    altReadObject(obj_path, scRNAseq.array.provenance=provenance, scRNAseq.realize.assays=realize.assays, scRNAseq.realize.reduced.dims=realize.reduced.dims, ...)
+    altReadObject(obj_path, scRNAseq.realize.assays=realize.assays, scRNAseq.realize.reduced.dims=realize.reduced.dims, ...)
 }
 
 #' @export
@@ -66,14 +65,13 @@ fetchMetadata <- function(name, version, path=NULL, package="scRNAseq", cache=NU
 #' @importFrom alabaster.base readObjectFile readObject
 #' @importFrom SummarizedExperiment assay assay<-
 #' @importFrom SingleCellExperiment reducedDim reducedDim<-
-scLoadObject <- function(path, metadata=NULL, scRNAseq.array.provenance=NULL, scRNAseq.realize.assays=FALSE, scRNAseq.realize.reduced.dims=TRUE, ...) {
+scLoadObject <- function(path, metadata=NULL, scRNAseq.realize.assays=FALSE, scRNAseq.realize.reduced.dims=TRUE, ...) {
     if (is.null(metadata)) {
         metadata <- readObjectFile(path)
     }
     ans <- readObject(
         path, 
         metadata=metadata, 
-        scRNAseq.array.provenance=scRNAseq.array.provenance, 
         scRNAseq.realize.assays=scRNAseq.realize.assays, 
         scRNAseq.realize.reduced.dims=scRNAseq.realize.reduced.dims, 
         ...

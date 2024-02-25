@@ -33,11 +33,11 @@ Imports:
     ensembldb,
     GenomicFeatures,
     alabaster.base,
-    alabaster.matrix,
-    DelayedArray,
     alabaster.sce,
     gypsum,
-    jsonlite
+    jsonlite,
+    DBI,
+    RSQLite
 Suggests: 
     BiocStyle, 
     knitr, 
@@ -47,7 +47,8 @@ Suggests:
     rappdirs,
     tools,
     jsonvalidate,
-    digest
+    digest,
+    BiocManager
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 
