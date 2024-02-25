@@ -44,7 +44,7 @@ alabaster.base::readObject(tmp)
 
 }
 \seealso{
-\code{\link{createMetadata}}, to create the metadata.
+\url{https://github.com/ArtifactDB/bioconductor-metadata-index}, on the expected schema for the metadata.
 
 \code{\link{polishDataset}}, to polish \code{x} before saving it.
 

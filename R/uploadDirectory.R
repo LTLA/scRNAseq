@@ -45,14 +45,14 @@
 #' rownames(sce) <- sprintf("GENE_%i", seq_len(nrow(sce)))
 #' colnames(sce) <- head(LETTERS, 10)
 #'
-#' meta <- createMetadata(
+#' meta <- list(
 #'     title="My dataset",
 #'     description="This is my dataset",
-#'     taxonomy.id="10090",
+#'     taxonomy_id="10090",
 #'     genome="GRCh38",
 #'     sources=list(list(provider="GEO", id="GSE12345")),
-#'     maintainer.name="Shizuka Mogami",
-#'     maintainer.email="mogami.shizuka@765pro.com"
+#'     maintainer_name="Shizuka Mogami",
+#'     maintainer_email="mogami.shizuka@765pro.com"
 #' )
 #' 
 #' cache <- tempfile()

@@ -17,7 +17,7 @@
 #' \code{fetchMetadata} returns a named list of metadata for the specified dataset.
 #'
 #' @seealso
-#' \code{\link{createMetadata}}, on some of the metadata requirements.
+#' \url{https://github.com/ArtifactDB/bioconductor-metadata-index}, on the expected schema for the metadata.
 #'
 #' \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
 #'

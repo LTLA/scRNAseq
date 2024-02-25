@@ -11,7 +11,7 @@
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
 #'
 #' @seealso
-#' \code{\link{createMetadata}}, to create the metadata.
+#' \url{https://github.com/ArtifactDB/bioconductor-metadata-index}, on the expected schema for the metadata.
 #'
 #' \code{\link{polishDataset}}, to polish \code{x} before saving it.
 #'

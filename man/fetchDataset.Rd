@@ -47,7 +47,7 @@ fetchMetadata("zeisel-brain-2015", "2023-12-14")
 
 }
 \seealso{
-\code{\link{createMetadata}}, on some of the metadata requirements.
+\url{https://github.com/ArtifactDB/bioconductor-metadata-index}, on the expected schema for the metadata.
 
 \code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
 
