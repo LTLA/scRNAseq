@@ -36,7 +36,7 @@
 #' @importFrom SingleCellExperiment splitAltExps 
 BuettnerESCData <- function(remove.htseq=TRUE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
-        sce <- fetchDatasets("buettner-esc-2015", "2023-12-14", realize.assays=TRUE)
+        sce <- fetchDataset("buettner-esc-2015", "2023-12-14", realize.assays=TRUE)
 
     } else {
         version <- "2.0.0"

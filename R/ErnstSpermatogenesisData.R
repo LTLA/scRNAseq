@@ -41,7 +41,7 @@ ErnstSpermatogenesisData <- function(method=c("emptyDrops", "Cellranger"), locat
     method <- match.arg(method)
 
     if (!legacy) {
-        sce <- fetchDataset("ernst-spermatogenesis-2019", tolower(method), realize.assays=TRUE)
+        sce <- fetchDataset("ernst-spermatogenesis-2019", "2023-12-21", path=tolower(method), realize.assays=TRUE)
     } else {
         version <- "2.6.0"
         sce <- .create_sce(file.path("ernst-spermatogenesis", version), suffix=tolower(method))

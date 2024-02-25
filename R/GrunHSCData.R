@@ -35,9 +35,9 @@
 #' @export
 #' @importFrom SummarizedExperiment rowData rowData<- colData<-
 #' @importFrom S4Vectors DataFrame
-GrunHSCData <- function(ensembl=FALSE, location=TRUE) {
+GrunHSCData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
-        sce <- fetchDataset("grun-bone-marrow-2016", "2023-12-14", realize.assays=TRUE)
+        sce <- fetchDataset("grun-bone_marrow-2016", "2023-12-14", realize.assays=TRUE)
 
     } else {
         version <- "2.0.0"

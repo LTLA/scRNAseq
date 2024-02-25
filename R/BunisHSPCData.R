@@ -34,7 +34,7 @@
 #' 
 #' @export
 BunisHSPCData <- function(filtered=TRUE, legacy=FALSE) {
-    if (!legacy && !isFALSE(retained)) {
+    if (!legacy && !isFALSE(filtered)) {
         sce <- fetchDataset("bunis-hspc-2021", "2023-12-21", realize.assays=TRUE)
         if (isTRUE(filtered)) {
             sce <- sce[,sce$retained]

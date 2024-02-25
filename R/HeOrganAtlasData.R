@@ -49,7 +49,7 @@ HeOrganAtlasData <- function(tissue=c("Bladder", "Blood", "Common.bile.duct", "E
     "Spleen", "Stomach", "Trachea"), ensembl=FALSE, location=TRUE, legacy=FALSE)
 {
     if (!legacy) {
-        all.sce <- lapply(tissue, function(x) fetchDataset("he-organ-2020", "2023-12-21", path=tolower(x), realize.assays=TRUE))
+        all.sce <- lapply(tissue, function(x) fetchDataset("he-organs-2020", "2023-12-21", path=gsub("\\.", "_", tolower(x)), realize.assays=TRUE))
         if (length(all.sce) > 1) {
             common <- Reduce(intersect, lapply(all.sce, rownames))
             for (i in seq_along(all.sce)) {

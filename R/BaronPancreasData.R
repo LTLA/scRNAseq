@@ -41,7 +41,7 @@ BaronPancreasData <- function(which=c("human", "mouse"), ensembl=FALSE, location
     which <- match.arg(which)
 
     if (!legacy) {
-        sce <- fetchDataset("baron-pancreas-2016", which, realize.assays=TRUE)
+        sce <- fetchDataset("baron-pancreas-2016", "2023-12-14", path=which, realize.assays=TRUE)
     } else {
         version <- "2.0.0"
         sce <- .create_sce(file.path("baron-pancreas", version), has.rowdata=FALSE, suffix=which)

@@ -4,7 +4,7 @@
 \alias{GrunHSCData}
 \title{Obtain the Grun HSC data}
 \usage{
-GrunHSCData(ensembl = FALSE, location = TRUE)
+GrunHSCData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
