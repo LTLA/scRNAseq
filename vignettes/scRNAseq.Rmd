@@ -23,7 +23,8 @@ knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
 
 The `r Biocpkg("scRNAseq")` package provides convenient access to several publicly available single-cell datasets in the form of `SingleCellExperiment` objects.
 We do all of the necessary data munging for each dataset beforehand, so that users can obtain a `SingleCellExperiment` for immediate use in further analyses.
-Users can also contribute their own published datasets to this package to enable re-use by the wider Bioconductor community. 
+To enable discovery, each dataset is decorated with metadata such as the study title/abstract, the species involved, the number of cells, etc.
+Users can also contribute their own published datasets to enable re-use by the wider Bioconductor community. 
 
 # Finding datasets 
 
