@@ -13,7 +13,8 @@ saveDataset(x, path, metadata)
 Any existing directory is removed before saving \code{x}.}
 
 \item{metadata}{Named list containing metadata for this dataset,
-see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}()}.}
+see the schema returned by \code{\link{fetchMetadataSchema}()}.
+Note that the \code{applications.takane} property will be automatically added by this function and does not have to be supplied.}
 }
 \value{
 \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.

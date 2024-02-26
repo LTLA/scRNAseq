@@ -47,7 +47,6 @@ Suggests:
     rappdirs,
     tools,
     jsonvalidate,
-    digest,
     BiocManager
 VignetteBuilder: knitr
 Encoding: UTF-8

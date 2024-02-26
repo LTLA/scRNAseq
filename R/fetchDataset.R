@@ -29,12 +29,10 @@
 #' fetchMetadata("zeisel-brain-2015", "2023-12-14")
 #'
 #' @export
+#' @importFrom gypsum cacheDirectory saveVersion
 #' @importFrom alabaster.base altReadObjectFunction altReadObject
-fetchDataset <- function(name, version, path=NA, package="scRNAseq", cache=NULL, overwrite=FALSE, realize.assays=FALSE, realize.reduced.dims=TRUE, ...) {
-    if (is.null(cache)) {
-        cache <- gypsum::cacheDirectory()
-    }
-    version_path <- gypsum::saveVersion(package, name, version, cache=cache, overwrite=overwrite)
+fetchDataset <- function(name, version, path=NA, package="scRNAseq", cache=cacheDirectory(), overwrite=FALSE, realize.assays=FALSE, realize.reduced.dims=TRUE, ...) {
+    version_path <- saveVersion(package, name, version, cache=cache, overwrite=overwrite)
 
     obj_path <- version_path
     if (!is.na(path)) {
@@ -47,18 +45,16 @@ fetchDataset <- function(name, version, path=NA, package="scRNAseq", cache=NULL,
 }
 
 #' @export
-fetchMetadata <- function(name, version, path=NA, package="scRNAseq", cache=NULL, overwrite=FALSE) {
-    if (is.null(cache)) {
-        cache <- gypsum::cacheDirectory()
-    }
-
+#' @importFrom jsonlite fromJSON
+#' @importFrom gypsum cacheDirectory saveFile
+fetchMetadata <- function(name, version, path=NA, package="scRNAseq", cache=cacheDirectory(), overwrite=FALSE) {
     remote_path <- "_bioconductor.json"
     if (!is.na(path)) {
         remote_path <- paste0(path, "/", remote_path)
     }
 
-    local_path <- gypsum::saveFile(package, name, version, remote_path, cache=cache, overwrite=overwrite)
-    jsonlite::fromJSON(local_path, simplifyVector=FALSE)
+    local_path <- saveFile(package, name, version, remote_path, cache=cache, overwrite=overwrite)
+    fromJSON(local_path, simplifyVector=FALSE)
 }
 
 #' @importFrom alabaster.base readObjectFile readObject

@@ -2,7 +2,7 @@
 #'
 #' Metadata survey for all available datasets in the \pkg{scRNAseq} package.
 #'
-#' @param cache,overwrite Arguments to pass to \code{\link[gypsum]{fetchMetadataDatabase}}.
+#' @param cache,overwrite Arguments to pass to \code{\link{fetchMetadataDatabase}}.
 #' @param latest Whether to only consider the latest version of each dataset.
 #'
 #' @return 
@@ -22,13 +22,14 @@
 #' 
 #' @export
 #' @importFrom S4Vectors DataFrame
-surveyDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
-    if (is.null(cache)) {
-        cache <- gypsum::cacheDirectory()
-    }
-    bpath <- gypsum::fetchMetadataDatabase(cache=cache, overwrite=overwrite)
-    con <- DBI::dbConnect(RSQLite::SQLite(), bpath)
-    on.exit(DBI::dbDisconnect(con))
+#' @importFrom gypsum cacheDirectory fetchMetadataDatabase
+#' @importFrom jsonlite fromJSON
+#' @importFrom DBI dbConnect dbDisconnect dbGetQuery
+#' @importFrom RSQLite SQLite
+surveyDatasets <- function(cache=cacheDirectory(), overwrite=FALSE, latest=TRUE) {
+    bpath <- fetchMetadataDatabase(cache=cache, overwrite=overwrite)
+    con <- dbConnect(SQLite(), bpath)
+    on.exit(dbDisconnect(con))
 
     stmt <- "SELECT json_extract(metadata, '$') AS meta, versions.asset AS asset, versions.version AS version, path";
     if (!latest) {
@@ -38,7 +39,7 @@ surveyDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
     if (latest) {
         stmt <- paste0(stmt, " AND versions.latest = 1")
     }
-    everything <- DBI::dbGetQuery(con, stmt)
+    everything <- dbGetQuery(con, stmt)
 
     path <- everything$path
     has.slash <- grepl("/", path)
@@ -49,7 +50,7 @@ surveyDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
         output$latest <- everything$latest == 1
     }
 
-    all_meta <- lapply(everything$meta, jsonlite::fromJSON, simplifyVector=FALSE)
+    all_meta <- lapply(everything$meta, fromJSON, simplifyVector=FALSE)
     output$object <- extract_atomic_from_json(all_meta, function(x) x$applications$takane$type, "character") 
     output$title <- extract_atomic_from_json(all_meta, function(x) x$title, "character")
     output$description <- extract_atomic_from_json(all_meta, function(x) x$title, "character")

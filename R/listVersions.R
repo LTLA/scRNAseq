@@ -22,6 +22,7 @@ listVersions <- function(name) {
 
 #' @export
 #' @rdname listVersions
+#' @importFrom gypsum fetchLatest
 fetchLatestVersion <- function(name) {
-    gypsum::fetchLatest("scRNAseq", name)
+    fetchLatest("scRNAseq", name)
 }

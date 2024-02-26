@@ -13,9 +13,7 @@
 #' @param package String containing the package name.
 #' @param probation Logical scalar indicating whether this should be a probational upload.
 #' @param url String containing the URL to the gypsum REST API.
-#' Defaults to \code{\link[gypsum]{restUrl}}.
 #' @param token String containing a GitHub access token for authentication.
-#' Defaults to \code{\link[gypsum]{accessToken}}.
 #' @param concurrent Integer scalar specifying the number of concurrent uploads.
 #' @param abort.failed Logical scalar indicating whether to abort the upload on any failure.
 #' Setting this to \code{FALSE} can be helpful for diagnosing upload problems.
@@ -68,17 +66,11 @@
 #' }
 #'
 #' @export
-uploadDirectory <- function(dir, name, version, package="scRNAseq", cache=NULL, probation=FALSE, url=NULL, token=NULL, concurrent=1, abort.failed=TRUE) {
-    if (is.null(url)) {
-        url <- gypsum::restUrl()
-    }
-    if (is.null(token)) {
-        token <- gypsum::accessToken()
-    }
-
+#' @importFrom gypsum restUrl accessToken startUpload abortUpload uploadFiles completeUpload
+uploadDirectory <- function(dir, name, version, package="scRNAseq", cache=NULL, probation=FALSE, url=restUrl(), token=accessToken(), concurrent=1, abort.failed=TRUE) {
     listing <- list_files(dir, cache=cache)
 
-    blob <- gypsum::startUpload(
+    blob <- startUpload(
         project=package,
         asset=name,
         version=version, 
@@ -94,13 +86,13 @@ uploadDirectory <- function(dir, name, version, package="scRNAseq", cache=NULL, 
     if (abort.failed) {
         on.exit({
             if (!success) {
-                gypsum::abortUpload(blob)
+                abortUpload(blob)
             }
         })
     }
 
-    gypsum::uploadFiles(blob, directory=dir, url=url, concurrent=concurrent)
-    gypsum::completeUpload(blob, url=url)
+    uploadFiles(blob, directory=dir, url=url, concurrent=concurrent)
+    completeUpload(blob, url=url)
 
     success <- TRUE
     invisible(NULL)
@@ -114,10 +106,8 @@ append_path_or_null <- function(dir, base) {
     }
 }
 
-list_files <- function(full, cache=NULL) {
-    if (is.null(cache)) {
-        cache <- gypsum::cacheDirectory()
-    }
+#' @importFrom gypsum cacheDirectory prepareDirectoryUpload
+list_files <- function(full, cache=cacheDirectory()) {
     # Going through the directory contents and converting symlinks to upload links.
-    gypsum::prepareDirectoryUpload(full, links="always", cache=cache)
+    prepareDirectoryUpload(full, links="always", cache=cache)
 }

@@ -4,10 +4,10 @@
 \alias{surveyDatasets}
 \title{Survey of dataset metadata}
 \usage{
-surveyDatasets(cache = NULL, overwrite = FALSE, latest = TRUE)
+surveyDatasets(cache = cacheDirectory(), overwrite = FALSE, latest = TRUE)
 }
 \arguments{
-\item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{fetchMetadataDatabase}}.}
+\item{cache, overwrite}{Arguments to pass to \code{\link{fetchMetadataDatabase}}.}
 
 \item{latest}{Whether to only consider the latest version of each dataset.}
 }

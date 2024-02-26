@@ -11,8 +11,8 @@ uploadDirectory(
   package = "scRNAseq",
   cache = NULL,
   probation = FALSE,
-  url = NULL,
-  token = NULL,
+  url = restUrl(),
+  token = accessToken(),
   concurrent = 1,
   abort.failed = TRUE
 )
@@ -35,11 +35,9 @@ Used to create upload links when an existing dataset is saved into \code{dir}, e
 
 \item{probation}{Logical scalar indicating whether this should be a probational upload.}
 
-\item{url}{String containing the URL to the gypsum REST API.
-Defaults to \code{\link[gypsum]{restUrl}}.}
+\item{url}{String containing the URL to the gypsum REST API.}
 
-\item{token}{String containing a GitHub access token for authentication.
-Defaults to \code{\link[gypsum]{accessToken}}.}
+\item{token}{String containing a GitHub access token for authentication.}
 
 \item{concurrent}{Integer scalar specifying the number of concurrent uploads.}
 

@@ -9,7 +9,7 @@ fetchDataset(
   version,
   path = NA,
   package = "scRNAseq",
-  cache = NULL,
+  cache = cacheDirectory(),
   overwrite = FALSE,
   realize.assays = FALSE,
   realize.reduced.dims = TRUE,
