@@ -29,13 +29,32 @@ Users can also contribute their own published datasets to enable re-use by the w
 # Finding datasets 
 
 The `surveyDatasets()` function will show all available datasets along with their metadata.
-This can be used to discover interesting datasets for `fetchDataset()`.
+This can be used to discover interesting datasets for further analysis.
 
 ```{r}
 library(scRNAseq)
 all.ds <- surveyDatasets()
 all.ds
 ```
+
+Users can also search on the metadata text using the `searchDatasets()` function.
+This accepts both simple text queries as well as more complicated expressions involving boolean operations.
+
+```{r}
+# Find all datasets involving pancreas.
+searchDatasets("pancreas")[,c("name", "title")]
+
+# Find all mm10 datasets involving pancreas or neurons.
+searchDatasets(
+   defineTextQuery("GRCm38", field="genome") &
+   (defineTextQuery("neuro%", partial=TRUE) | 
+    defineTextQuery("pancrea%", partial=TRUE))
+)[,c("name", "title")]
+```
+
+Keep in mind that the search results are not guaranteed to be reproducible -
+more datasets may be added over time, and existing datasets may be updated with new versions.
+Once a dataset of interest is identified, users should explicitly list the name and version of the dataset in their scripts to ensure reproducibility.
 
 # Loading a dataset
 
@@ -161,8 +180,11 @@ Just follow these simple steps for instant fame and prestige.
     ```
 
 6. Comment on the PR to notify us that the dataset has finished uploading and you're happy with it.
-   We'll review it and make sure everything's in order before approving it.
+   We'll review it and make sure everything's in order.
    If some fixes are required, we'll just clear the dataset so that you can upload a new version with the necessary changes.
+   Otherwise, we'll approve the dataset.
+   Note that once a version of a dataset is approved, no further changes can be made to that version;
+   you'll have to upload a new version if you want to modify something.
 
 # Session information {-}
 
