@@ -40,28 +40,28 @@ surveyDatasets <- function(cache=NULL, overwrite=FALSE, latest=TRUE) {
     }
     everything <- DBI::dbGetQuery(con, stmt)
 
-    output <- DataFrame(
-        asset = everything$asset,
-        version = everything$version,
-        path = everything$path
-    )
+    path <- everything$path
+    has.slash <- grepl("/", path)
+    path[!has.slash] <- NA_character_
+    path[has.slash] <- sub("/[^/]+$", "", path[has.slash])
+    output <- DataFrame(name = everything$asset, version = everything$version, path = path)
     if (!latest) {
         output$latest <- everything$latest == 1
     }
 
     all_meta <- lapply(everything$meta, jsonlite::fromJSON, simplifyVector=FALSE)
-    output$object <- extract_atomic_from_json(all_meta, function(x) x$takane$type, "character") 
+    output$object <- extract_atomic_from_json(all_meta, function(x) x$applications$takane$type, "character") 
     output$title <- extract_atomic_from_json(all_meta, function(x) x$title, "character")
     output$description <- extract_atomic_from_json(all_meta, function(x) x$title, "character")
     output$taxonomy_id <- extract_charlist_from_json(all_meta, function(x) x$taxonomy_id)
     output$genome <- extract_charlist_from_json(all_meta, function(x) x$genome)
 
-    output$rows <- extract_atomic_from_json(all_meta, function(x) x$takane$summarized_experiment$rows, "integer")
-    output$columns <- extract_atomic_from_json(all_meta, function(x) x$takane$summarized_experiment$columns, "integer")
-    output$assays <- extract_charlist_from_json(all_meta, function(x) x$takane$summarized_experiment$assays)
-    output$column_annotations <- extract_charlist_from_json(all_meta, function(x) x$takane$summarized_experiment$column_annotations)
-    output$reduced_dimensions <- extract_charlist_from_json(all_meta, function(x) x$takane$single_cell_experiment$reduced_dimensions)
-    output$alternative_experiments <- extract_charlist_from_json(all_meta, function(x) x$takane$single_cell_experiment$alternative_experiments)
+    output$rows <- extract_atomic_from_json(all_meta, function(x) x$applications$takane$summarized_experiment$rows, "integer")
+    output$columns <- extract_atomic_from_json(all_meta, function(x) x$applications$takane$summarized_experiment$columns, "integer")
+    output$assays <- extract_charlist_from_json(all_meta, function(x) x$applications$takane$summarized_experiment$assays)
+    output$column_annotations <- extract_charlist_from_json(all_meta, function(x) x$applications$takane$summarized_experiment$column_annotations)
+    output$reduced_dimensions <- extract_charlist_from_json(all_meta, function(x) x$applications$takane$single_cell_experiment$reduced_dimensions)
+    output$alternative_experiments <- extract_charlist_from_json(all_meta, function(x) x$applications$takane$single_cell_experiment$alternative_experiments)
 
     output$bioconductor_version < extract_atomic_from_json(all_meta, function(x) x$bioconductor_version, "character")
     output$maintainer_name < extract_atomic_from_json(all_meta, function(x) x$maintainer_name, "character")

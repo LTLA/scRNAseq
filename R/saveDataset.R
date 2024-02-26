@@ -7,6 +7,7 @@
 #' Any existing directory is removed before saving \code{x}.
 #' @param metadata Named list containing metadata for this dataset,
 #' see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}()}.
+#' Note that the \code{applications.takane} property will be automatically added by this function and does not have to be supplied.
 #'
 #' @return \code{x} and its metadata are saved into \code{path}, and \code{NULL} is invisibly returned.
 #'

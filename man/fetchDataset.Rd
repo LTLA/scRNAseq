@@ -7,7 +7,7 @@
 fetchDataset(
   name,
   version,
-  path = NULL,
+  path = NA,
   package = "scRNAseq",
   cache = NULL,
   overwrite = FALSE,
@@ -22,7 +22,7 @@ fetchDataset(
 \item{version}{String containing the version of the dataset.}
 
 \item{path}{String containing the path to a subdataset, if \code{name} contains multiple datasets.
-Defaults to \code{NULL} if no subdatasets are present.}
+Defaults to \code{NA} if no subdatasets are present.}
 
 \item{package}{String containing the name of the package.}
 

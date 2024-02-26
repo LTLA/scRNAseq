@@ -5,7 +5,7 @@
 #' @param name String containing the name of the dataset.
 #' @param version String containing the version of the dataset.
 #' @param path String containing the path to a subdataset, if \code{name} contains multiple datasets.
-#' Defaults to \code{NULL} if no subdatasets are present.
+#' Defaults to \code{NA} if no subdatasets are present.
 #' @param package String containing the name of the package.
 #' @param cache,overwrite Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.
 #' @param realize.assays,realize.reduced.dims Logical scalars indicating whether to realize assays and reduced dimensions into memory.
@@ -30,14 +30,14 @@
 #'
 #' @export
 #' @importFrom alabaster.base altReadObjectFunction altReadObject
-fetchDataset <- function(name, version, path=NULL, package="scRNAseq", cache=NULL, overwrite=FALSE, realize.assays=FALSE, realize.reduced.dims=TRUE, ...) {
+fetchDataset <- function(name, version, path=NA, package="scRNAseq", cache=NULL, overwrite=FALSE, realize.assays=FALSE, realize.reduced.dims=TRUE, ...) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
     version_path <- gypsum::saveVersion(package, name, version, cache=cache, overwrite=overwrite)
 
     obj_path <- version_path
-    if (!is.null(path)) {
+    if (!is.na(path)) {
         obj_path <- file.path(version_path, gsub("/*$", "", path))
     }
 
@@ -47,15 +47,14 @@ fetchDataset <- function(name, version, path=NULL, package="scRNAseq", cache=NUL
 }
 
 #' @export
-fetchMetadata <- function(name, version, path=NULL, package="scRNAseq", cache=NULL, overwrite=FALSE) {
+fetchMetadata <- function(name, version, path=NA, package="scRNAseq", cache=NULL, overwrite=FALSE) {
     if (is.null(cache)) {
         cache <- gypsum::cacheDirectory()
     }
 
-    if (is.null(path)) {
-        remote_path <- "_bioconductor.json"
-    } else {
-        remote_path <- paste0(path, "/_bioconductor.json")
+    remote_path <- "_bioconductor.json"
+    if (!is.na(path)) {
+        remote_path <- paste0(path, "/", remote_path)
     }
 
     local_path <- gypsum::saveFile(package, name, version, remote_path, cache=cache, overwrite=overwrite)
