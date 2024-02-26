@@ -13,7 +13,6 @@ package: scRNAseq
 vignette: >
   %\VignetteIndexEntry{User's Guide}
   %\VignetteEngine{knitr::rmarkdown}
-bibliography: "`r system.file('scripts', 'ref.bib', package='scRNAseq')`"
 ---
 
 ```{r style, echo=FALSE}
@@ -22,71 +21,150 @@ knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
 
 # Introduction
 
-The `r Biocpkg("scRNAseq")` package provides convenient access to several publicly available data sets 
-in the form of `SingleCellExperiment` objects.
-The focus of this package is to capture datasets that are not easily read into R with a one-liner from, e.g., `read.csv()`.
-Instead, we do the necessary data munging so that users only need to call a single function to obtain a well-formed `SingleCellExperiment`.
-For example:
+The `r Biocpkg("scRNAseq")` package provides convenient access to several publicly available single-cell datasets in the form of `SingleCellExperiment` objects.
+We do all of the necessary data munging for each dataset beforehand, so that users can obtain a `SingleCellExperiment` for immediate use in further analyses.
+Users can also contribute their own published datasets to this package to enable re-use by the wider Bioconductor community. 
+
+# Finding datasets 
+
+The `surveyDatasets()` function will show all available datasets along with their metadata.
+This can be used to discover interesting datasets for `fetchDataset()`.
 
 ```{r}
 library(scRNAseq)
-fluidigm <- ReprocessedFluidigmData()
-fluidigm
+all.ds <- surveyDatasets()
+all.ds
 ```
 
-Readers are referred to the `r Biocpkg("SummarizedExperiment")` and `r Biocpkg("SingleCellExperiment")` documentation 
-for further information on how to work with `SingleCellExperiment` objects.
+# Loading a dataset
 
-# Available data sets
-
-The `listDatasets()` function returns all available datasets in `r Biocpkg("scRNAseq")`,
-along with some summary statistics and the necessary R command to load them.
+The `fetchDataset()` function will download a particular dataset, returning it as a `SingleCellExperiment`:
 
 ```{r}
-out <- listDatasets()
+sce <- fetchDataset("zeisel-brain-2015", "2023-12-14")
+sce
 ```
 
-```{r, echo=FALSE}
-out <- as.data.frame(out)
-out$Taxonomy <- c(`10090`="Mouse", `9606`="Human", `8355`="Xenopus")[as.character(out$Taxonomy)]
-out$Call <- sprintf("`%s`", out$Call)
-knitr::kable(out)
-```
-
-If the original dataset was not provided with Ensembl annotation, we can map the identifiers with `ensembl=TRUE`.
-Any genes without a corresponding Ensembl identifier is discarded from the dataset.
+For studies that generate multiple datasets, the dataset of interest must be explicitly requested via the `path=` argument:
 
 ```{r}
-sce <- ZeiselBrainData(ensembl=TRUE)
-head(rownames(sce))
+sce <- fetchDataset("baron-pancreas-2016", "2023-12-14", path="human")
+sce
 ```
 
-Functions also have a `location=TRUE` argument that loads in the gene coordinates.
+By default, array data is loaded as a file-backed `DelayedArray` from the `r Biocpkg("HDF5Array")` package.
+Setting `realize.assays=TRUE` and/or `realize.reduced.dims=TRUE` will coerce these to more conventional in-memory representations like ordinary arrays or `dgCMatrix` objects.
 
 ```{r}
-sce <- ZeiselBrainData(ensembl=TRUE, location=TRUE)
-head(rowRanges(sce))
+assay(sce)
+sce <- fetchDataset("baron-pancreas-2016", "2023-12-14", path="human", realize.assays=TRUE)
+class(assay(sce))
 ```
 
-# Adding new data sets
+Users can also fetch the metadata associated with each dataset:
 
-Please contact us if you have a data set that you would like to see added to this package.
-The only requirement is that your data set has publicly available expression values (ideally counts) and sample annotation.
-The more difficult/custom the format, the better, 
-as its inclusion in this package will provide more value for other users in the R/Bioconductor community.
+```{r}
+str(fetchMetadata("zeisel-brain-2015", "2023-12-14"))
+```
 
-If you have already written code that processes your desired data set in a `SingleCellExperiment`-like form,
-we would welcome a pull request [here](https://github.com/LTLA/scRNAseq).
-The process can be expedited by ensuring that you have the following files:
+# Adding new datasets
 
-- `inst/scripts/make-X-Y-data.Rmd`, a Rmarkdown report that creates all components of a `SingleCellExperiment`.
-`X` should be the last name of the first author of the relevant study while `Y` should be the name of the biological system.
-- `inst/scripts/make-X-Y-metadata.R`, an R script that creates a metadata CSV file at `inst/extdata/metadata-X-Y.csv`.
-Metadata files should follow the format described in the `r Biocpkg("ExperimentHub")` documentation.
-- `R/XYData.R`, an R source file that defines a function `XYData()` to download the components from ExperimentHub
-and creates a `SingleCellExperiment` object.
+Want to contribute your own dataset to this package?
+It's easy!
+Just follow these simple steps for instant fame and prestige. 
 
-Potential contributors are recommended to examine some of the existing scripts in the package to pick up the coding conventions.
-Remember, we're more likely to accept a contribution if it's indistinguishable from something we might have written ourselves!
+1. Format your dataset as a `SummarizedExperiment` or `SingleCellExperiment`.
+   Let's just make up something here.
 
-# References
+    ```{r}
+    library(SingleCellExperiment)
+    sce <- SingleCellExperiment(list(counts=matrix(rpois(1000, lambda=1), 100, 10)))
+    rownames(sce) <- sprintf("GENE_%i", seq_len(nrow(sce)))
+    colnames(sce) <- head(LETTERS, 10)
+    ```
+
+2. Assemble the metadata for your dataset.
+   This should be a list structured as specified in the [Bioconductor metadata schema](https://artifactdb.github.io/bioconductor-metadata-index/bioconductor/v1.json)
+   Check out some examples from `fetchMetadata()` - note that the `application.takane` property will be automatically added later, and so can be omitted from the list that you create.
+
+    ```{r}
+    meta <- list(
+        title="My dataset",
+        description="This is my dataset",
+        taxonomy_id="10090",
+        genome="GRCh38",
+        sources=list(
+            list(provider="GEO", id="GSE12345"),
+            list(provider="PubMed", id="1234567")
+        ),
+        maintainer_name="Chihaya Kisaragi",
+        maintainer_email="kisaragi.chihaya@765pro.com"
+    )
+    ```
+
+3. Run `saveDataset()` on your `SummarizedExperiment` or whatever object contains your dataset.
+   This saves the dataset into a "staging directory" using language-agnostic file formats - check out the [**alabaster**](https://github.com/ArtifactDB/alabaster.base) framework for more details.
+   In more complex cases involving multiple datasets, users may save each dataset into a subdirectory of the staging directory.
+
+    ```{r}
+    # Simple case: you only have one dataset to upload.
+    staging <- tempfile()
+    saveDataset(sce, staging, meta)
+    list.files(staging, recursive=TRUE)
+    
+    # Complex case: you have multiple datasets to upload.
+    staging <- tempfile()
+    dir.create(staging)
+    saveDataset(sce, file.path(staging, "foo"), meta)
+    saveDataset(sce, file.path(staging, "bar"), meta) # etc.
+    ```
+
+   You can check that everything was correctly saved by reloading the on-disk data into the R session for inspection:
+
+    ```{r}
+    alabaster.base::readObject(file.path(staging, "foo"))
+    ```
+
+4. Open a [pull request (PR)](https://github.com/LTLA/scRNAseq/pulls) to request a new dataset.
+   You will need to provide a few things here:
+   - The name of your dataset.
+     This typically follows the format of `{NAME}-{SYSTEM}-{YEAR}`, where `NAME` is the last name of the first author of the study,
+     `SYSTEM` is the biological system (e.g., tissue, cell types) being studied,
+     and `YEAR` is the year of publication for the dataset.
+   - The version of your dataset.
+     This is usually just the current date... or whenever you started putting together the dataset for upload.
+     The exact date doesn't really matter as long as we can establish a timeline for later versions.
+   - The code used to assemble the dataset as an Rmarkdown file.
+     This should be added to the [`scripts/`](https://github.com/LTLA/scRNAseq/tree/master/scripts) directory of this package,
+     in order to provide some record of how the dataset was created.
+
+5. Run `uploadDirectory()` to upload your staging directory.
+   The first time this function is called, it will automatically prompt you to log into GitHub so that the [**gypsum** backend](https://github.com/ArtifactDB/gypsum-worker) can authenticate you.
+   If you are on a system without browser access (e.g., most computing clusters), a [token](https://github.com/settings/tokens) can be manually supplied via `gypsum::accessToken()`.
+
+    ```{r, eval=FALSE}
+    uploadDirectory(staging, "my_dataset_name", "2020-02-20")
+    ```
+
+   You can check that everything was successfully uploaded by just calling `fetchDataset()`:
+
+    ```{r, eval=FALSE}
+    fetchDataset("my_dataset_name", "2020-02-20")
+    ```
+
+   If you realized you made a mistake, no worries.
+   Use the following call to clear the erroneous dataset, and try again:
+
+    ```{r, eval=FALSE}
+    gypsum::rejectProbation("scRNAseq", "my_dataset_name", "2020-02-20")
+    ```
+
+6. Comment on the PR to notify us that the dataset has finished uploading and you're happy with it.
+   We'll review it and make sure everything's in order before approving it.
+   If some fixes are required, we'll just clear the dataset so that you can upload a new version with the necessary changes.
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
