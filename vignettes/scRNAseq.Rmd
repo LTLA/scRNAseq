@@ -160,10 +160,10 @@ Just follow these simple steps for instant fame and prestige.
 
 5. Run `uploadDirectory()` to upload your staging directory.
    The first time this function is called, it will automatically prompt you to log into GitHub so that the [**gypsum** backend](https://github.com/ArtifactDB/gypsum-worker) can authenticate you.
-   If you are on a system without browser access (e.g., most computing clusters), a [token](https://github.com/settings/tokens) can be manually supplied via `gypsum::accessToken()`.
+   If you are on a system without browser access (e.g., most computing clusters), a [token](https://github.com/settings/tokens) can be manually supplied via `gypsum::setAccessToken()`.
 
     ```{r, eval=FALSE}
-    uploadDirectory(staging, "my_dataset_name", "2020-02-20")
+    uploadDirectory(staging, "scRNAseq", "my_dataset_name", "2020-02-20")
     ```
 
    You can check that everything was successfully uploaded by just calling `fetchDataset()`:
