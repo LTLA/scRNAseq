@@ -5,6 +5,8 @@
 #' @param filtered Logical scalar indicating whether to filter out cells that were not used by the authors.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata is scraped from GEO, using both the author-supplied TSV of per-cell annotations and the sample-level metadata.
@@ -39,14 +41,17 @@
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<-
 #' @importFrom SummarizedExperiment rowData rowData<-
 #' @importFrom BiocGenerics cbind
-BacherTCellData <- function(filtered=TRUE, ensembl=FALSE, location=TRUE) {
-    version <- "2.6.0"
-
-    sce <- .create_sce(file.path("bacher-tcell", version), has.rowdata=FALSE)
+BacherTCellData <- function(filtered=TRUE, ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("bacher-tcell-2020", "2023-12-21", realize.assays=TRUE)
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("bacher-tcell", version), has.rowdata=FALSE)
+    }
 
     if (filtered) {
         sce <- sce[,sce$retained]
-        sce$filtered <- NULL
+        sce$retained <- NULL
     }
 
     .convert_to_ensembl(sce, 

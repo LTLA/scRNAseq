@@ -4,7 +4,12 @@
 \alias{PaulHSCData}
 \title{Obtain the Paul HSC data}
 \usage{
-PaulHSCData(ensembl = FALSE, discard.multiple = TRUE, location = TRUE)
+PaulHSCData(
+  ensembl = FALSE,
+  discard.multiple = TRUE,
+  location = TRUE,
+  legacy = FALSE
+)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
@@ -12,6 +17,9 @@ PaulHSCData(ensembl = FALSE, discard.multiple = TRUE, location = TRUE)
 \item{discard.multiple}{Logical scalar indicating whether ambiguous rows should be discarded.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

@@ -8,7 +8,8 @@ HuCortexData(
   mode = c("ctx", "3T3"),
   samples = NULL,
   ensembl = FALSE,
-  location = TRUE
+  location = TRUE,
+  legacy = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,9 @@ If specified, this overrides \code{mode}.}
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Row data contains a single \code{"featureType"} field describing the type of each feature
@@ -40,23 +42,28 @@
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<-
 #' @importFrom SummarizedExperiment rowData rowData<-
 #' @importFrom BiocGenerics cbind
-ZeiselBrainData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("zeisel-brain", version))
+ZeiselBrainData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("zeisel-brain-2015", "2023-12-14", realize.assays=TRUE)
 
-    status <- rowData(sce)$featureType
-    status[status=="mito"] <- "endogenous"
-    sce <- splitAltExps(sce, status, "endogenous")
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("zeisel-brain", version))
 
-    # Decorating spike-ins with row metadata. Probably could be less
-    # verbose but this is pretty clear.
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 9, dilution = 20000)
-    spikedata <- spikedata[rownames(spike.exp),]
+        status <- rowData(sce)$featureType
+        status[status=="mito"] <- "endogenous"
+        sce <- splitAltExps(sce, status, "endogenous")
 
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
-    altExp(sce, "ERCC") <- spike.exp
+        # Decorating spike-ins with row metadata. Probably could be less
+        # verbose but this is pretty clear.
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 9, dilution = 20000)
+        spikedata <- spikedata[rownames(spike.exp),]
+
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        rowData(spike.exp)$featureType <- NULL # redundant field; what else would it be!?
+        altExp(sce, "ERCC") <- spike.exp
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

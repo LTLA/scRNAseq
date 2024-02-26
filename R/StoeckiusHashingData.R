@@ -7,6 +7,8 @@
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' @param strip.metrics Logical scalar indicating whether quality control metrics should be removed from the HTO/ADT counts.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' When \code{type="pbmc"}, the \code{mode} can be one or more of:
@@ -18,12 +20,14 @@
 #' \item \code{"adt1"}, counts for the first set of ADTs (immunoglobulin controls).
 #' \item \code{"adt2"}, counts for the second set of ADTs (cell type-specific markers).
 #' }
+#' If \code{mode=NULL}, the default is to use \code{"human"}, \code{"mouse"} and \code{"hto"}.
 #'
 #' When \code{type="mixed"}, the \code{mode} can be one or more of:
 #' \itemize{
 #' \item \code{"rna"}, the RNA counts for the genes;
 #' \item \code{"hto"}, the HTO counts.
 #' }
+#' If \code{mode=NULL}, the default is to use \code{"rna"} and \code{"hto"}.
 #'
 #' If \code{ensembl=TRUE}, gene symbols for the RNA counts are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
@@ -58,11 +62,7 @@
 #' @export
 #' @importFrom utils head
 #' @importFrom SingleCellExperiment altExps<- 
-StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
-    ensembl=FALSE, location=TRUE, strip.metrics=TRUE) 
-{
-    version <- "2.4.0"
-
+StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL, ensembl=FALSE, location=TRUE, strip.metrics=TRUE, legacy=FALSE) {
     type <- match.arg(type)
     if (type=="pbmc") {
         acceptable <- c("human", "mouse", "hto", "adt1", "adt2")
@@ -77,9 +77,30 @@ StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
     }
 
     collated <- list()
-    for (m in mode) {
-        collated[[m]] <- .create_sce(file.path("stoeckius-hashing", version), 
-            suffix=paste0(type, "-", m), has.rowdata=FALSE, has.coldata=FALSE)
+    if (!legacy && strip.metrics && type == "mixed") {
+        # We just can't do it for PBMC, it's just too much of a mess to
+        # preserve back-compatibility, given that we decided to omit the
+        # human/mouse splits from the saved rowData. Better to omit it than to
+        # give people a misleading impression of a confident split.
+        for (m in mode) {
+            collated[[m]] <- fetchDataset("stoeckius-hashing-2018", "2023-12-20", path=paste0("mixture/", m), realize.assays=TRUE)
+        }
+
+    } else {
+        version <- "2.4.0"
+        for (m in mode) {
+            collated[[m]] <- .create_sce(file.path("stoeckius-hashing", version), 
+                suffix=paste0(type, "-", m), has.rowdata=FALSE, has.coldata=FALSE)
+        }
+
+        # Stripping metrics from the ADT matrices.
+        if (strip.metrics) {
+            strippable <- c("hto", "adt1", "adt2")
+            metrics <- c("no_match", "ambiguous", "total_reads", "bad_struct")
+            for (i in intersect(names(collated), strippable)) {
+                collated[[i]] <- collated[[i]][setdiff(rownames(collated[[i]]), metrics),]
+            }
+        }
     }
 
     if (length(collated) > 1) {
@@ -102,15 +123,6 @@ StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL,
             symbols=rownames(collated[[i]]),
             ensembl=ensembl,
             location=location)
-    }
-
-    # Stripping metrics from the ADT matrices.
-    if (strip.metrics) {
-        strippable <- c("hto", "adt1", "adt2")
-        metrics <- c("no_match", "ambiguous", "total_reads", "bad_struct")
-        for (i in intersect(names(collated), strippable)) {
-            collated[[i]] <- collated[[i]][setdiff(rownames(collated[[i]]), metrics),]
-        }
     }
 
     primary <- collated[[1]]

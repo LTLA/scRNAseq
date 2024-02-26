@@ -1,0 +1,135 @@
+---
+title: Processing the Lawlor pancreas dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of human pancreas from [Lawlor et al. (2017)](https://doi.org/10.1101/gr.212720.116).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE86469](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE86469).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask=FALSE)    
+count.tab <- bfcrpath(bfc, "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE86nnn/GSE86469/suppl/GSE86469_GEO.islet.single.cell.processed.data.RSEM.raw.expected.counts.csv.gz")
+```
+
+We then load it in as a sparse matrix.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(count.tab, sep=",", quote='"', row.names=1)
+dim(counts)
+```
+
+# Downloading the metadata
+
+We extract the metadata for this study using the `r Biocpkg("GEOquery")` package.
+
+```{r}
+library(GEOquery)
+coldata <- pData(getGEO("GSE86469")[[1]])
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+rownames(coldata) <- NULL
+colnames(coldata)
+```
+
+We remove the constant columns, as these are unlikely to be interesting.
+
+```{r}
+nlevels <- vapply(coldata, FUN=function(x) length(unique(x[!is.na(x)])), 1L)
+coldata <- coldata[,nlevels > 1L]
+```
+
+We also remove the columns related to the GEO accession itself, as well as some redundant fields.
+
+```{r}
+coldata <- coldata[,! colnames(coldata) %in% c("geo_accession", "relation", "relation.1")]
+coldata <- coldata[,!grepl("^characteristics_ch", colnames(coldata))]
+```
+
+We convert all factors into character vectors.
+
+```{r}
+for (i in colnames(coldata)) {
+    if (is.factor(coldata[[i]])) {
+        coldata[[i]] <- as.character(coldata[[i]])
+    }
+}
+```
+
+Some are numeric instead:
+
+```{r}
+coldata[["bmi:ch1"]] <- as.numeric(coldata[["bmi:ch1"]])
+summary(coldata[["bmi:ch1"]])
+coldata[["age:ch1"]] <- as.numeric(coldata[["age:ch1"]])
+summary(coldata[["age:ch1"]])
+```
+
+We clean up the column names:
+
+```{r}
+colnames(coldata) <- sub("[:_]ch1$", "", colnames(coldata))
+colnames(coldata)
+```
+
+Verifying that everything is in order:
+
+```{r}
+stopifnot(identical(colnames(counts), coldata[,1]))
+rownames(coldata) <- coldata[,1]
+coldata <- coldata[,-1,drop=FALSE]
+coldata
+```
+
+# Saving to file 
+
+We put everything together into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+```
+
+With some polishing to save some space:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save all of the components to disk in preparation for upload:
+
+```{r}
+meta <- list(
+    title="Single-cell transcriptomes identify human islet cell signatures and reveal cell-type-specific expression changes in type 2 diabetes",
+    description="Blood glucose levels are tightly controlled by the coordinated action of at least four cell types constituting pancreatic islets. Changes in the proportion and/or function of these cells are associated with genetic and molecular pathophysiology of monogenic, type 1, and type 2 (T2D) diabetes. Cellular heterogeneity impedes precise understanding of the molecular components of each islet cell type that govern islet (dys)function, particularly the less abundant delta and gamma/pancreatic polypeptide (PP) cells. Here, we report single-cell transcriptomes for 638 cells from nondiabetic (ND) and T2D human islet samples. Analyses of ND single-cell transcriptomes identified distinct alpha, beta, delta, and PP/gamma cell-type signatures. Genes linked to rare and common forms of islet dysfunction and diabetes were expressed in the delta and PP/gamma cell types. Moreover, this study revealed that delta cells specifically express receptors that receive and coordinate systemic cues from the leptin, ghrelin, and dopamine signaling pathways implicating them as integrators of central and peripheral metabolic signals into the pancreatic islet. Finally, single-cell transcriptome profiling revealed genes differentially regulated between T2D and ND alpha, beta, and delta cells that were undetectable in paired whole islet analyses. This study thus identifies fundamental cell-type-specific features of pancreatic islet (dys)function and provides a critical resource for comprehensive understanding of islet biology and diabetes pathogenesis.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="GEO", id="GSE86469"),
+        list(provider="PubMed", id="27864352")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-17_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

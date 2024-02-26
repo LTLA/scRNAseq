@@ -4,7 +4,12 @@
 \alias{ERCCSpikeInConcentrations}
 \title{Obtain ERCC concentrations}
 \usage{
-ERCCSpikeInConcentrations(volume = NULL, dilution = NULL, mix = c("1", "2"))
+ERCCSpikeInConcentrations(
+  volume = NULL,
+  dilution = NULL,
+  mix = c("1", "2"),
+  legacy = FALSE
+)
 }
 \arguments{
 \item{volume}{Numeric scalar specifying the added volume (in nanoliters) of ERCC spike-in mixture.
@@ -15,6 +20,9 @@ Only used if \code{volume} is specified.}
 
 \item{mix}{String specifying whether to compute the number of molecules for mix 1 or 2.
 Only used if both \code{dilution} and \code{volume} are specified.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.

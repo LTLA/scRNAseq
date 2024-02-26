@@ -3,6 +3,8 @@
 #' Obtain the mouse nervous system single-cell RNA-seq dataset from Zeisel et al. (2018).
 #'
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Row data contains the gene symbol as well as some relevant per-gene statistics,
@@ -33,14 +35,19 @@
 #' @importFrom SingleCellExperiment splitAltExps altExp altExp<- reducedDims<- colPairs<-
 #' @importFrom SummarizedExperiment rowData rowData<-
 #' @importFrom BiocGenerics cbind
-ZeiselNervousData <- function(location=TRUE) {
-    version <- "2.6.0"
+ZeiselNervousData <- function(location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("zeisel-nervous-2018", "2023-12-22", realize.assays=TRUE)
 
-    hub <- .ExperimentHub()
-    sce <- .create_sce(file.path("zeisel-nervous", version), hub=hub)
+    } else {
+        version <- "2.6.0"
 
-    reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/zeisel-nervous", version, "reddims.rds"))]]
-    colPairs(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/zeisel-nervous", version, "colpairs.rds"))]]
+        hub <- .ExperimentHub()
+        sce <- .create_sce(file.path("zeisel-nervous", version), hub=hub)
+
+        reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/zeisel-nervous", version, "reddims.rds"))]]
+        colPairs(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/zeisel-nervous", version, "colpairs.rds"))]]
+    }
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

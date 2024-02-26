@@ -1,0 +1,179 @@
+---
+title: Processing the Segerstolpe pancreas dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of human pancreas from [Segerstolpe et al. (2016)](https://doi.org/10.1016/j.cmet.2016.08.020).
+A count matrix is provided in the ArrayExpress entry for this project.
+We download it using `r Biocpkg("BiocFileCache")` to cache the results:
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask=FALSE)    
+base.url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-5061/"
+count.file <- bfcrpath(bfc, paste0(base.url, "pancreas_refseq_rpkms_counts_3514sc.txt"))
+```
+
+The file itself is quite complex:
+
+- The first 2 columns contain the gene symbol and NCBI GenBank transcript identifiers for each row.
+- The next `X` columns are the RPKMs, for `X` cells.
+- The remaining `X` columns are the counts.
+
+This requires some additional work to extract the useful data.
+The first line contains the names of the cells, 
+so we can use this to determine the number and indices of the columns with per-cell counts.
+
+```{r}
+col.names <- read.table(count.file, header=FALSE, sep="\t", 
+    stringsAsFactors=FALSE, comment.char="", nrows = 1)[,-1]
+ncells <- length(col.names)
+
+what <- vector("list", ncells*2 + 2)
+what[[1]] <- "character"
+what[[2]] <- "character"
+what[seq_len(ncells) + ncells + 2] <- "integer"
+```
+
+We then read in the gene symbols and the counts.
+
+```{r}
+emtab.df <- read.table(count.file, header=FALSE, sep="\t", 
+    stringsAsFactors=FALSE, colClasses=what, skip=1)
+gene.info <- emtab.df[,1:2]
+emtab.df <- emtab.df[,-(1:2)]
+colnames(emtab.df) <- col.names
+dim(emtab.df)
+```
+
+Some coercion is performed to yield a count matrix and a row-level `DataFrame`. 
+
+```{r}
+library(S4Vectors)
+counts <- as.matrix(emtab.df)
+rowdata <- DataFrame(symbol=gene.info[,1], refseq=gene.info[,2])
+```
+
+# Preparing the column metadata
+
+We retrieve the column metadata fields from ArrayExpress using the same accession number.
+
+```{r}
+meta.fname <- bfcrpath(bfc, paste0(base.url, "E-MTAB-5061.sdrf.txt"))
+emtab.sdrf <- read.delim(meta.fname, stringsAsFactors=FALSE, check.names=FALSE, row.names=1)
+colnames(emtab.sdrf)
+```
+
+We make sure that the sample IDs match with the column names of the count matrix.
+
+```{r}
+stopifnot(identical(sort(rownames(emtab.sdrf)), sort(colnames(counts))))
+emtab.sdrf <- emtab.sdrf[match(colnames(counts), rownames(emtab.sdrf)),]
+```
+
+We only keep the `Source Name` and `Characteristics` fields.
+The other fields describe relationships to other files/identifiers within ArrayExpress and are not of (primary) interest.
+
+```{r}
+keep <- grep("Characteristics", colnames(emtab.sdrf))
+emtab.sdrf <- emtab.sdrf[,c(1, keep)]
+colnames(emtab.sdrf) <- sub(".*\\[(.*)\\]", "\\1", colnames(emtab.sdrf))
+```
+
+We also remove fields that only have one level and thus are not really useful.
+
+```{r}
+has.multi.levels <- vapply(emtab.sdrf, function(x) length(unique(x))>1L, TRUE)
+emtab.sdrf <- emtab.sdrf[,has.multi.levels]
+```
+
+The `cell type` field has some `"not applicable"` entries that should be more formally represented as `NA`s.
+
+```{r}
+lost <- emtab.sdrf$`inferred cell type`=="not applicable"
+emtab.sdrf$`inferred cell type`[lost] <- NA_character_
+```
+
+We coerce this into a column-level `DataFrame`.
+
+```{r}
+coldata <- as(emtab.sdrf, "DataFrame")
+coldata
+```
+
+# Saving to file
+
+Slapping everything together into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata, rowData=rowdata)
+```
+
+We split off the spike-ins.
+
+```{r}
+status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
+sce <- splitAltExps(sce, status, ref="endogenous")
+
+spike.exp <- altExp(sce, "ERCC")
+rownames(spike.exp) <- rowData(spike.exp)$refseq
+rowData(spike.exp) <- rowData(spike.exp)[,0] # not really useful for spike-ins.
+
+# This is wrong for one donor - donor "H1" has 100ul rather than 25ul -
+# but there's not much that we can do about that in the rowData.
+library(scRNAseq)
+spikedata <- countErccMolecules(volume = 25, dilution = 40000)
+spikedata <- spikedata[rownames(spike.exp), ]
+rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+altExp(sce, "ERCC") <- spike.exp
+```
+
+We use symbols as the row names, because the RefSeq identifiers are a mess, what with all the `+` symbols everywhere.
+
+```{r}
+rownames(sce) <- rowData(sce)$symbol
+rowData(sce)$symbol <- NULL
+```
+
+Finally we do some polishing to optimize for space.
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+And saving it:
+
+```{r}
+meta <- list(
+    title="Single-Cell Transcriptome Profiling of Human Pancreatic Islets in Health and Type 2 Diabetes",
+    description="Hormone-secreting cells within pancreatic islets of Langerhans play important roles in metabolic homeostasis and disease. However, their transcriptional characterization is still incomplete. Here, we sequenced the transcriptomes of thousands of human islet cells from healthy and type 2 diabetic donors. We could define specific genetic programs for each individual endocrine and exocrine cell type, even for rare δ, γ, ε, and stellate cells, and revealed subpopulations of α, β, and acinar cells. Intriguingly, δ cells expressed several important receptors, indicating an unrecognized importance of these cells in integrating paracrine and systemic metabolic signals. Genes previously associated with obesity or diabetes were found to correlate with BMI. Finally, comparing healthy and T2D transcriptomes in a cell-type resolved manner uncovered candidates for future functional studies. Altogether, our analyses demonstrate the utility of the generated single-cell gene expression resource.
+    
+Maintainer note: ERCC molecule counts were computed based on the addition of 25 uL of a 1:40000 dilution of ERCC mix 1.",
+    taxonomy_id="9606",
+    genome="GRCh37",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-5061"),
+        list(provider="PubMed", id="27667667")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-19_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

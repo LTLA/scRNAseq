@@ -1,0 +1,116 @@
+---
+title: Processing the Usoskin brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse brain from [Usoskin et al. (2015)](https://doi.org/10.1038/nn.3881).
+RPMs for endogenous genes and repeat regions are available as External Resource Table 1 at http://linnarssonlab.org/drg/.
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "https://storage.googleapis.com/linnarsson-lab-www-blobs/blobs/drg/"
+count.url <- paste0(base.url, "Usoskin%20et%20al.%20External%20resources%20Table%201.xlsx")
+count.file <- bfcrpath(bfc, count.url)
+```
+
+We load them into memory.
+
+```{r}
+library(readxl)
+all.raw <- read_xlsx(count.file, sheet=2, col_names=FALSE)
+```
+
+# Unpacking the format
+
+We need to unpack the column data:
+
+```{r}
+meta.raw <- head(all.raw, 10)
+coldata <- data.frame(t(meta.raw[,-(1:9)]), stringsAsFactors=FALSE)
+
+library(S4Vectors)
+coldata <- DataFrame(coldata)
+colnames(coldata) <- meta.raw[,9,drop=TRUE]
+
+rownames(coldata) <- coldata$`Sample ID`
+stopifnot(!anyDuplicated(rownames(coldata)))
+coldata <- coldata[,setdiff(colnames(coldata), "Sample ID")]
+
+coldata$Reads <- as.numeric(coldata$Reads)
+coldata
+```
+
+And then the rowdata:
+
+```{r}
+gene.info <- tail(all.raw, -11)
+rowdata <- as.data.frame(gene.info[,1:8])
+rowdata.names <- all.raw[11,1:8,drop=TRUE]
+rowdata.names <- sub("^[0-9]\\. ", "", rowdata.names)
+rowdata <- DataFrame(rowdata)
+colnames(rowdata) <- rowdata.names
+rowdata
+```
+
+And finally, the RPMs (since no raw counts have been provided):
+
+```{r}
+rpms <- as.matrix(gene.info[,-(1:9)])
+storage.mode(rpms) <- "numeric"
+colnames(rpms) <- NULL
+dim(rpms)
+```
+
+# Saving to file 
+
+Slapping them together to form a `SingleCellExperiment`.
+We'll just call it a CPM assay.
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(cpm=rpms), rowData=rowdata, colData=coldata)
+rownames(sce) <- rowData(sce)[,1]
+rowData(sce) <- rowData(sce)[,-1]
+```
+
+We apply some polish to optimize for storage:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+And saving them for upload:
+
+```{r}
+meta <- list(
+    title="Unbiased classification of sensory neuron types by large-scale single-cell RNA sequencing",
+    description="The primary sensory system requires the integrated function of multiple cell types, although its full complexity remains unclear. We used comprehensive transcriptome analysis of 622 single mouse neurons to classify them in an unbiased manner, independent of any a priori knowledge of sensory subtypes. Our results reveal eleven types: three distinct low-threshold mechanoreceptive neurons, two proprioceptive, and six principal types of thermosensitive, itch sensitive, type C low-threshold mechanosensitive and nociceptive neurons with markedly different molecular and operational properties. Confirming previously anticipated major neuronal types, our results also classify and provide markers for new, functionally distinct subtypes. For example, our results suggest that itching during inflammatory skin diseases such as atopic dermatitis is linked to a distinct itch-generating type. We demonstrate single-cell RNA-seq as an effective strategy for dissecting sensory responsive cells into distinct neuronal types. The resulting catalog illustrates the diversity of sensory types and the cellular complexity underlying somatic sensation.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="25420068"),
+        list(provider="URL", id=count.url, version=as.character(Sys.Date()))
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-19_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

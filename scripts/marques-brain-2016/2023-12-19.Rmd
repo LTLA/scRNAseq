@@ -1,0 +1,125 @@
+---
+title: Processing the Marques brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of mouse oligodendrocytes from [Marques et al. (2016)](https://doi.org/10.1126/science.aaf6463).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE75330](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+count.file <- bfcrpath(bfc, paste0("ftp://ftp.ncbi.nlm.nih.gov/geo/series/",
+    "GSE75nnn/GSE75330/suppl/GSE75330_Marques_et_al_mol_counts2.tab.gz"))
+```
+
+We load them into memory.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+We also extract the pure symbols:
+
+```{r}
+rowdata <- DataFrame(symbol=sub("_loc[0-9]+$", "", rownames(counts)), row.names=rownames(counts))
+rowdata
+```
+
+# Extracting the metadata
+
+We extract the metadata for this study using the `r Biocpkg("GEOquery")` package.
+
+```{r}
+library(GEOquery)
+coldata <- pData(getGEO("GSE75330")[[1]])
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+rownames(coldata) <- NULL
+colnames(coldata)
+```
+
+Unfortunately, some of the cells are named differently in the `coldata` compared to the `counts`, which needs correction.
+
+```{r}
+coldata[,1] <- sub("T[0-9]-", "-", coldata[,1])
+coldata <- coldata[match(colnames(counts), coldata[,1]),]
+stopifnot(identical(colnames(counts), coldata[,1]))
+```
+
+We remove the constant columns, as these are unlikely to be interesting.
+
+```{r}
+nlevels <- vapply(coldata, FUN=function(x) length(unique(x[!is.na(x)])), 1L)
+coldata <- coldata[,nlevels > 1L]
+```
+
+We also remove the columns related to the GEO accession itself, as well as some redundant fields.
+
+```{r}
+stopifnot(identical(coldata$title, colnames(counts)))
+rownames(coldata) <- coldata$title
+coldata <- coldata[,! colnames(coldata) %in%
+    c("geo_accession", "relation", "relation.1", "title")]
+coldata <- coldata[,!grepl("^characteristics_ch", colnames(coldata))]
+```
+
+We convert all factors into character vectors, and we clean up the column names.
+
+```{r}
+for (i in colnames(coldata)) {
+    if (is.factor(coldata[[i]])) {
+        coldata[[i]] <- as.character(coldata[[i]])
+    }
+}
+colnames(coldata) <- sub("[:_]ch1$", "", colnames(coldata))
+coldata
+```
+
+# Saving to file 
+
+We now assemble the components into a `SingleCellExperiment`, with some polishing to save disk space:
+
+```{r}
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=counts), rowData=rowdata, colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
+We then save it to disk:
+
+```{r}
+meta <- list(
+    title="Oligodendrocyte heterogeneity in the mouse juvenile and adult central nervous system",
+    description="Oligodendrocytes have been considered as a functionally homogeneous population in the central nervous system (CNS). We performed single-cell RNA sequencing on 5072 cells of the oligodendrocyte lineage from 10 regions of the mouse juvenile and adult CNS. Thirteen distinct populations were identified, 12 of which represent a continuum from Pdgfra(+) oligodendrocyte precursor cells (OPCs) to distinct mature oligodendrocytes. Initial stages of differentiation were similar across the juvenile CNS, whereas subsets of mature oligodendrocytes were enriched in specific regions in the adult brain. Newly formed oligodendrocytes were detected in the adult CNS and were responsive to complex motor learning. A second Pdgfra(+) population, distinct from OPCs, was found along vessels. Our study reveals the dynamics of oligodendrocyte differentiation and maturation, uncoupling them at a transcriptional level and highlighting oligodendrocyte heterogeneity in the CNS.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE75330"),
+        list(provider="PubMed", id="27284195")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-19_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

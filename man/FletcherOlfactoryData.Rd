@@ -4,7 +4,12 @@
 \alias{FletcherOlfactoryData}
 \title{Obtain the Fletcher Olfactory data}
 \usage{
-FletcherOlfactoryData(filtered = TRUE, ensembl = FALSE, location = TRUE)
+FletcherOlfactoryData(
+  filtered = TRUE,
+  ensembl = FALSE,
+  location = TRUE,
+  legacy = FALSE
+)
 }
 \arguments{
 \item{filtered}{Logical scalar indicating whether to filter out cells that were not used by the authors.}
@@ -12,6 +17,9 @@ FletcherOlfactoryData(filtered = TRUE, ensembl = FALSE, location = TRUE)
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

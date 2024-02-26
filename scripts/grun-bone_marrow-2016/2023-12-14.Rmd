@@ -1,0 +1,95 @@
+---
+title: Processing the Grun bone marrow dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of bone marrow cells from [Grun et al. (2016)](https://doi.org/10.1016/j.stem.2016.05.010).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE76983](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76983).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE76nnn/GSE76983/suppl/GSE76983_expdata_BMJhscC.csv.gz"
+count.file <- bfcrpath(bfc, url)
+```
+
+We read this into memory as a sparse matrix.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Forming a `SingleCellExperiment`
+
+Slapping together everything into an SCE:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts))
+```
+
+Creating some row data for user convenience:
+
+```{r}
+symbol <- sub("__.*", "", rownames(sce))
+loc <- sub(".*__", "", rownames(sce))
+rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+```
+
+Also fleshing out the column data, using GEO sample annotation to determine the extraction protocol.
+
+```{r}
+cn <- colnames(sce)
+sample <- sub("_.*", "", cn)
+protocol <- ifelse(sample %in% c("JC4", "JC48P2", "JC48P4", "JC48P6", "JC48P7"),
+    "sorted hematopoietic stem cells", "micro-dissected cells")
+colData(sce) <- DataFrame(sample=sample, protocol=protocol, row.names=cn)
+```
+
+Adding some polish to save space:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+# Saving to file 
+
+We save everything to disk in preparation for upload.
+
+```{r}
+meta <- list(
+    title="De Novo Prediction of Stem Cell Identity using Single-Cell Transcriptome Data [bone marrow only]",
+    description="Adult mitotic tissues like the intestine, skin, and blood undergo constant turnover throughout the life of an organism. Knowing the identity of the stem cell is crucial to understanding tissue homeostasis and its aberrations upon disease. Here we present a computational method for the derivation of a lineage tree from single-cell transcriptome data. By exploiting the tree topology and the transcriptome composition, we establish StemID, an algorithm for identifying stem cells among all detectable cell types within a population. We demonstrate that StemID recovers two known adult stem cell populations, Lgr5+ cells in the small intestine and hematopoietic stem cells in the bone marrow. We apply StemID to predict candidate multipotent cell populations in the human pancreas, a tissue with largely uncharacterized turnover dynamics. We hope that StemID will accelerate the search for novel stem cells by providing concrete markers for biological follow-up and validation.
+
+Maintainer note: this dataset contains only the bone marrow cells from the study. The protocol used to extract each cell is determined from the GEO annotation for the sample containing the cell.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id='GSE76983'),
+        list(provider="PubMed", id='27345837')
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-14_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

@@ -4,6 +4,8 @@
 #'
 #' @param remove.htseq Logical scalar indicating whether HT-seq alignment statistics should be removed.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is generated from the column names,
@@ -30,25 +32,30 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-KolodziejczykESCData <- function(remove.htseq=TRUE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("kolodziejczyk-esc", version), has.rowdata=FALSE, has.coldata=FALSE)
+KolodziejczykESCData <- function(remove.htseq=TRUE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("kolodziejczyk-esc-2015", "2023-12-17", realize.assays=TRUE)
 
-    sce$culture <- sub(".*mES_([^_]+)_.*", "\\1", colnames(sce))
-    sce$plate <- sub(".*mES_[^_]+_([^_]+)_.*", "\\1", colnames(sce))
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("kolodziejczyk-esc", version), has.rowdata=FALSE, has.coldata=FALSE)
 
-    if (remove.htseq) {
-        sce <- sce[grep("^__", rownames(sce), invert=TRUE),]
+        sce$culture <- sub(".*mES_([^_]+)_.*", "\\1", colnames(sce))
+        sce$plate <- sub(".*mES_[^_]+_([^_]+)_.*", "\\1", colnames(sce))
+
+        if (remove.htseq) {
+            sce <- sce[grep("^__", rownames(sce), invert=TRUE),]
+        }
+
+        spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25e6)
+        spikedata <- spikedata[rownames(spike.exp), ]
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        altExp(sce, "ERCC") <- spike.exp
     }
-
-    spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, spike.type, ref="endogenous")
-
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 1, dilution = 25e6)
-    spikedata <- spikedata[rownames(spike.exp), ]
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    altExp(sce, "ERCC") <- spike.exp
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

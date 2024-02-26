@@ -4,12 +4,15 @@
 \alias{CampbellBrainData}
 \title{Obtain the Campbell brain data}
 \usage{
-CampbellBrainData(ensembl = FALSE, location = TRUE)
+CampbellBrainData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the row names of the returned object should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

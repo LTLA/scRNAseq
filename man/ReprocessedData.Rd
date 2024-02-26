@@ -6,11 +6,26 @@
 \alias{ReprocessedFluidigmData}
 \title{Reprocessed single-cell data sets}
 \usage{
-ReprocessedAllenData(assays = NULL, ensembl = FALSE, location = TRUE)
+ReprocessedAllenData(
+  assays = NULL,
+  ensembl = FALSE,
+  location = TRUE,
+  legacy = FALSE
+)
 
-ReprocessedTh2Data(assays = NULL, ensembl = FALSE, location = TRUE)
+ReprocessedTh2Data(
+  assays = NULL,
+  ensembl = FALSE,
+  location = TRUE,
+  legacy = FALSE
+)
 
-ReprocessedFluidigmData(assays = NULL, ensembl = FALSE, location = TRUE)
+ReprocessedFluidigmData(
+  assays = NULL,
+  ensembl = FALSE,
+  location = TRUE,
+  legacy = FALSE
+)
 }
 \arguments{
 \item{assays}{Character vector specifying one or more assays to return.
@@ -20,6 +35,9 @@ If \code{NULL}, all assays are returned.}
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,

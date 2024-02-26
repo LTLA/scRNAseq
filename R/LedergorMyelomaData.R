@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata was created from the sample metadata file in GSE117156. It contains an 'Experiment_ID' column,
@@ -32,9 +34,13 @@
 #'
 #' @export
 #' @importFrom SummarizedExperiment rowData
-LedergorMyelomaData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.8.0"
-    sce <- .create_sce(file.path("ledergor-myeloma", version), has.rowdata=FALSE)
+LedergorMyelomaData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("ledergor-myeloma-2018", "2023-12-20", realize.assays=TRUE)
+    } else {
+        version <- "2.8.0"
+        sce <- .create_sce(file.path("ledergor-myeloma", version), has.rowdata=FALSE)
+    }
 
     .convert_to_ensembl(sce,
         species = "Hs",

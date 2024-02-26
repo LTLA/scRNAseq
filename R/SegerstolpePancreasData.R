@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Row data contains fields for the gene symbol and RefSeq transcript IDs corresponding to each gene.
@@ -40,20 +42,25 @@
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
 #' @importFrom SummarizedExperiment rowData
-SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("segerstolpe-pancreas", version))
-    rownames(sce) <- rowData(sce)$symbol
+SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("segerstolpe-pancreas-2016", "2023-12-19", realize.assays=TRUE)
 
-    status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, status, ref="endogenous")
-    
-    ## This is wrong for one donor - donor "H1" has 100ul rather than 25ul
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 25, dilution = 40000)
-    spikedata <- spikedata[rownames(spike.exp), ]
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    altExp(sce, "ERCC") <- spike.exp
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("segerstolpe-pancreas", version))
+        rownames(sce) <- rowData(sce)$symbol
+
+        status <- ifelse(grepl("^ERCC-[0-9]+", rowData(sce)$refseq), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, status, ref="endogenous")
+        
+        ## This is wrong for one donor - donor "H1" has 100ul rather than 25ul
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 25, dilution = 40000)
+        spikedata <- spikedata[rownames(spike.exp), ]
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        altExp(sce, "ERCC") <- spike.exp
+    }
 
     .convert_to_ensembl(sce, 
         symbols=rownames(sce), 

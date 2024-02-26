@@ -1,0 +1,210 @@
+---
+title: Processing the Zeisel nervous system dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the mouse nervous system from [Zeisel et al. (2018)](https://doi.org/10.1016/j.cell.2018.06.021).
+Counts for endogenous genes are available from http://mousebrain.org/downloads.html as a `loom` file.
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+loom.url <- "https://storage.googleapis.com/linnarsson-lab-loom/l5_all.loom"
+loom.path <- bfcrpath(bfc, loom.url)
+```
+
+We load this into our R session using the `r Biocpkg("LoomExperiment")` package.
+
+```{r}
+library(LoomExperiment)
+scle <- import(loom.path, type="SingleCellLoomExperiment")
+scle 
+```
+
+Then it's just a matter of peeling apart the bits that we need.
+For starters, let's clean up the `rowData` by moving the gene IDs to the row names:
+
+```{r}
+rd <- rowData(scle)
+colnames(rd) <- sub("^X_", "", colnames(rd))
+rownames(rd) <- rd$Accession
+rd$Accession <- NULL
+rd
+```
+
+# Cleaning up column annotations
+
+We also need to clean up the `colData`.
+This is, sadly, a gargantuan manual effort - so much for `loom` being a ready-to-use file format!
+We start by stripping out non-informative or redundant fields: 
+
+```{r}
+cd <- colData(scle)
+
+# Useless pieces of information, or pieces that are obvious from the experimental design.
+cd$Bucket <- NULL
+cd$Species <- NULL
+cd$AnalysisProject <- NULL
+cd$Transcriptome <- NULL
+cd$TimepointPool <- NULL
+cd$NGI_PlateWell <- NULL
+cd$PlugDate <- NULL
+cd$Plug_Date <- NULL
+cd$Project <- NULL
+
+# Redundant fields.
+cd$Cell_Conc <- NULL
+cd$ngperul_cDNA <- NULL
+cd$cDNA_Lib_Ok <- NULL
+cd$Target_Num_Cells <- NULL
+cd$Date_Captured <- NULL
+cd$Num_Pooled_Animals <- NULL
+cd$PCR_Cycles <- NULL
+cd$Sample_Index <- NULL
+cd$Seq_Comment <- NULL
+cd$Seq_Lib_Date <- NULL
+cd$Seq_Lib_Ok <- NULL
+```
+
+Converting various character fields into numbers, where applicable.
+On occassion, we have to get rid of some nonsense fields with quotation marks; something probably got corrupted when the file was saved.
+
+```{r}
+options(warn=2)
+for (i in colnames(cd)) {
+    current <- cd[[i]]
+
+    if (is.character(current)) {
+        converted <- current
+        is.bad <- converted=="" | grepl('"', converted)
+        converted[is.bad] <- NA
+        changed <- TRUE
+
+        if (any(has.pct <- grepl("%$", current))) {
+            converted[!has.pct] <- NA
+            converted <- sub("%$", "", converted)
+            converted <- as.numeric(converted)/100
+            cd[[i]] <- converted
+        } else if (any(has.comma <- grepl(",[0-9]{3}", current))) {
+            converted[!has.comma] <- NA # these are probably corruptions of some sort.
+            converted <- gsub(",([0-9]{3})", "\\1", converted)
+            converted <- as.numeric(converted)
+            cd[[i]] <- converted
+        } else if (any(grepl("^[0-9]+,[0-9]+$", current))){
+            converted <- sub(",", ".", converted)
+            converted <- as.numeric(converted)
+            cd[[i]] <- converted
+        } else if (any(grepl("^[0-9]+(\\.[0-9]+)?$", current))) {
+            cd[[i]] <- as.numeric(converted)
+        } else {
+            changed <- FALSE
+        }
+
+#        # For debugging purposes, to check that the corruptions are purged correctly.
+#        if (changed) {
+#            print(i)
+#            print(names(table(current)))
+#            print(names(table(converted)))
+#        }
+    }
+}
+options(warn=1)
+```
+
+We replace the variuos `nan` strings with `NA`s in the character columns.
+
+```{r}
+for (i in colnames(cd)) {
+    current <- cd[[i]]
+    if (is.character(current) && any(lost <- current=="nan")) {
+        current[lost] <- NA_character_
+        cd[[i]] <- current
+    }    
+}
+```
+
+We shift the class probabilities into a nested data frame.
+
+```{r}
+clcols <- grep("ClassProbability", colnames(cd))
+clprobs <- cd[,clcols]
+colnames(clprobs) <- sub("ClassProbability_", "", colnames(clprobs))
+cd <- cd[,-clcols]
+cd$ClassProbability <- clprobs
+```
+
+We also hack out the reduced dimensions.
+
+```{r}
+pca.cols <- c("X_PC1", "X_PC2")
+tsne.cols <- c("X_tSNE1", "X_tSNE2")
+other.cols <- c("X_X", "X_Y")
+reddim <- list(
+    PCA=as.matrix(cd[,pca.cols]),
+    tSNE=as.matrix(cd[,tsne.cols]),
+    unnamed=as.matrix(cd[,other.cols])
+)
+cd <- cd[,!colnames(cd) %in% c(pca.cols, tsne.cols, other.cols)]
+```
+
+Finally, we get rid of the prefixing with `X_`.
+Don't know why it's there but, well, whatever.
+
+```{r}
+colnames(cd) <- sub("X_", "", colnames(cd))
+cd
+```
+
+# Saving to file
+
+We now create a new `SingleCellExperiment` object.
+I'm not storing the cell-cell graph, though, because I don't want to.
+
+```{r}
+sce <- SingleCellExperiment(
+    list(counts=as(assay(scle), 'dgCMatrix')),
+    rowData=rd,
+    colData=cd
+)
+```
+
+We apply some polish to save disk space:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce 
+```
+
+We then save it to disk in preparation for upload:
+
+```{r}
+meta <- list(
+    title="Molecular Architecture of the Mouse Nervous System",
+    description="The mammalian nervous system executes complex behaviors controlled by specialized, precisely positioned, and interacting cell types. Here, we used RNA sequencing of half a million single cells to create a detailed census of cell types in the mouse nervous system. We mapped cell types spatially and derived a hierarchical, data-driven taxonomy. Neurons were the most diverse and were grouped by developmental anatomical units and by the expression of neurotransmitters and neuropeptides. Neuronal diversity was driven by genes encoding cell identity, synaptic connectivity, neurotransmission, and membrane conductance. We discovered seven distinct, regionally restricted astrocyte types that obeyed developmental boundaries and correlated with the spatial distribution of key glutamate and glycine neurotransmitters. In contrast, oligodendrocytes showed a loss of regional identity followed by a secondary diversification. The resource presented here lays a solid foundation for understanding the molecular architecture of the mammalian nervous system and enables genetic manipulation of specific cell types.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="30096314"),
+        list(provider="URL", id=loom.url, version=as.character(Sys.Date()))
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-22_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

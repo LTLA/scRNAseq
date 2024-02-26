@@ -1,0 +1,137 @@
+---
+title: Processing the Tasic brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse brain from [Tasic et al. (2016)]( ).
+Counts for endogenous genes and spike-in transcripts are available from the Gene Expression Omnibus
+using the accession number [GSE71585](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71585).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE71nnn/GSE71585/suppl/"
+count.file <- bfcrpath(bfc, paste0(base.url, "GSE71585_RefSeq_counts.csv.gz"))
+spike.file <- bfcrpath(bfc, paste0(base.url, "GSE71585_ERCC_and_tdTomato_counts.csv.gz"))
+```
+
+We load them into memory.
+
+```{r}
+count.mat <- read.csv(count.file, row.names=1, header=TRUE, check.names=FALSE)
+count.mat <- as.matrix(count.mat)
+dim(count.mat)
+spike.mat <- read.csv(spike.file, row.names=1, header=TRUE, check.names=FALSE)
+spike.mat <- as.matrix(spike.mat)
+dim(spike.mat)
+```
+
+We check that all objects are in the same order.
+
+```{r}
+stopifnot(identical(colnames(count.mat), colnames(spike.mat)))
+```
+
+We move td-Tomato expression from the ERCC matrix to the count matrix, because it is expressed (biologically) and not a spike-in.
+
+```{r}
+count.mat <- rbind(count.mat, spike.mat["tdTomato",,drop=FALSE])
+spike.mat <- spike.mat[setdiff(rownames(spike.mat), "tdTomato"),,drop=FALSE]
+```
+
+# Downloading the per-cell metadata
+
+We also download a file containing the metadata for each cell.
+
+```{r}
+meta.file <- bfcrpath(bfc, paste0(base.url, "GSE71585_Clustering_Results.csv.gz"))
+metadata <- read.csv(meta.file, stringsAsFactors=FALSE)
+nrow(metadata)
+head(metadata)
+```
+
+Some clean-up is necessary to replace `"N/A"` with actual `NA_character_` entries, 
+which are more appropriate for conveying missingness.
+
+```{r}
+for (i in colnames(metadata)) {
+    current <- metadata[,i]
+    to.rename <- current %in% c("N/A")
+    current[to.rename] <- NA
+    metadata[,i] <- current
+}
+```
+
+We check that all objects are in the same order, and use this to create a column-level `DataFrame`.
+
+```{r}
+m <- match(colnames(count.mat), metadata$sample_title)
+stopifnot(all(!is.na(m)))
+metadata <- metadata[m,]
+library(S4Vectors)
+coldata <- as(metadata, "DataFrame")
+coldata$sample_title <- NULL # don't need this, it's in the colnames.
+```
+
+# Saving to file 
+
+Slapping everything together into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=count.mat), colData=coldata)
+```
+
+We add the spike-in infomration:
+
+```{r}
+library(scRNAseq)
+spike.exp <- SummarizedExperiment(list(counts=spike.mat))
+spikedata <- countErccMolecules(volume = 100, dilution = 1000000)
+spikedata <- spikedata[rownames(spike.exp), ]
+rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+altExp(sce, "ERCC") <- spike.exp
+spike.exp
+```
+
+We apply some polish to save disk space:
+
+```{r}
+sce <- polishDataset(sce)
+sce
+```
+
+We now save all of the components to file:
+
+```{r}
+meta <- list(
+    title="Adult mouse cortical cell taxonomy revealed by single cell transcriptomics",
+    description="Nervous systems are composed of various cell types, but the extent of cell type diversity is poorly understood. We constructed a cellular taxonomy of one cortical region, primary visual cortex, in adult mice on the basis of single-cell RNA sequencing. We identified 49 transcriptomic cell types, including 23 GABAergic, 19 glutamatergic and 7 non-neuronal types. We also analyzed cell type-specific mRNA processing and characterized genetic access to these transcriptomic types by many transgenic Cre lines. Finally, we found that some of our transcriptomic cell types displayed specific and differential electrophysiological and axon projection properties, thereby confirming that the single-cell transcriptomic signatures can be associated with specific cellular properties.
+
+Maintainer note: spike-in molecule counts were computed based on a volume of 100 nL for a 1:1000000 dilution of mix 1. Note that some of the spike-in rows have missing observations for some (but not all) cells. The last 9 cells (containing `_CTX_` in their names) correspond to no-cell control libraries.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="26727548"),
+        list(provider="GEO", id="GSE71585")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-19_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

@@ -5,6 +5,8 @@
 #' @param strip Logical scalar indicating whether to strip the \code{.X} notation from the row names.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' Only used if \code{strip=TRUE}.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata contains cell types provided by the data generators
@@ -26,11 +28,15 @@
 #' sce <- HermannSpermatogenesisData()
 #' 
 #' @export
-HermannSpermatogenesisData <- function(strip=FALSE, location=TRUE) {
-    version <- "2.4.0"
-    sce <- .create_sce(file.path("hermann-spermatogenesis", version), 
-        assays = c("spliced", "unspliced"), has.rowdata=FALSE)
-  
+HermannSpermatogenesisData <- function(strip=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("splicing-demonstration-2020", "2023-12-20", realize.assays=TRUE)
+    } else {
+        version <- "2.4.0"
+        sce <- .create_sce(file.path("hermann-spermatogenesis", version), 
+            assays = c("spliced", "unspliced"), has.rowdata=FALSE)
+    }
+
     if (strip) {
         rownames(sce) <- sub("\\..*", "", rownames(sce))
 

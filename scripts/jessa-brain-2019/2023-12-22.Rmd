@@ -1,0 +1,208 @@
+---
+title: Processing the Jessa brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the mouse brain from [Jessa et al. (2019)](https://doi.org/10.1038/s41588-019-0531-7).
+Counts for endogenous genes are available from GEO using the accession number [GSE133531](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE133531).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+raw.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE133531&format=file")
+tmp <- tempfile()
+untar(raw.path, exdir=tmp)
+list.files(tmp)
+```
+
+Creating a `SingleCellExperiment` from the combined entries.
+
+```{r}
+library(DropletUtils)
+nms <- c("GSM3934450_ET_CT_12", "GSM3934451_ET_CT_15",
+    "GSM3934452_PT_CT_0", "GSM3934453_C57BL6-P3-cortex",
+    "GSM3934454_C57BL6-P6-cortex", "GSM3934455_ET_PO_12",
+    "GSM3934456_ET_PO_15", "GSM3934457_PT_PO_0",
+    "GSM3934458_C57BL6-P3-pons", "GSM3934459_C57BL6-P6-pons")
+
+library(BiocParallel)
+all.prefixes <- file.path(tmp, paste0(nms, "_"))
+names(all.prefixes) <- nms
+sce <- read10xCounts(all.prefixes, type="prefix", BPPARAM=MulticoreParam())
+sce
+```
+
+We don't really need a separate `ID` column in the row data, as this is redundant with the row names.
+
+```{r}
+stopifnot(identical(rownames(sce), rowData(sce)$ID))
+rowData(sce)$ID <- NULL
+```
+
+We rename the sample column to avoid conflicts with later metadata fields.
+We also strip out the GEM group from the barcode to make life easier.
+
+```{r}
+sce$Barcode <- sub("-1$", "", sce$Barcode)
+sce$Sample_ID <- sce$Sample
+sce$Sample <- NULL
+```
+
+# Filling in the metadata
+
+Now we load up the per-sample metadata.
+
+```{r}
+all.meta <- list()
+for (i in seq_along(nms)) {
+    all.meta[[i]] <- read.delim(file.path(tmp, paste0(nms[i], ".metadata.tsv.gz")))
+    all.meta[[i]]$.Sample <- nms[i]
+}
+
+all.meta <- do.call(rbind, all.meta)
+head(all.meta)
+```
+
+Matching to the columns of `sce`.
+
+```{r}
+obs <- DataFrame(Sample_ID=all.meta$.Sample, Barcode=all.meta$Cell)
+stopifnot(all(obs %in% colData(sce)))
+m <- match(colData(sce), obs)
+all.meta <- DataFrame(all.meta[m,], row.names=NULL)
+all.meta$retained <- !is.na(m)
+summary(all.meta$retained)
+```
+
+Auto-filling sample name information, even for the cells that weren't used.
+
+```{r}
+rename <- split(all.meta$Sample, all.meta$.Sample)
+rename <- lapply(rename, unique)
+stopifnot(all(lengths(rename)==1L))
+all.meta$Sample <- unlist(rename)[sce$Sample_ID]
+table(all.meta$Sample, useNA="always")
+```
+
+Moving the dimensionality reduction results to a better home.
+Note that these are per-sample coordinates, so it doesn't make sense to plot them across samples.
+
+```{r}
+pc.names <- c("PC1", "PC2")
+t.names <- c("tSNE_1", "tSNE_2")
+reducedDims(sce) <- list(Sample_PCA=as.matrix(all.meta[,pc.names]), Sample_TSNE=as.matrix(all.meta[,t.names]))
+keep <- colnames(all.meta) %in% c(pc.names, t.names)
+all.meta <- all.meta[,!keep,drop=FALSE]
+```
+
+Similarly, the clustering is done for each sample separately, so we rename it to make that clear.
+
+```{r}
+colnames(all.meta)[colnames(all.meta)=="Cluster"] <- "Sample_Cluster"
+colnames(all.meta)[colnames(all.meta)=="Cluster_number"] <- "Sample_Cluster_number"
+```
+
+Removing the redundant sample and barcode columns before adding it to the SCE:
+
+```{r}
+all.meta <- all.meta[,setdiff(colnames(all.meta), c(".Sample", "Cell"))]
+colData(sce) <- cbind(colData(sce), all.meta)
+colData(sce)
+```
+
+# Adding joint metadata
+
+Adding the joint forebrain analysis results, consisting of various coordinates and clustering results.
+
+```{r}
+fb.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE133531&format=file&file=GSE133531%5FForebrain%5Fjoin%2E2D%2Etsv%2Egz")
+fb.meta <- DataFrame(read.delim(fb.path))
+fb.meta
+
+obs <- DataFrame(Sample=fb.meta$Sample, Barcode=sub(".*_", "", fb.meta$Cell))
+ref <- colData(sce)[,c("Sample", "Barcode")]
+stopifnot(all(obs %in% ref))
+m <- match(ref, obs)
+summary(is.na(m))
+fb.meta <- fb.meta[m,]
+
+u.names <- c("UMAP1", "UMAP2")
+reducedDim(sce, "Forebrain_PC") <- as.matrix(fb.meta[,pc.names])
+reducedDim(sce, "Forebrain_tSNE") <- as.matrix(fb.meta[,t.names])
+reducedDim(sce, "Forebrain_UMAP") <- as.matrix(fb.meta[,u.names])
+
+sce$Forebrain_Joint_cluster_number <- fb.meta$Joint_cluster_number
+table(sce$Forebrain_Joint_cluster_number)
+sce$Forebrain_Joint_cluster <- fb.meta$Joint_cluster
+table(sce$Forebrain_Joint_cluster)
+```
+
+Repeating the dose with the Pons data.
+
+```{r}
+pons.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE133531&format=file&file=GSE133531%5FPons%5Fjoin%2E2D%2Etsv%2Egz")
+pons.meta <- DataFrame(read.delim(pons.path))
+pons.meta
+
+obs <- DataFrame(Sample=pons.meta$Sample, Barcode=sub(".*_", "", pons.meta$Cell))
+ref <- colData(sce)[,c("Sample", "Barcode")]
+stopifnot(all(obs %in% ref))
+m <- match(ref, obs)
+summary(is.na(m))
+pons.meta <- pons.meta[m,]
+
+u.names <- c("UMAP1", "UMAP2")
+reducedDim(sce, "Pons_PC") <- as.matrix(pons.meta[,pc.names])
+reducedDim(sce, "Pons_tSNE") <- as.matrix(pons.meta[,t.names])
+reducedDim(sce, "Pons_UMAP") <- as.matrix(pons.meta[,u.names])
+
+sce$Pons_Joint_cluster_number <- pons.meta$Joint_cluster_number
+table(sce$Pons_Joint_cluster_number)
+sce$Pons_Joint_cluster <- pons.meta$Joint_cluster
+table(sce$Pons_Joint_cluster)
+```
+
+# Saving to file
+
+Polishing up the SCE:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save it to file in preparation for upload:
+
+```{r}
+meta <- list(
+    title="Stalled developmental programs at the root of pediatric brain tumors",
+    description="Childhood brain tumors have suspected prenatal origins. To identify vulnerable developmental states, we generated a single-cell transcriptome atlas of >65,000 cells from embryonal pons and forebrain, two major tumor locations. We derived signatures for 191 distinct cell populations and defined the regional cellular diversity and differentiation dynamics. Projection of bulk tumor transcriptomes onto this dataset shows that WNT medulloblastomas match the rhombic lip-derived mossy fiber neuronal lineage and embryonal tumors with multilayered rosettes fully recapitulate a neuronal lineage, while group 2a/b atypical teratoid/rhabdoid tumors may originate outside the neuroectoderm. Importantly, single-cell tumor profiles reveal highly defined cell hierarchies that mirror transcriptional programs of the corresponding normal lineages. Our findings identify impaired differentiation of specific neural progenitors as a common mechanism underlying these pediatric cancers and provide a rational framework for future modeling and therapeutic interventions.
+
+Maintainer note: this dataset consists of cells from all samples in this study. Clustering annotations and reduced dimensions that have names prefixed with \"Sample_\" were presumably computed within each sample and should not be used in inter-sample comparisons.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE133531"),
+        list(provider="PubMed", id="31768071")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-22_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

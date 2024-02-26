@@ -1,0 +1,110 @@
+---
+title: Processing the Aztekin Xenopus tail dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of Xenopus tail cells from [Aztekin et al. (2019)](https://doi.org/10.1126/science.aav9996).
+We download and cache the count matrix and metadata using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-7716/arrayExpressUpload.zip"
+contents <- bfcrpath(bfc, url)
+
+cache <- tempfile()
+unzip(contents, exdir=cache)
+unzip(file.path(cache, "ArrayExpressV2.zip"), exdir=cache)
+```
+
+# Processing the read counts
+
+We load the counts into memory.
+
+```{r}
+library(Matrix)
+path <- file.path(cache, "ArrayExpress")
+counts <- as(readMM(file.path(path, "countsMatrix.mtx")), "dgCMatrix")
+
+gene.info <- read.csv(file.path(path, "genes.csv"), stringsAsFactors=FALSE, header=FALSE)
+head(gene.info)
+rownames(counts) <- gene.info[,1]
+
+cell.info <- read.csv(file.path(path, "cells.csv"), stringsAsFactors=FALSE, header=FALSE)
+head(cell.info)
+colnames(counts) <- cell.info[,1]
+
+dim(counts)
+```
+
+# Processing the metadata
+
+Processing the per-cell metadata, and merging in the per-sample metadata along with it.
+
+```{r}
+library(S4Vectors)
+meta <- read.csv(file.path(path, "meta.csv"), stringsAsFactors=FALSE)
+labels <- read.csv(file.path(path, "labels.csv"), stringsAsFactors=FALSE)
+meta <- cbind(meta, labels[match(meta$sample, labels$Sample),-1])
+meta <- DataFrame(meta)
+rownames(meta) <- NULL
+meta
+```
+
+Now enforcing consistency checks with the column names of `counts`.
+We remove `cell` afterwards to save some space, given that it's redundant with the column names.
+
+```{r}
+stopifnot(identical(colnames(counts), meta$cell))
+meta$cell <- NULL
+```
+
+# Saving for upload 
+
+Let's put together a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=meta)
+
+# Adding reduced dimensions.
+reducedDim(sce, "UMAP") <- as.matrix(colData(sce)[,c("X", "Y")])
+colData(sce) <- colData(sce)[,setdiff(colnames(colData(sce)), c("X", "Y"))]
+
+# Performing some polishing.
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We save this to disk in preparation for upload.
+
+```{r}
+meta <- list(
+    title="Identification of a regeneration-organizing cell in the Xenopus tail",
+    description="Unlike mammals, Xenopus laevis tadpoles have a high regenerative potential. To characterize this regenerative response, we performed single-cell RNA sequencing after tail amputation. By comparing naturally occurring regeneration-competent and -incompetent tadpoles, we identified a previously unrecognized cell type, which we term the regeneration-organizing cell (ROC). ROCs are present in the epidermis during normal tail development and specifically relocalize to the amputation plane of regeneration-competent tadpoles, forming the wound epidermis. Genetic ablation or manual removal of ROCs blocks regeneration, whereas transplantation of ROC-containing grafts induces ectopic outgrowths in early embryos. Transcriptional profiling revealed that ROCs secrete ligands associated with key regenerative pathways, signaling to progenitors to reconstitute lost tissue. These findings reveal the cellular mechanism through which ROCs form the wound epidermis and ensure successful regeneration.",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-7716"),
+        list(provider="PubMed", id="31097661")
+    ),
+    taxonomy_id="8355",
+    genome="Xenla9.1",
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-14_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

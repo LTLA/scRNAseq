@@ -4,12 +4,15 @@
 \alias{JessaBrainData}
 \title{Obtain the Jessa brain data}
 \usage{
-JessaBrainData(filtered = TRUE, location = TRUE)
+JessaBrainData(filtered = TRUE, location = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{filtered}{Logical scalar indicating whether to filter out cells that were not used by the authors.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

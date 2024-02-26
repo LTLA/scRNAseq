@@ -4,6 +4,8 @@
 #'
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Row metadata contains the symbol and chromosomal location for each gene.
@@ -33,21 +35,26 @@
 #' @export
 #' @importFrom SummarizedExperiment rowData rowData<- colData<-
 #' @importFrom S4Vectors DataFrame
-GrunHSCData <- function(ensembl=FALSE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("grun-hsc", version), has.rowdata=FALSE, has.coldata=FALSE)
+GrunHSCData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("grun-bone_marrow-2016", "2023-12-14", realize.assays=TRUE)
 
-    # Cleaning up the row data.
-    symbol <- sub("__.*", "", rownames(sce))
-    loc <- sub(".*__", "", rownames(sce))
-    rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("grun-hsc", version), has.rowdata=FALSE, has.coldata=FALSE)
 
-    # Cleaning up the col data.
-    cn <- colnames(sce)
-    sample <- sub("_.*", "", cn)
-    protocol <- ifelse(sample %in% c("JC4", "JC48P2", "JC48P4", "JC48P6", "JC48P7"),
-        "sorted hematopoietic stem cells", "micro-dissected cells")
-    colData(sce) <- DataFrame(sample=sample, protocol=protocol, row.names=cn)
+        # Cleaning up the row data.
+        symbol <- sub("__.*", "", rownames(sce))
+        loc <- sub(".*__", "", rownames(sce))
+        rowData(sce) <- DataFrame(symbol=symbol, chr=loc)
+
+        # Cleaning up the col data.
+        cn <- colnames(sce)
+        sample <- sub("_.*", "", cn)
+        protocol <- ifelse(sample %in% c("JC4", "JC48P2", "JC48P4", "JC48P6", "JC48P7"),
+            "sorted hematopoietic stem cells", "micro-dissected cells")
+        colData(sce) <- DataFrame(sample=sample, protocol=protocol, row.names=cn)
+    }
 
     .convert_to_ensembl(sce, 
         species="Mm", 

@@ -1,0 +1,101 @@
+---
+title: Processing the Chen brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse brain from [Chen et al. (2017)](https://doi.org/10.1016/j.celrep.2017.03.004).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE87544](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE87544).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE87nnn/GSE87544/suppl/"
+count.file <- bfcrpath(bfc, paste0(base.url, "GSE87544_Merged_17samples_14437cells_count.txt.gz"))
+```
+
+Reading them in as a sparse matrix.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(count.file)
+dim(counts)
+```
+
+# Downloading the metadata
+
+We also download the cluster identities.
+
+```{r}
+cluster.file <- bfcrpath(bfc, paste0(base.url, "GSE87544_1443737Cells.SVM.cluster.identity.renamed.csv.gz"))
+coldata <- read.csv(cluster.file, stringsAsFactors=FALSE, row.names=1)
+coldata <- as(coldata, "DataFrame")
+coldata
+```
+
+We check that the columns are in the same order.
+
+```{r}
+m <- match(colnames(counts), rownames(coldata))
+coldata <- coldata[m,]
+stopifnot(identical(colnames(counts), rownames(coldata)))
+```
+
+Looks like the first column isn't really necessary:
+
+```{r}
+stopifnot(identical(colnames(counts), coldata[,1]))
+coldata <- coldata[,-1,drop=FALSE]
+```
+
+We hack out some of the sample attributes from the cell names:
+
+```{r}
+coldata$batch <- as.integer(sub("^B([0-9]+).*", "\\1", rownames(coldata)))
+coldata$treatment <- sub(".*_([a-zA-Z]+)[^a-zA-Z]*$", "\\1", rownames(coldata))
+table(coldata$batch, coldata$treatment, useNA="always")
+```
+
+# Saving to file 
+
+We slap together a `SingleCellExperiment` object:
+
+```{r}
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+sce <- polishDataset(sce)
+sce
+```
+
+Now, saving to disk:
+
+```{r}
+meta <- list(
+    title="Single-Cell RNA-Seq Reveals Hypothalamic Cell Diversity",
+    description="The hypothalamus is one of the most complex brain structures involved in homeostatic regulation. Defining cell composition and identifying cell-type-specific transcriptional features of the hypothalamus is essential for understanding its functions and related disorders. Here, we report single-cell RNA sequencing results of adult mouse hypothalamus, which defines 11 non-neuronal and 34 neuronal cell clusters with distinct transcriptional signatures. Analyses of cell-type-specific transcriptomes reveal gene expression dynamics underlying oligodendrocyte differentiation and tanycyte subtypes. Additionally, data analysis provides a comprehensive view of neuropeptide expression across hypothalamic neuronal subtypes and uncover Crabp1+ and Pax6+ neuronal populations in specific hypothalamic sub-regions. Furthermore, we found food deprivation exhibited differential transcriptional effects among the different neuronal subtypes, suggesting functional specification of various neuronal subtypes. Thus, the work provides a comprehensive transcriptional perspective of adult hypothalamus, which serves as a valuable resource for dissecting cell-type-specific functions of this complex brain region.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id='GSE87544'),
+        list(provider="PubMed", id='28355573')
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-14_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

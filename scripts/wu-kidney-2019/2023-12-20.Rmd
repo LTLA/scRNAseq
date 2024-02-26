@@ -1,0 +1,148 @@
+---
+title: Processing the Wu kidney snRNA-seq data
+author: "Aaron Lun"
+---
+
+```{r setup, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Download the data
+
+We obtain a single-nucleus RNA sequencing dataset of mouse kidneys from [Wu et al. (2019)](https://doi.org/10.1681/asn.2018090912).
+Counts for endogenous genes and antibody-derived tags are available from the Gene Expression Omnibus
+using the accession number [GSE119531](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE119531).
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE119nnn/GSE119531/suppl/"
+
+healthy.raw <- bfcrpath(bfc, paste0(base.url, "GSE119531_Healthy.combined.dge.txt.gz"))
+healthy.ann <- bfcrpath(bfc, paste0(base.url, "GSE119531_Healthy.combined.cell.annotation.txt.gz"))
+
+disease.raw <- bfcrpath(bfc, paste0(base.url, "GSE119531_UUO.dge.txt.gz"))
+disease.ann <- bfcrpath(bfc, paste0(base.url, "GSE119531_UUO.cell.annotation.txt.gz"))
+```
+
+# Processing disease data
+
+We load in each of the two sets of files.
+There are some mild discrepancies with the cell barcodes that require some adjustment.
+
+```{r}
+library(scuttle)
+disease.mat <- readSparseCounts(disease.raw)
+dim(disease.mat)
+
+disease.tab <- read.table(disease.ann, header=TRUE, sep="\t", stringsAsFactors=FALSE)
+head(disease.tab)
+
+test.names <- sub("1_", "_", colnames(disease.mat))
+colnames(disease.mat) <- NULL
+stopifnot(identical(test.names, disease.tab$CellBarcode))
+```
+
+One of the disease cell types consists of invalid unicode, so we replace it.
+I'm guessing it's the only other UTF-8-containing cell type name.
+
+```{r}
+invalid <- disease.tab$CellType == "M\xcc\xfc"
+disease.tab$CellType[invalid] <- "MØ"
+summary(invalid)
+```
+
+Now slapping it all into an SCE with some polish to optimize disk space:
+
+```{r}
+library(scRNAseq)
+disease.sce <- SingleCellExperiment(list(counts=disease.mat), colData=disease.tab)
+disease.sce <- polishDataset(disease.sce)
+disease.sce
+```
+
+All disease samples were generated using 10X, so we won't bother adding a technology column to the column data.
+
+# Processing healthy data
+
+And again, for the healthy samples.
+
+```{r}
+healthy.mat <- readSparseCounts(healthy.raw)
+dim(healthy.mat)
+
+healthy.tab <- read.table(healthy.ann, header=TRUE, sep="\t", stringsAsFactors=FALSE)
+head(healthy.tab)
+
+test.names <- sub("sNuc.10x", "sNuc-10x", colnames(healthy.mat))
+colnames(healthy.mat) <- NULL
+stopifnot(identical(test.names, healthy.tab$CellBarcode))
+```
+
+Figuring out the technology for each cell:
+
+```{r}
+healthy.tab$Technology <- sub("_.*", "", test.names)
+```
+
+Now slapping it all into an SCE with some polish to optimize disk space:
+
+```{r}
+healthy.sce <- SingleCellExperiment(list(counts=healthy.mat), colData=healthy.tab)
+healthy.sce <- polishDataset(healthy.sce)
+healthy.sce
+```
+
+# Save for upload
+ 
+We now save to disk in preparation for upload.
+Unfortunately it seems like the row names are different between the healthy and disease samples.
+How this came to be is beyond me, but we'll just save them separately and let the downstream users sort out the rest.
+
+```{r}
+meta_raw <- list(
+    title="Advantages of Single-Nucleus over Single-Cell RNA Sequencing of Adult Kidney: Rare Cell Types and Novel Cell States Revealed in Fibrosis [%s donors only]",
+    description="Background: A challenge for single-cell genomic studies in kidney and other solid tissues is generating a high-quality single-cell suspension that contains rare or difficult-to-dissociate cell types and is free of both RNA degradation and artifactual transcriptional stress responses.
+
+Methods: We compared single-cell RNA sequencing (scRNA-seq) using the DropSeq platform with single-nucleus RNA sequencing (snRNA-seq) using sNuc-DropSeq, DroNc-seq, and 10X Chromium platforms on adult mouse kidney. We validated snRNA-seq on fibrotic kidney from mice 14 days after unilateral ureteral obstruction (UUO) surgery.
+
+Results: A total of 11,391 transcriptomes were generated in the comparison phase. We identified ten clusters in the scRNA-seq dataset, but glomerular cell types were absent, and one cluster consisted primarily of artifactual dissociation-induced stress response genes. By contrast, snRNA-seq from all three platforms captured a diversity of kidney cell types that were not represented in the scRNA-seq dataset, including glomerular podocytes, mesangial cells, and endothelial cells. No stress response genes were detected. Our snRNA-seq protocol yielded 20-fold more podocytes compared with published scRNA-seq datasets (2.4% versus 0.12%, respectively). Unexpectedly, single-cell and single-nucleus platforms had equivalent gene detection sensitivity. For validation, analysis of frozen day 14 UUO kidney revealed rare juxtaglomerular cells, novel activated proximal tubule and fibroblast cell states, and previously unidentified tubulointerstitial signaling pathways.
+
+Conclusions: snRNA-seq achieves comparable gene detection to scRNA-seq in adult kidney, and it also has substantial advantages, including reduced dissociation bias, compatibility with frozen samples, elimination of dissociation-induced transcriptional stress responses, and successful performance on inflamed fibrotic kidney.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE119531"),
+        list(provider="PubMed", id="30510133")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+```
+
+Now saving them:
+
+```{r}
+output.dir <- "2023-12-20_output"
+unlink(output.dir, recursive=TRUE)
+dir.create(output.dir)
+
+healthy.meta <- meta_raw
+healthy.meta$title <- sprintf(healthy.meta$title, "healthy")
+healthy.meta$description <- paste0(healthy.meta$description, "\n\n",
+    "Maintainer note: this dataset only contains cells from healthy donors across multiple droplet technologies.")
+saveDataset(healthy.sce, file.path(output.dir, "healthy"), healthy.meta)
+
+disease.meta <- meta_raw
+disease.meta$title <- sprintf(disease.meta$title, "disease")
+disease.meta$description <- paste0(disease.meta$description, "\n\n",
+    "Maintainer note: this dataset only contains cells from diseased donors, generated using 10X Chromium snRNA-seq.")
+saveDataset(disease.sce, file.path(output.dir, "disease"), disease.meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

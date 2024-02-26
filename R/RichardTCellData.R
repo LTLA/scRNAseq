@@ -3,6 +3,8 @@
 #' Obtain the mouse CD8+ T cell single-cell RNA-seq data from Richard et al. (2018).
 #'
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata is provided in the same form as supplied in E-MTAB-6051.
@@ -29,18 +31,23 @@
 #' 
 #' @export
 #' @importFrom SingleCellExperiment splitAltExps
-RichardTCellData <- function(location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("richard-tcell", version), has.rowdata=FALSE)
+RichardTCellData <- function(location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("richard-tcell-2018", "2023-12-19", realize.assays=TRUE)
 
-    spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, spike.type, ref="endogenous")
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("richard-tcell", version), has.rowdata=FALSE)
 
-    spike.exp <- altExp(sce, "ERCC")
-    spikedata <- ERCCSpikeInConcentrations(volume = 1000, dilution = 3e07)
-    spikedata <- spikedata[rownames(spike.exp), ]
-    rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
-    altExp(sce, "ERCC") <- spike.exp
+        spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+        spike.exp <- altExp(sce, "ERCC")
+        spikedata <- ERCCSpikeInConcentrations(volume = 1000, dilution = 3e07)
+        spikedata <- spikedata[rownames(spike.exp), ]
+        rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+        altExp(sce, "ERCC") <- spike.exp
+    }
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

@@ -1,0 +1,135 @@
+---
+title: Processing the La Manno brain dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of the mouse and human midbrains from [La Manno et al. (2016)](https://doi.org/10.1016/j.cell.2016.09.027).
+Counts for cells from various developmental stages in both species are available from the Gene Expression Omnibus 
+using the accession number [GSE76381](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76381).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE76nnn/GSE76381/suppl/"
+
+es.count.file <- bfcrpath(bfc, paste0(base.url, "GSE76381_ESMoleculeCounts.cef.txt.gz"))
+embryo.count.file <- bfcrpath(bfc, paste0(base.url, "GSE76381_EmbryoMoleculeCounts.cef.txt.gz"))
+ips.count.file <- bfcrpath(bfc, paste0(base.url, "GSE76381_iPSMoleculeCounts.cef.txt.gz"))
+
+madult.count.file <- bfcrpath(bfc, paste0(base.url, "GSE76381_MouseAdultDAMoleculeCounts.cef.txt.gz"))
+membryo.count.file <- bfcrpath(bfc, paste0(base.url, "GSE76381_MouseEmbryoMoleculeCounts.cef.txt.gz"))
+```
+
+# Reading the data in
+
+We create a function to extract data from each file.
+
+```{r}
+library(scRNAseq)
+FUN <- function(path, as.csv=FALSE, skip=0) {
+    if (as.csv) {
+        FUN <- read.csv
+    } else {
+        FUN <- read.delim
+    }
+
+    x <- FUN(path, header=FALSE, stringsAsFactors=FALSE, skip=skip)
+    is.gene <- which(x[,1]=="Gene")
+    
+    metadata <- t(x[2:(is.gene-1L),-(1:2)])
+    df <- data.frame(metadata, stringsAsFactors=FALSE)
+    df <- DataFrame(df)
+    colnames(df) <- x[2:(is.gene-1L),2]
+    rownames(df) <- NULL
+
+    raw_data <- as.matrix(x[-(1:(is.gene+1L)),])
+    rownames <- raw_data[,1]
+    stopifnot(length(unique(raw_data[,2]))==1L) # checking that second column has nothing interesting.
+
+    counts <- raw_data[,-(1:2)]
+    storage.mode(counts) <- "numeric"
+    sce <- SingleCellExperiment(list(counts=counts), colData=df)
+
+    rownames(sce) <- rownames
+    rowData(sce)$symbol <- sub("_loc[0-9]+$", "", rownames(sce))
+
+    polishDataset(sce)
+}    
+```
+
+We run this on all the human datasets:
+
+```{r}
+es.data <- FUN(es.count.file)
+es.data
+embryo.data <- FUN(embryo.count.file)
+embryo.data
+ips.data <- FUN(ips.count.file)
+ips.data
+```
+
+We repeat the process for the mouse data.
+
+```{r}
+madult.data <- FUN(madult.count.file, as.csv=TRUE, skip=1)
+madult.data
+membryo.data <- FUN(membryo.count.file, skip=1)
+membryo.data
+```
+
+# Saving objects
+
+Rather frustratingly, each of the stages has a different set of genes, so we need to save them separately.
+We set up a simple function do to so:
+
+```{r}
+title <- "Molecular Diversity of Midbrain Development in Mouse, Human, and Stem Cells [%s only]"
+description <- "Understanding human embryonic ventral midbrain is of major interest for Parkinson’s disease. However, the cell types, their gene expression dynamics, and their relationship to commonly used rodent models remain to be defined. We performed single-cell RNA sequencing to examine ventral midbrain development in human and mouse. We found 25 molecularly defined human cell types, including five subtypes of radial glia-like cells and four progenitors. In the mouse, two mature fetal dopaminergic neuron subtypes diversified into five adult classes during postnatal development. Cell types and gene expression were generally conserved across species, but with clear differences in cell proliferation, developmental timing, and dopaminergic neuron development. Additionally, we developed a method to quantitatively assess the fidelity of dopaminergic neurons derived from human pluripotent stem cells, at a single-cell level. Thus, our study provides insight into the molecular programs controlling human midbrain development and provides a foundation for the development of cell replacement therapies.
+
+Maintainer note: this dataset contains only the %s from this study."
+
+output.dir <- "2023-12-17_output"
+unlink(output.dir, recursive=TRUE)
+dir.create(output.dir)
+
+savePart <- function(sce, short, long, human=TRUE) {
+    saveDataset(sce, file.path(output.dir, short), 
+        list(
+            title=sprintf(title, long),
+            description=sprintf(description, long),
+            taxonomy_id=if (human) "9606" else "10090",
+            genome=if (human) "GRCh38" else "GRCm38",
+            sources=list(
+                list(provider="GEO", id="GSE76381"),
+                list(provider="PubMed", id="27716510")
+            ),
+            maintainer_name="Aaron Lun",
+            maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+        )
+    )
+}
+```
+
+We save all of the relevant components to file in preparation for upload.
+
+```{r}
+savePart(es.data, "human-es", "human embryonic stem cells")
+savePart(embryo.data, "human-embryo", "human embryo ventral midbrain cells")
+savePart(ips.data, "human-ips", "human induced pluripotent stem cells")
+savePart(madult.data, "mouse-adult", "adult mouse brain cells")
+savePart(membryo.data, "mouse-embryo", "mouse embryonic brain cells")
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

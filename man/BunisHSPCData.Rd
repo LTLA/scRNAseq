@@ -4,7 +4,7 @@
 \alias{BunisHSPCData}
 \title{Obtain the Bunis haematopoietic stem and progenitor cell data}
 \usage{
-BunisHSPCData(filtered = TRUE)
+BunisHSPCData(filtered = TRUE, legacy = FALSE)
 }
 \arguments{
 \item{filtered}{Logical scalar or "cells" indicating whether to:
@@ -13,6 +13,9 @@ BunisHSPCData(filtered = TRUE)
 \item \code{"cells"}: filter out empty droplets as filtered out by cell ranger.
 \item \code{FALSE}: no filtering
 }}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

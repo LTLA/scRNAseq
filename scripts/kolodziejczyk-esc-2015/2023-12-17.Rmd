@@ -1,0 +1,110 @@
+---
+title: Processing the Kolodziejczyk ESC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of mouse embryonic stem cells from [Kolodziejczyk et al. (2015)](https://doi.org/10.1016/j.stem.2015.09.011).
+We download and cache the count matrix using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+url <- "https://espresso.teichlab.sanger.ac.uk/static/counttable_es.csv"
+kolod.counts <- bfcrpath(bfc, url)
+```
+
+# Processing the read counts
+
+We load the counts into memory.
+Despite the name of the file, it is not actually comma-separated!
+
+```{r}
+counts <- read.table(kolod.counts, row.names=1, check.names=FALSE)
+counts <- as.matrix(counts)
+dim(counts)
+```
+
+And then we slap this into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts))
+```
+
+# Cleaning up the `SingleCellExperiment`
+
+First we split out the ERCC data.
+
+```{r}
+spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+library(scRNAseq)
+spike.exp <- altExp(sce, "ERCC")
+spikedata <- countErccMolecules(volume = 1, dilution = 25e6)
+rowData(spike.exp) <- spikedata[rownames(spike.exp), ]
+altExp(sce, "ERCC") <- spike.exp
+spike.exp
+```
+
+Then we pull out some of the column data from the title:
+
+```{r}
+sce$culture <- sub(".*mES_([^_]+)_.*", "\\1", colnames(sce))
+sce$plate <- sub(".*mES_[^_]+_([^_]+)_.*", "\\1", colnames(sce))
+table(sce$culture, sce$plate)
+```
+
+We also move some of the HTSeq-related metrics into the column data:
+
+```{r}
+is.htseq <- grepl("^__", rownames(sce))
+metrics <- t(as.matrix(assay(sce)[is.htseq,,drop=FALSE]))
+sce <- sce[!is.htseq,]
+colnames(metrics) <- sub("^__", "", colnames(metrics))
+colData(sce)$metrics <- DataFrame(metrics)
+colData(sce)$metrics
+```
+
+And then adding some polish:
+
+```{r}
+sce <- polishDataset(sce)
+sce
+```
+
+# Saving for upload 
+
+We save these to disk in preparation for upload.
+
+```{r}
+meta <- list(
+    title="Single Cell RNA-Sequencing of Pluripotent States Unlocks Modular Transcriptional Variation",
+    description="Embryonic stem cell (ESC) culture conditions are important for maintaining long-term self-renewal, and they influence cellular pluripotency state. Here, we report single cell RNA-sequencing of mESCs cultured in three different conditions: serum, 2i, and the alternative ground state a2i. We find that the cellular transcriptomes of cells grown in these conditions are distinct, with 2i being the most similar to blastocyst cells and including a subpopulation resembling the two-cell embryo state. Overall levels of intercellular gene expression heterogeneity are comparable across the three conditions. However, this masks variable expression of pluripotency genes in serum cells and homogeneous expression in 2i and a2i cells. Additionally, genes related to the cell cycle are more variably expressed in the 2i and a2i conditions. Mining of our dataset for correlations in gene expression allowed us to identify additional components of the pluripotency network, including Ptma and Zfp640, illustrating its value as a resource for future discovery.
+
+Maintainer note: alignment metrics are stored as a nested data frame in the column data. Molecule counts for ERCC spike-ins are computed based on a volume of 1 nL per cell at a dilution of 1:25000000.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="URL", id=url, version=as.character(Sys.Date())),
+        list(provider="PubMed", id="26431182")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-17_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

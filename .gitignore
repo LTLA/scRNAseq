@@ -1,2 +1,5 @@
-raw_data
+raw_data/
+finished/
 .Rproj.user
+*.html
+*.swp

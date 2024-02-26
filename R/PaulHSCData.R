@@ -5,6 +5,8 @@
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param discard.multiple Logical scalar indicating whether ambiguous rows should be discarded.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata includes the plate and the mouse of origin, fluoresence intensities from indexed sorting 
@@ -35,13 +37,15 @@
 #' sce <- PaulHSCData()
 #' 
 #' @export
-#' @importFrom SummarizedExperiment rowData
-PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE, location=TRUE) {
-    version <- "2.2.0"
-    sce <- .create_sce(file.path("paul-hsc", version), has.rowdata=FALSE)
-
-    if (discard.multiple) {
-        sce <- sce[!grepl(";", rownames(sce)),]
+PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE, location=TRUE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("paul-hsc-2015", "2023-12-20", realize.assays=TRUE)
+    } else {
+        version <- "2.2.0"
+        sce <- .create_sce(file.path("paul-hsc", version), has.rowdata=FALSE)
+        if (discard.multiple) {
+            sce <- sce[!grepl(";", rownames(sce)),]
+        }
     }
 
     .convert_to_ensembl(sce, 

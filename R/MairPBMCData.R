@@ -5,6 +5,8 @@
 #' @param mode Character vector specifying whether to return either or both the RNA and ADT counts.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata contains the donor identity and cartridge of origin.
@@ -38,29 +40,35 @@
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom SummarizedExperiment colData<- rowData
 #' @importFrom SingleCellExperiment SingleCellExperiment altExps 
-MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE) {
+MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE, legacy=FALSE) {
     mode <- match.arg(mode, c("rna", "adt"), several.ok=TRUE)
-    version <- "2.4.0"
-    tag <- "mair-pbmc"
-    hub <- .ExperimentHub()
 
-    collated <- list()
-    for (x in mode) {
-        collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
-            has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
+    if (!legacy && identical(mode, c("rna", "adt"))) {
+        sce <- fetchDataset("mair-pbmc-2020", "2023-12-20", realize.assays=TRUE)
+
+    } else {
+        version <- "2.4.0"
+        tag <- "mair-pbmc"
+        hub <- .ExperimentHub()
+
+        collated <- list()
+        for (x in mode) {
+            collated[[x]] <- .create_sce(file.path(tag, version), hub=hub, 
+                has.rowdata=TRUE, has.coldata=FALSE, suffix=x)
+        }
+
+        if ("rna" %in% names(collated)) {
+            collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
+                symbols=rowData(collated[["rna"]])$Symbol,
+                species="Hs",
+                ensembl=ensembl,
+                location=location)
+        }
+
+        sce <- collated[[1]]
+        altExps(sce) <- collated[-1]
+        colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, version, "coldata.rds")][[1]] 
     }
-
-    if ("rna" %in% names(collated)) {
-        collated[["rna"]] <- .convert_to_ensembl(collated[["rna"]],
-            symbols=rowData(collated[["rna"]])$Symbol,
-            species="Hs",
-            ensembl=ensembl,
-            location=location)
-    }
-
-    sce <- collated[[1]]
-    altExps(sce) <- collated[-1]
-    colData(sce) <- hub[hub$rdatapath==file.path("scRNAseq", tag, version, "coldata.rds")][[1]] 
 
     sce
 }

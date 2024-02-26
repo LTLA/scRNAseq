@@ -1,0 +1,157 @@
+---
+title: Processing the Richard CD8^+^ T cell dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of CD8^+^ T cells from [Richard et al. (2018)](https://doi.org/10.1038/s41590-018-0160-9).
+Counts for endogenous genes and spike-in transcripts are available from ArrayExpress
+using the accession number [E-MTAB-6051](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6051/).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-6051/"
+path1 <- bfcrpath(bfc, paste0(base.url, "counts_table_sortdate20161026.txt"))
+path2 <- bfcrpath(bfc, paste0(base.url, "counts_table_sortdate20160727.txt"))
+```
+
+# Reading in the metadata
+
+We read in the metadata from the SDRF file:
+
+```{r}
+richard.sdrf <- bfcrpath(bfc, paste0(base.url, "E-MTAB-6051.sdrf.txt"))
+coldata <- read.delim(richard.sdrf, check.names=FALSE, stringsAsFactors=FALSE)
+libnames <- coldata[["Assay Name"]]
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+colnames(coldata)
+```
+
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+We also discard some ArrayExpress-specific columns.
+
+```{r}
+keep <- grep("(Characteristics|Factor|Parameter Value|Comment)", colnames(coldata))
+coldata <- coldata[,keep] 
+
+new.colnames <- sub(".*\\[(.*)\\]", "\\1", colnames(coldata))
+u <- !duplicated(new.colnames)
+coldata <- coldata[,u]
+colnames(coldata) <- new.colnames[u]
+
+has.multi.levels <- vapply(coldata, FUN=function(x) length(unique(x))>1L, TRUE)
+coldata <- coldata[,has.multi.levels]
+coldata <- coldata[,setdiff(colnames(coldata), c("ENA_SAMPLE", 
+    "BioSD_SAMPLE", "technical replicate group", "ENA_EXPERIMENT", 
+    "SUBMITTED_FILE_NAME", "ENA_RUN", "FASTQ_URI",
+    "single cell identifier"))]
+coldata
+```
+
+We convert all of the FACS intensity measurements to numeric values.
+
+```{r}
+for (i in grep("^CD[0-9]+", colnames(coldata))) {
+    suppressWarnings(coldata[[i]] <- as.numeric(coldata[[i]]))
+}
+```
+
+Many of these are actually technical replicates, so we only need to keep the first one of each pair.
+
+```{r}
+libnames <- sub("(_[iS][0-9]{3}\\.).*", "\\1", libnames)
+first <- !duplicated(libnames)
+last <- !duplicated(libnames, fromLast=TRUE)
+stopifnot(identical(coldata[first,], coldata[last,]))
+
+coldata <- coldata[first,]
+libnames <- libnames[first]
+dim(coldata)
+```
+
+# Processing the read counts
+
+We load the counts into memory.
+
+```{r}
+batch1 <- read.delim(path1, header=TRUE, row.names=1, check.names=FALSE)
+batch2 <- read.delim(path2, header=TRUE, row.names=1, check.names=FALSE)
+stopifnot(identical(rownames(batch1), rownames(batch2)))
+```
+
+We combine the matrices together, and make sure they match up with the `coldata` order.
+
+```{r}
+combined <- cbind(batch1, batch2)
+combined <- as.matrix(combined)
+stopifnot(identical(sort(colnames(combined)), sort(libnames)))
+m <- match(libnames, colnames(combined))
+combined <- combined[,m]
+```
+
+# Saving for upload 
+
+Slapping this together into a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=combined), colData=coldata)
+```
+
+We split off the ERCCs and add some concentrations.
+
+```{r}
+spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+sce <- splitAltExps(sce, spike.type, ref="endogenous")
+
+spike.exp <- altExp(sce, "ERCC")
+spikedata <- scRNAseq::countErccMolecules(volume = 1000, dilution = 3e07)
+spikedata <- spikedata[rownames(spike.exp), ]
+rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+altExp(sce, "ERCC") <- spike.exp
+
+spike.exp
+```
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We save these to disk in preparation for upload:
+
+```{r}
+meta <- list(
+    title="T cell cytolytic capacity is independent of initial stimulation strength",
+    description="How cells respond to myriad stimuli with finite signaling machinery is central to immunology. In naive T cells, the inherent effect of ligand strength on activation pathways and endpoints has remained controversial, confounded by environmental fluctuations and intercellular variability within populations. Here we studied how ligand potency affected the activation of CD8+ T cells in vitro, through the use of genome-wide RNA, multi-dimensional protein and functional measurements in single cells. Our data revealed that strong ligands drove more efficient and uniform activation than did weak ligands, but all activated cells were fully cytolytic. Notably, activation followed the same transcriptional pathways regardless of ligand potency. Thus, stimulation strength did not intrinsically dictate the T cell-activation route or phenotype; instead, it controlled how rapidly and simultaneously the cells initiated activation, allowing limited machinery to elicit wide-ranging responses.
+
+Maintainer note: ERCC molecule counts were computed based on a 1000 nL volume per cell of a 1:30000000 dilution for mix 1.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-6051"),
+        list(provider="PubMed", id="30013148")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-19_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

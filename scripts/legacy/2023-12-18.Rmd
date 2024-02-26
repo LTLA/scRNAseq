@@ -1,0 +1,165 @@
+---
+title: Processing legacy datasets
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview
+
+Here, we re-process datasets that were previously stored inside `r Biocpkg("scRNAseq")` itself,
+in preparation for relocating them into `r Biocpkg("ExperimentHub")`.
+This aims to reduce the size of the package and improve consistency with the other ExperimentHub-hosted datasets.
+
+# Downloading the data
+
+We download and cache an old version of the `r Biocpkg("scRNAseq")` package using the `r Biocpkg("BiocFileCache")` package.
+We choose the latest version that still contains the serialized `SingleCellExperiment` objects.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+source.url <- "http://bioconductor.org/packages/3.9/data/experiment/src/contrib/scRNAseq_1.10.0.tar.gz"
+tarpath <- bfcrpath(bfc, source.url)
+```
+
+We unpack this in preparation for extraction of the serialized objects.
+
+```{r}
+tmploc <- tempfile()
+dir.create(tmploc, showWarnings=FALSE)
+untar(tarpath, exdir=tmploc)
+path <- file.path(tmploc, "scRNAseq", "data")
+list.files(path)
+```
+
+# Extracting objects
+
+We set up a function to extract the `SingleCellExperiment` object from each Rdata file.
+This will shift the ERCC counts into the alternative experiments and do some polishing.
+
+```{r}
+library(scRNAseq)
+extractor <- function(fname) {
+    env <- new.env()
+    load(fname, envir=env)
+    se <- env[[ls(env)[1]]]
+
+    status <- ifelse(grepl("^ERCC-[0-9]+$", rownames(se)), "ERCC", "endogenous")
+    if (length(unique(status)) > 1L) {
+        se <- as(se, "SingleCellExperiment")
+        se <- splitAltExps(se, status, ref="endogenous")
+        metadata(altExp(se)) <- list() # wiping redundant metadata
+    }
+
+    polishDataset(se)
+}
+```
+
+Using this function, we read in the counts for the endogenous genes, ERCC spike-in transcripts and mitochondrial genes.
+
+```{r}
+allen <- extractor(file.path(path, "allen.rda"))
+allen
+th2 <- extractor(file.path(path, "th2.rda"))
+th2
+fluidigm <- extractor(file.path(path, "fluidigm.rda"))
+fluidigm
+```
+
+The `th2` dataset has some issues with its column data, where it seems that everything is saved as a factor, so we'll just fix that:
+
+```{r}
+all.caps <- which(colnames(colData(th2)) == toupper(colnames(colData(th2))))
+for (i in all.caps) {
+    colData(th2)[,i] <- as.numeric(as.vector(colData(th2)[,i]))
+}
+colData(th2)
+```
+
+# Saving objects
+
+Now we save all of the pieces.
+We need to set up the directory first:
+
+```{r}
+library(scRNAseq)
+output.dir <- "2023-12-18_output"
+unlink(output.dir, recursive=TRUE)
+dir.create(output.dir)
+```
+
+The original fluidigm dataset:
+
+```{r}
+meta <- list(
+    title="Low-coverage single-cell mRNA sequencing reveals cellular heterogeneity and activated signaling pathways in developing cerebral cortex [reprocessed from FASTQ]",
+    description="Large-scale surveys of single-cell gene expression have the potential to reveal rare cell populations and lineage relationships but require efficient methods for cell capture and mRNA sequencing. Although cellular barcoding strategies allow parallel sequencing of single cells at ultra-low depths, the limitations of shallow sequencing have not been investigated directly. By capturing 301 single cells from 11 populations using microfluidics and analyzing single-cell transcriptomes across downsampled sequencing depths, we demonstrate that shallow single-cell mRNA sequencing (∼50,000 reads per cell) is sufficient for unbiased cell-type classification and biomarker identification. In the developing cortex, we identify diverse cell types, including multiple progenitor and neuronal subtypes, and we identify EGR1 and FOS as previously unreported candidate targets of Notch signaling in human but not mouse radial glia. Our strategy establishes an efficient method for unbiased analysis and comparison of cell populations from heterogeneous tissue by microfluidic single-cell capture and low-coverage sequencing of many cells.
+
+Maintainer note: this dataset was processed by Michael Cole and included in older versions of the scRNAseq package (prior to 1.11.0, before Bioconductor 3.10). Processing started at the FASTQ files, themselves extracted from author-supplied SRA files using the SRA toolkit. Reads were aligned with TopHat (v2.0.11) to GRCh38 and quantified against the RefSeq human gene annotation (GCF_000001405.28, downloaded from NCBI on June 22, 2015). featureCounts (v1.4.6-p3) was used to compute gene-level read counts and Cufflinks (v2.2.0) was used to compute gene-leve FPKMs. Reads were also mapped to the transcriptome using RSEM (v1.2.19) to compute read counts and TPMs. FastQC (v. 0.10.1) and Picard (v. 1.128) were used to compute sample quality control (QC) metrics, though no filtering on the QC metrics has been performed.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="PubMed", id="25086649"),
+        list(provider="SRA", id="SRP041736"),
+        list(provider="URL", id=source.url)
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(fluidigm, file.path(output.dir, "fluidigm"), meta)
+```
+
+A subset of the Allen brain dataset:
+
+```{r}
+meta <- list(
+    title="Adult mouse cortical cell taxonomy revealed by single cell transcriptomics [reprocessed from FASTQ, subset]",
+    description="Nervous systems are composed of various cell types, but the extent of cell type diversity is poorly understood. We constructed a cellular taxonomy of one cortical region, primary visual cortex, in adult mice on the basis of single-cell RNA sequencing. We identified 49 transcriptomic cell types, including 23 GABAergic, 19 glutamatergic and 7 non-neuronal types. We also analyzed cell type–specific mRNA processing and characterized genetic access to these transcriptomic types by many transgenic Cre lines. Finally, we found that some of our transcriptomic cell types displayed specific and differential electrophysiological and axon projection properties, thereby confirming that the single-cell transcriptomic signatures can be associated with specific cellular properties.
+
+Maintainer note: this dataset is a subset (379 cells) of the full data in the study, generated for testing purposes. It was processed by Michael Cole and included in older versions of the scRNAseq package (prior to 1.11.0, before Bioconductor 3.10). Processing started at the FASTQ files, themselves extracted from author-supplied SRA files using the SRA toolkit. Reads were aligned with TopHat (v2.0.11) to GRCm38 and quantified against the RefSeq mouse gene annotation (GCF_000001635.23_GRCm38.p3, downloaded from NCBI on December 28, 2014). featureCounts (v1.4.6-p3) was used to compute gene-level read counts and Cufflinks (v2.2.0) was used to compute gene-leve FPKMs. Reads were also mapped to the transcriptome using RSEM (v1.2.19) to compute read counts and TPMs. FastQC (v. 0.10.1) and Picard (v. 1.128) were used to compute sample quality control (QC) metrics, though no filtering on the QC metrics has been performed.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="26727548"),
+        list(provider="SRA", id="SRP061902"),
+        list(provider="URL", id=source.url)
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(allen, file.path(output.dir, "allen"), meta)
+```
+
+And another one involving Th2 cells:
+
+```{r}
+meta <- list(
+    title="Single-cell RNA sequencing reveals T helper cells synthesizing steroids de novo to contribute to immune homeostasis [reprocessed from FASTQ]",
+    description="T helper 2 (Th2) cells regulate helminth infections, allergic disorders, tumor immunity, and pregnancy by secreting various cytokines. It is likely that there are undiscovered Th2 signaling molecules. Although steroids are known to be immunoregulators, de novo steroid production from immune cells has not been previously characterized. Here, we demonstrate production of the steroid pregnenolone by Th2 cells in vitro and in vivo in a helminth infection model. Single-cell RNA sequencing and quantitative PCR analysis suggest that pregnenolone synthesis in Th2 cells is related to immunosuppression. In support of this, we show that pregnenolone inhibits Th cell proliferation and B cell immunoglobulin class switching. We also show that steroidogenic Th2 cells inhibit Th cell proliferation in a Cyp11a1 enzyme-dependent manner. We propose pregnenolone as a \"lymphosteroid,\" a steroid produced by lymphocytes. We speculate that this de novo steroid production may be an intrinsic phenomenon of Th2-mediated immune responses to actively restore immune homeostasis.
+
+Maintainer note: this dataset was processed by Michael Cole and included in older versions of the scRNAseq package (prior to 1.11.0, before Bioconductor 3.10). Processing started at the FASTQ files obtained from ArrayExpress. Reads were aligned with TopHat (v2.0.11) to GRCm38 and quantified against the RefSeq mouse gene annotation (GCF_000001635.23_GRCm38.p3, downloaded from NCBI on December 28, 2014). featureCounts (v1.4.6-p3) was used to compute gene-level read counts and Cufflinks (v2.2.0) was used to compute gene-leve FPKMs. Reads were also mapped to the transcriptome using RSEM (v1.2.19) to compute read counts and TPMs. FastQC (v. 0.10.1) and Picard (v. 1.128) were used to compute sample quality control (QC) metrics, though no filtering on the QC metrics has been performed.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="PubMed", id="24813893"),
+        list(provider="ArrayExpress", id="E-MTAB-2512"),
+        list(provider="URL", id=source.url)
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(th2, file.path(output.dir, "th2"), meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

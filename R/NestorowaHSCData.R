@@ -4,6 +4,8 @@
 #'
 #' @param remove.htseq Logical scalar indicating whether HT-seq alignment statistics should be removed.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Rows corresponding to HT-seq's alignment statistics are removed by default.
@@ -40,19 +42,24 @@
 #' @export
 #' @importFrom SummarizedExperiment rowData
 #' @importFrom SingleCellExperiment splitAltExps reducedDim<-
-NestorowaHSCData <- function(remove.htseq=TRUE, location=TRUE) {
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("nestorowa-hsc", version), has.rowdata=FALSE)
+NestorowaHSCData <- function(remove.htseq=TRUE, location=TRUE, legacy=FALSE) {
+    if (!legacy && remove.htseq) {
+        sce <- fetchDataset("nestorowa-hsc-2016", "2023-12-19", realize.assays=TRUE)
 
-    if (remove.htseq) {
-        sce <- sce[grep("^__", rownames(sce), invert=TRUE),]
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("nestorowa-hsc", version), has.rowdata=FALSE)
+
+        if (remove.htseq) {
+            sce <- sce[grep("^__", rownames(sce), invert=TRUE),]
+        }
+
+        reducedDim(sce, "diffusion") <- sce$diffusion
+        sce$diffusion <- NULL
+
+        status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
+        sce <- splitAltExps(sce, status, ref="endogenous")
     }
-
-    reducedDim(sce, "diffusion") <- sce$diffusion
-    sce$diffusion <- NULL
-
-    status <- ifelse(grepl("^ERCC-[0-9]+", rownames(sce)), "ERCC", "endogenous")
-    sce <- splitAltExps(sce, status, ref="endogenous")
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

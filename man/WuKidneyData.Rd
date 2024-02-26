@@ -4,7 +4,12 @@
 \alias{WuKidneyData}
 \title{Obtain the Wu kidney data}
 \usage{
-WuKidneyData(mode = c("healthy", "disease"), ensembl = FALSE, location = TRUE)
+WuKidneyData(
+  mode = c("healthy", "disease"),
+  ensembl = FALSE,
+  location = TRUE,
+  legacy = FALSE
+)
 }
 \arguments{
 \item{mode}{String indicating whether to return data for healthy and/or diseased donors.}
@@ -12,6 +17,9 @@ WuKidneyData(mode = c("healthy", "disease"), ensembl = FALSE, location = TRUE)
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
 
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.

@@ -4,6 +4,8 @@
 #'
 #' @param samples A character vector with at least one element, specifying which samples(s) to retrieve.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata is extracted from the sample annotation in GSE106273,
@@ -33,22 +35,25 @@
 #' @importFrom SummarizedExperiment rowData<- rowData
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom BiocGenerics cbind
-BachMammaryData <- function(samples=c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2"),
-    location=TRUE)
-{
-    version <- "2.0.0"
-    host <- file.path("bach-mammary", version)
-    samples <- match.arg(samples, several.ok=TRUE)
+BachMammaryData <- function(samples=c("NP_1", "NP_2", "G_1", "G_2", "L_1", "L_2", "PI_1", "PI_2"), location=TRUE, legacy = FALSE) {
+    if (!legacy && length(unique(samples)) == 8) {
+        sce <- fetchDataset("bach-mammary-2017", "2023-12-14", realize.assays=TRUE)
 
-    collected <- vector("list", length(samples))
-    for (i in seq_along(samples)) {
-       collected[[i]] <- .create_sce(host, has.rowdata=FALSE, suffix=samples[i])
+    } else {
+        version <- "2.0.0"
+        host <- file.path("bach-mammary", version)
+        samples <- match.arg(samples, several.ok=TRUE)
+
+        collected <- vector("list", length(samples))
+        for (i in seq_along(samples)) {
+           collected[[i]] <- .create_sce(host, has.rowdata=FALSE, suffix=samples[i])
+        }
+        sce <- do.call(cbind, collected)
+
+        ehub <- .ExperimentHub()
+        rowData(sce) <- ehub[ehub$rdatapath==file.path("scRNAseq", host, "rowdata.rds")][[1]]
+        rownames(sce) <- rowData(sce)$Ensembl
     }
-    sce <- do.call(cbind, collected)
-
-    ehub <- .ExperimentHub()
-    rowData(sce) <- ehub[ehub$rdatapath==file.path("scRNAseq", host, "rowdata.rds")][[1]]
-    rownames(sce) <- rowData(sce)$Ensembl
 
     .define_location_from_ensembl(sce, species="Mm", location=location)
 }

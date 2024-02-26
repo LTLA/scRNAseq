@@ -4,6 +4,8 @@
 #'
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' @param filter Logical scalar indicating if the filtered subset should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata contains various cell labels as provided by the authors.
@@ -37,19 +39,24 @@
 #' sce.zhao <- ZhaoImmuneLiverData()
 #' 
 #' @export
-ZhaoImmuneLiverData <- function(location=TRUE, filter=FALSE) {
-    version <- "2.6.0"
-    sce <- .create_sce(file.path("zhao-immune-liver", version), has.rowdata=TRUE)
+ZhaoImmuneLiverData <- function(location=TRUE, filter=FALSE, legacy=FALSE) {
+    if (!legacy) {
+        sce <- fetchDataset("zhao-immune-2020", "2023-12-22", realize.assays=TRUE)
 
-    if (filter) {
-        sce <- sce[,sce$retained]
-        sce$retained <- NULL
+    } else {
+        version <- "2.6.0"
+        sce <- .create_sce(file.path("zhao-immune-liver", version), has.rowdata=TRUE)
+
+        if (filter) {
+            sce <- sce[,sce$retained]
+            sce$retained <- NULL
+        }
+
+        gem.group <- as.integer(sub(".*-", "", colnames(sce)))
+        sce$sample <- c("donor 1 blood", "donor 1 spleen", "donor 1 liver",
+            "donor 2 blood", "donor 2 spleen", "donor 2 liver",
+            "donor 3 blood", "donor 3 spleen", "donor 3 liver")[gem.group]
     }
-
-    gem.group <- as.integer(sub(".*-", "", colnames(sce)))
-    sce$sample <- c("donor 1 blood", "donor 1 spleen", "donor 1 liver",
-        "donor 2 blood", "donor 2 spleen", "donor 2 liver",
-        "donor 3 blood", "donor 3 spleen", "donor 3 liver")[gem.group]
 
     sce
 }

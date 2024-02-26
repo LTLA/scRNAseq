@@ -1,0 +1,218 @@
+---
+title: Processing the Giladi HSC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Overview 
+
+Here, we process a single-cell sequencing dataset of haematopoietic stem cells from [Giladi et al. (2018)](https://doi.org/10.1038/s41556-018-0121-4).
+This involves both RNA and CRISPR components, so we'll be handling each one separately.
+We set up a local `r Biocpkg("BiocFileCache")` directory to handle the file caching:
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+```
+
+# Processing RNA-seq
+
+## Counts
+
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE92575](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE92575).
+We download and cache them:
+
+```{r}
+collected <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file")
+dir <- tempfile()
+untar(collected, exdir=dir)
+all.files <- list.files(dir, full=TRUE)
+length(all.files)
+```
+
+Loading all of the count matrices into memory.
+
+```{r}
+library(scuttle)
+library(BiocParallel)
+out <- bplapply(all.files, readSparseCounts)
+
+# Sanity check:
+stopifnot(length(unique(lapply(out, rownames)))==1)
+
+# Checking that the names are unique after combining.
+all.cn <- unlist(lapply(out, colnames))
+stopifnot(anyDuplicated(all.cn)==0)
+
+combined <- do.call(cbind, out)
+```
+
+Constructing a `SingleCellExperiment` object.
+
+```{r}
+sce <- SingleCellExperiment(list(counts=combined))
+sce
+```
+
+Extracting an intelligible gene symbol from the row names:
+
+```{r}
+rowData(sce)$symbol <- sub(".*;", "", rownames(sce))
+head(rowData(sce)$symbol)
+```
+
+## Loading column data
+
+We download the cell metadata as well:
+
+```{r}
+meta.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE92575&format=file&file=GSE92575%5Fmetadata%2Etxt%2Egz")
+meta <- read.delim(meta.path, skip=14, check.names=FALSE)
+str(meta)
+```
+
+We expand this to cover all cells in the SCE.
+
+```{r}
+true.samples <- sub(".*_", "", sub(".txt.gz", "", basename(all.files)))
+true.samples <- rep(true.samples, vapply(out, ncol, 0L))
+ref <- DataFrame(well=colnames(combined), sample=true.samples)
+obs <- DataFrame(well=meta$well, sample=meta$Amp_batch_ID)
+stopifnot(all(obs %in% ref))
+
+m <- match(ref, obs)
+meta <- meta[m,]
+meta$retained <- !is.na(m)
+meta$sample <- true.samples
+
+stopifnot(all(meta$well == colnames(combined) | !meta$retained))
+rownames(meta) <- colnames(combined)
+meta$well <- NULL # removing redundant columns
+```
+
+And then we attach it to the SCE.
+
+```{r}
+colData(sce) <- DataFrame(meta)
+colData(sce)
+```
+
+# Processing CRISPR
+
+Counts for CRISPR barcodes are also available from the Gene Expression Omnibus
+using the accession number [GSE113494](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113494).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+crisp.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113494&format=file&file=GSE113494%5Fcrispseq%5Fcount%2Etxt%2Egz")
+crisp.df <- read.delim(crisp.path, skip=9)
+head(crisp.df)
+```
+
+For some bizarre reason, this is not actually a count matrix, but rather, a molecule information file.
+So we convert this into a count matrix in the simplest way - namely, counting the number of unique UMIs for each cell in each barcode.
+
+```{r}
+library(DropletUtils)
+crisp.mat <- makeCountMatrix(crisp.df$grna, crisp.df$well)
+dim(crisp.mat)
+
+crisp.cd <- DataFrame(crisp.df[,c("well", "amplification.batch")])
+crisp.cd <- crisp.cd[match(colnames(crisp.mat), crisp.cd$well),]
+rownames(crisp.cd) <- crisp.cd$well
+crisp.cd <- crisp.cd[,2,drop=FALSE]
+head(crisp.cd)
+
+crisp.rd <- DataFrame(crisp.df[,c("grna", "ugi")])
+crisp.rd <- crisp.rd[match(rownames(crisp.mat), crisp.rd$grna),]
+rownames(crisp.rd) <- crisp.rd$grna
+crisp.rd <- crisp.rd[,2,drop=FALSE]
+head(crisp.rd)
+```
+
+We also extract the target gene for each barcode, and whether it is a control:
+
+```{r}
+crisp.rd$gene <- sub("_[0-9]+.*", "", rownames(crisp.rd))
+crisp.rd$gene <- sub("CTR?L_", "", crisp.rd$gene)
+crisp.rd$control <- grepl("CTR?L_", rownames(crisp.rd))
+head(crisp.rd)
+```
+
+We put this together into a `SingleCellExperiment` object:
+
+```{r}
+crisp.sce <- SingleCellExperiment(list(counts=crisp.mat), rowData=crisp.rd, colData=crisp.cd)
+crisp.sce
+```
+
+# Saving to file
+
+Unfortunately the RNA and CRISPR datasets don't have exactly the same set of cells, so we'll save them separately.
+We still check that the amplification batches are the same to ensure we're dealing with the same cells.
+
+```{r}
+common <- intersect(colnames(sce), colnames(crisp.sce))
+mr <- match(common, colnames(sce))
+mc <- match(common, colnames(crisp.sce))
+stopifnot(identical(sce$Amp_batch_ID[mr], crisp.sce$amplification.batch[mc]))
+```
+
+We perform polishing of the dataset to optimize for space.
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+crisp.sce <- polishDataset(crisp.sce)
+crisp.sce
+```
+
+Setting up some metadata:
+
+```{r}
+meta_raw <- list(
+    title="Single-cell characterization of haematopoietic progenitors and their trajectories in homeostasis and perturbed haematopoiesis [%s only]",
+    description="The dynamics of haematopoietic stem cell differentiation and the hierarchy of oligopotent stem cells in the bone marrow remain controversial. Here we dissect haematopoietic progenitor populations at single cell resolution, deriving an unbiased reference model of transcriptional states in normal and perturbed murine bone marrow. We define the signature of the naive haematopoietic stem cell and find a continuum of core progenitor states. Core cell populations mix transcription of pre-myeloid and pre-lymphoid programs, but do not mix erythroid or megakaryocyte programs with other fates. CRISP-seq perturbation analysis confirms our models and reveals that Cebpa regulates entry into all myeloid fates, while Irf8 and PU.1 deficiency block later differentiation towards monocyte or granulocyte fates. Our transcriptional map defines a reference network model for blood progenitors and their differentiation trajectories during normal and perturbed haematopoiesis.
+
+Maintainer note: this object only the %s data from this study.",
+    taxonomy_id="10090",
+    genome="MGSCv37",
+    sources=list(
+        list(provider="PubMed", id="29915358")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+```
+
+We now save all of the relevant components to file in preparation for upload.
+
+```{r}
+output.dir <- "2023-12-21_output"
+unlink(output.dir, recursive=TRUE)
+dir.create(output.dir)
+
+rna.meta <- meta_raw
+rna.meta$title <- sprintf(rna.meta$title, "RNA")
+rna.meta$description <- sprintf(rna.meta$description, "RNA")
+rna.meta$sources <- c(rna.meta$sources, list(list(provider="GEO", id="GSE92575")))
+saveDataset(sce, file.path(output.dir, "rna"), rna.meta)
+
+crisp.meta <- meta_raw
+crisp.meta$title <- sprintf(crisp.meta$title, "CRISPR")
+crisp.meta$description <- sprintf(crisp.meta$description, "CRISPR")
+crisp.meta$sources <- c(crisp.meta$sources, list(list(provider="GEO", id="GSE11349")))
+saveDataset(crisp.sce, file.path(output.dir, "crispr"), crisp.meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

@@ -1,0 +1,177 @@
+---
+title: Processing the Bacher T cell dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of T cells from multiple patients from [Bacher et al. (2020)](https://doi.org/10.1016/j.immuni.2020.11.016).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE162086](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162086).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+# Manually transcribed from GEO:
+samples <- matrix(ncol=4, byrow=TRUE, 
+    c(
+        "GSM4932900","J09835","WHO 1","non-hospitalized",
+        "GSM4932901","J09836","WHO 1","non-hospitalized",
+        "GSM4932902","J10535","WHO 4","mild-moderate",
+        "GSM4932903","J10624","WHO 2","non-hospitalized",
+        "GSM4932904","J10625","WHO 2","non-hospitalized",
+        "GSM4932905","J10886","WHO 5","mild-moderate",
+        "GSM4932906","J10887","WHO 6","severe",
+        "GSM4932907","J10888","WHO 4","mild-moderate",
+        "GSM4932908","J11689","WHO 2","non-hospitalized",
+        "GSM4932909","J14204","WHO 7","severe",
+        "GSM4932910","J14205","WHO 5","mild-moderate",
+        "GSM4932911","J15890","WHO 2","non-hospitalized",
+        "GSM4932912","J15891","healthy","healthy",
+        "GSM4932913","J15892","healthy","healthy",
+        "GSM4932914","J15899","healthy","healthy",
+        "GSM4932915","J15900","healthy","healthy",
+        "GSM4932916","J15893","WHO 5","mild-moderate",
+        "GSM4932917","J21854","WHO 7","severe",
+        "GSM4932918","J21855","healthy","healthy",
+        "GSM4932919","J21856","healthy","healthy"
+    )
+)
+
+counts <- vector("list", nrow(samples))
+for (x in seq_along(counts)) {
+    url <- sprintf("https://www.ncbi.nlm.nih.gov/geo/download/?acc=%s&format=file&file=%s%%5F%s%%5Fcounts%%2Etsv%%2Egz", 
+        samples[x,1], samples[x,1], samples[x,2])
+    counts[[x]] <- bfcrpath(bfc, url) 
+}
+```
+
+# Reading in the counts
+
+Reading all the counts in as sparse matrices:
+
+```{r}
+library(scuttle)
+library(BiocParallel)
+counts <- bplapply(counts, readSparseCounts, quote="\"", BPPARAM=MulticoreParam())
+
+# Sanity check:
+gene.ids <- lapply(counts, rownames)
+stopifnot(length(unique(gene.ids))==1L)
+
+# Checking that the names are unique after combining.
+all.cn <- unlist(lapply(counts, colnames))
+stopifnot(anyDuplicated(all.cn)==0)
+
+combined <- do.call(cbind, counts)
+dim(combined)
+```
+
+Creating a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=combined))
+```
+
+# Reading in the cell metadata
+
+Loading in the per-cell metadata:
+
+```{r}
+meta.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE162086&format=file&file=GSE162086%5Fseurat%5Fmetadata%2Etsv%2Egz")
+meta <- read.delim(meta.path, check.names=FALSE)
+head(meta)
+```
+
+This is, unfortunately, just a subset of the count matrix:
+
+```{r}
+ID <- paste0(sub("-1", "", meta$barcode), "-", meta$sample)
+ref <- gsub("\"", "", colnames(combined))
+stopifnot(all(ID %in% ref))
+
+m <- match(ref, ID)
+meta <- meta[m,]
+rownames(meta) <- ref
+meta$retained <- !is.na(m)
+summary(meta$retained)
+```
+
+We can try to fill in the patient-level attributes for missing cells, by extrapolating from cells in the same patient.
+
+```{r}
+meta$sample <- sub(".*-", "", ref)
+meta$barcode <- sub("-.*", "", ref)
+
+for (field in c("batch", "seq_run", "diagnosis")) {
+    tab <- table(meta$sample, meta[[field]])
+    best <- max.col(tab)
+    stopifnot(all(tab[cbind(seq_along(best), best)] == rowSums(tab))) # Checking that there's only one option here.
+    best <- as(colnames(tab)[best], typeof(meta[[field]]))
+    names(best) <- rownames(tab)
+    meta[[field]] <- best[meta$sample]
+    print(field)
+    print(t(tab))
+}
+```
+
+We also slap in the sample-level metadata, that doesn't show up in the above.
+
+```{r}
+m <- match(meta$sample,samples[,2])
+stopifnot(all(!is.na(m)))
+meta$who_class <- samples[m,3]
+meta$severity <- samples[m,4]
+```
+
+And finally we add it to the `SingleCellExperiment`.
+
+```{r}
+colData(sce) <- DataFrame(meta)
+colData(sce)
+```
+
+# Saving to file 
+
+We run some polishing to optimize the dataset for storage:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+ 
+We now save all of the relevant components to file for upload:
+
+```{r}
+meta <- list(
+    title="Low-Avidity CD4+ T Cell Responses to SARS-CoV-2 in Unexposed Individuals and Humans with Severe COVID-19",
+    description="CD4+ T cells reactive against SARS-CoV-2 can be found in unexposed individuals, and these are suggested to arise in response to common cold coronavirus (CCCoV) infection. Here, we utilized SARS-CoV-2-reactive CD4+ T cell enrichment to examine the antigen avidity and clonality of these cells, as well as the relative contribution of CCCoV cross-reactivity. SARS-CoV-2-reactive CD4+ memory T cells were present in virtually all unexposed individuals examined, displaying low functional avidity and multiple, highly variable cross-reactivities that were not restricted to CCCoVs. SARS-CoV-2-reactive CD4+ T cells from COVID-19 patients lacked cross-reactivity to CCCoVs, irrespective of strong memory T cell responses against CCCoV in all donors analyzed. In severe but not mild COVID-19, SARS-CoV-2-specific T cells displayed low functional avidity and clonality, despite increased frequencies. Our findings identify low-avidity CD4+ T cell responses as a hallmark of severe COVID-19 and argue against a protective role for CCCoV-reactive T cells in SARS-CoV-2 infection.
+
+Maintainer note: the column data contains an additional `retained` field, indicating whether the cell was listed in the author-supplied metadata. (If not, it was presumably filtered out during their analysis.) We have also taken the liberty of filling in some of the sample-level attributes for the filtered cells by extrapolating from those in the same sample.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="PubMed", id="33296686"),
+        list(provider="GEO", id="GSE162086")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-21_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

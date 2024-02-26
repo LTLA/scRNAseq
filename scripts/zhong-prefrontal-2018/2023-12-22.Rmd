@@ -1,0 +1,146 @@
+---
+title: Processing the Zhong prefrontal cortex dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of human prefrontal cortex cells from [Zhong et al. (2018)](https://doi.org/10.1038/nature25980).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE104276](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE104276).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+fname <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE104276&format=file&file=GSE104276%5Fall%5Fpfc%5F2394%5FUMI%5Fcount%5FNOERCC%2Exls%2Egz")
+tmp <- tempfile(fileext=".xls")
+R.utils::gunzip(fname, destname=tmp, remove=FALSE)
+```
+
+Reading all the counts in as sparse matrices.
+Despite its name, this is not actually an XLS file.
+
+```{r}
+library(scuttle)
+counts <- readSparseCounts(tmp, skip.row=1, col.names=FALSE)
+colnames(counts) <- strsplit(readLines(tmp, n=1), "\t")[[1]]
+dim(counts)
+```
+
+# Attaching per-cell metadata
+
+We pull down some sample-level metadata in SOFT format.
+
+```{r}
+library(GEOquery)
+out <- GEOquery::getGEO("GSE104276")
+
+df <- as(phenoData(out[[1]]), "data.frame")
+sampdata <- DataFrame(
+    developmental_stage=df[["developmental stage:ch1"]],
+    gender=df[["gender:ch1"]],
+    sample=df$title
+)
+
+# Fixing an error in their annotation.
+sampdata$developmental_stage[sampdata$developmental_stage == "week gestation"] <- "23 weeks after gestation"
+
+sampdata
+```
+
+Unfortunately, it's not enough to link the exact samples to their cells.
+We take the nuclear option of rolling through the per-sample TPM files to figure out who lives where.
+
+```{r}
+fname <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE104276&format=file")
+
+tmp <- tempfile()
+untar(fname, exdir=tmp)
+
+all.files <- list.files(tmp, full=TRUE)
+out <- lapply(all.files, function(x) {
+    strsplit(readLines(x, n=1), "\t")[[1]]
+})
+
+# So many errors in their sample names...
+samples <- sub("\\..*", "", basename(all.files))
+samples <- sub("GSM[0-9]+_", "", samples)
+samples <- sub("GW8", "GW08", samples)
+samples <- sub("GW9", "GW09", samples)
+samples <- sub("GW19_PFC", "GW19_PFC1_", samples)
+
+mapping <- rep(basename(samples), lengths(out))
+names(mapping) <- unlist(out)
+
+converted <- mapping[colnames(counts)]
+stopifnot(all(!is.na(converted)))
+m <- match(converted, sampdata$sample)
+stopifnot(all(!is.na(m)))
+
+coldata <- sampdata[m,]
+rownames(coldata) <- colnames(counts)
+coldata
+```
+
+But that's not all, because we can add even more annotation about the cell type.
+
+```{r}
+fname <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE104276&format=file&file=GSE104276%5Freadme%5Fsample%5Fbarcode%2Exlsx")
+
+library(readxl)
+more.data <- read_xlsx(fname, sheet="SampleInfo")
+more.data <- as.data.frame(more.data)
+head(more.data)
+
+m <- match(rownames(coldata), more.data[,1])
+coldata <- cbind(coldata, more.data[m,c(-1, -ncol(more.data))])
+colnames(coldata)
+```
+
+# Saving to file 
+
+Putting everything together into a `SingleCellExperiment`:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData=coldata)
+```
+
+Polishing up the dataset for optimizing disk usage:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save it to disk in preparation for an upload:
+
+```{r}
+meta <- list(
+    title="A single-cell RNA-seq survey of the developmental landscape of the human prefrontal cortex",
+    description="The mammalian prefrontal cortex comprises a set of highly specialized brain areas containing billions of cells and serves as the centre of the highest-order cognitive functions, such as memory, cognitive ability, decision-making and social behaviour. Although neural circuits are formed in the late stages of human embryonic development and even after birth, diverse classes of functional cells are generated and migrate to the appropriate locations earlier in development. Dysfunction of the prefrontal cortex contributes to cognitive deficits and the majority of neurodevelopmental disorders; there is therefore a need for detailed knowledge of the development of the prefrontal cortex. However, it is still difficult to identify cell types in the developing human prefrontal cortex and to distinguish their developmental features. Here we analyse more than 2,300 single cells in the developing human prefrontal cortex from gestational weeks 8 to 26 using RNA sequencing. We identify 35 subtypes of cells in six main classes and trace the developmental trajectories of these cells. Detailed analysis of neural progenitor cells highlights new marker genes and unique developmental features of intermediate progenitor cells. We also map the timeline of neurogenesis of excitatory neurons in the prefrontal cortex and detect the presence of interneuron progenitors in early developing prefrontal cortex. Moreover, we reveal the intrinsic development-dependent signals that regulate neuron generation and circuit formation using single-cell transcriptomic data analysis. Our screening and characterization approach provides a blueprint for understanding the development of the human prefrontal cortex in the early and mid-gestational stages in order to systematically dissect the cellular basis and molecular regulation of prefrontal cortex function in humans.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="GEO", id="GSE104276"),
+        list(provider="PubMed", id="29539641")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-22_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

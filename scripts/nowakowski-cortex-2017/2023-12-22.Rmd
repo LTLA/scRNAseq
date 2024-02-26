@@ -1,0 +1,120 @@
+---
+title: Processing the Nowakowski cortex dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of the human cotex from [Nowakowski et al. (2017)](https://doi.org/10.1126/science.aap8809).
+TPMs for endogenous genes are available from the the UCSC cell browser at http://cells.ucsc.edu/?ds=cortex-dev.
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+expr.url <- "http://cells.ucsc.edu/cortex-dev/exprMatrix.tsv.gz"
+exprs.path <- bfcrpath(bfc, expr.url)
+
+library(scuttle)
+mat <- readSparseCounts(exprs.path, row.names=1)
+dim(mat)
+```
+
+For unknown reasons, the rownames have multiple gene symbols.
+This has no obvious benefit with respect to disambiguation, so we'll just remove them.
+
+```{r}
+hits <- strsplit(rownames(mat), "\\|")
+stopifnot(all(lengths(hits) == 2L))
+before <- vapply(hits, function(x) x[1], "")
+after <- vapply(hits, function(x) x[2], "")
+stopifnot(identical(before, after))
+rownames(mat) <- before
+```
+
+# Reading in metadata
+
+We also read in various pieces of metadata; firstly, the per-cell metadata.
+
+```{r}
+meta.url <- "http://cells.ucsc.edu/cortex-dev/meta.tsv"
+meta.path <- bfcrpath(bfc, meta.url)
+meta <- read.delim(meta.path, row.names=1)
+stopifnot(identical(colnames(mat), rownames(meta))) 
+meta <- DataFrame(meta)
+meta
+```
+
+And then all of the various reduced dimensions:
+
+```{r}
+red.dim.list <- c(
+    "tMinusSNE_on_WGCNA",
+    "TriMap",
+    "TMinusSNE_scanpy",
+    "UMAP_scanpy",
+    "PAGAPlusForceAtlas2_scanpy"
+)
+
+reddims <- list()
+for (i in red.dim.list) { 
+    X <- bfcrpath(bfc, sprintf("http://cells.ucsc.edu/cortex-dev/%s.coords.tsv.gz", i))
+    Y <- as.matrix(read.table(X, row.names=1, sep="\t"))
+    stopifnot(all(rownames(Y) %in% colnames(mat)))
+
+    expanded <- Y[match(colnames(mat), rownames(Y)),,drop=FALSE]
+    rownames(expanded) <- colnames(mat)
+
+    stopifnot(identical(colnames(expanded), c("V2", "V3")))
+    colnames(expanded) <- NULL
+    reddims[[i]] <- expanded
+}
+```
+
+# Saving to file 
+
+Making sure we can assemble the final SCE:
+
+```{r}
+sce <- SingleCellExperiment(list(tpm=mat), colData=meta, reducedDims=reddims)
+```
+
+Adding some polish to optimize disk usage:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce 
+```
+
+We now save all of the relevant components to file:
+
+```{r}
+curdate <- as.character(Sys.Date())
+meta <- list(
+    title="Spatiotemporal gene expression trajectories reveal developmental hierarchies of the human cortex",
+    description="Systematic analyses of spatiotemporal gene expression trajectories during organogenesis have been challenging because diverse cell types at different stages of maturation and differentiation coexist in the emerging tissues. We identified discrete cell types as well as temporally and spatially restricted trajectories of radial glia maturation and neurogenesis in developing human telencephalon. These lineage-specific trajectories reveal the expression of neurogenic transcription factors in early radial glia and enriched activation of mammalian target of rapamycin signaling in outer radial glia. Across cortical areas, modest transcriptional differences among radial glia cascade into robust typological distinctions among maturing neurons. Together, our results support a mixed model of topographical, typological, and temporal hierarchies governing cell-type diversity in the developing human telencephalon, including distinct excitatory lineages emerging in rostral and caudal cerebral cortex.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="URL", id=expr.url, version=curdate),
+        list(provider="URL", id=meta.url, version=curdate),
+        list(provider="PubMed", id="29217575")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-22_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

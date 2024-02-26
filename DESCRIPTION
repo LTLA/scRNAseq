@@ -1,7 +1,7 @@
 Package: scRNAseq
 Title: Collection of Public Single-Cell RNA-Seq Datasets
-Version: 2.17.0
-Date: 2021-11-14
+Version: 2.17.1
+Date: 2024-02-25
 Authors@R: c(
     person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cph")),
     person("Michael", "Cole", role="aut"),
@@ -21,15 +21,25 @@ Depends:
 Imports:
     utils,
     methods,
+    Matrix,
     BiocGenerics,
     S4Vectors,
+    SparseArray,
+    DelayedArray,
     GenomicRanges,
     SummarizedExperiment,
     ExperimentHub (>= 2.3.4),
     AnnotationHub (>= 3.3.6),
     AnnotationDbi,
     ensembldb,
-    GenomicFeatures
+    GenomicFeatures,
+    alabaster.base,
+    alabaster.matrix,
+    alabaster.sce,
+    gypsum,
+    jsonlite,
+    DBI,
+    RSQLite
 Suggests: 
     BiocStyle, 
     knitr, 
@@ -37,7 +47,9 @@ Suggests:
     BiocFileCache,
     testthat,
     rappdirs,
-    tools
+    tools,
+    jsonvalidate,
+    BiocManager
 VignetteBuilder: knitr
 Encoding: UTF-8
 biocViews: 
@@ -48,4 +60,4 @@ biocViews:
     RNASeqData,
     SingleCellData
 BuildResaveData: no
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.1

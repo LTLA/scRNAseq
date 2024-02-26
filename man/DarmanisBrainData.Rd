@@ -4,7 +4,12 @@
 \alias{DarmanisBrainData}
 \title{Obtain the Darmanis brain data}
 \usage{
-DarmanisBrainData(ensembl = FALSE, location = TRUE, remove.htseq = TRUE)
+DarmanisBrainData(
+  ensembl = FALSE,
+  location = TRUE,
+  remove.htseq = TRUE,
+  legacy = FALSE
+)
 }
 \arguments{
 \item{ensembl}{Logical scalar indicating whether the output row names should contain Ensembl identifiers.}
@@ -12,6 +17,9 @@ DarmanisBrainData(ensembl = FALSE, location = TRUE, remove.htseq = TRUE)
 \item{location}{Logical scalar indicating whether genomic coordinates should be returned.}
 
 \item{remove.htseq}{Logical scalar indicating whether HT-seq alignment statistics should be removed.}
+
+\item{legacy}{Logical scalar indicating whether to pull data from ExperimentHub.
+By default, we use data from the gypsum backend.}
 }
 \value{
 A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.

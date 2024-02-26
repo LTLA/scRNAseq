@@ -1,0 +1,181 @@
+---
+title: Processing the Fletcher Olfactory Epithelium (OE) dataset
+author: Davide Risso
+date: 9 February 2021
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of Olfactory Epithelium cells from multiple mice from [Fletcher et al. (2017)](https://doi.org/10.1016/j.stem.2017.04.003).
+Counts for the endogenous genes, spike-ins, and gene constructs are available from the Gene Expression Omnibus using the accession number [GSE95601](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE95601).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+base <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE95601&format=file&file="
+fname <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5Fcounts%5Ftable%2Etxt%2Egz"))
+protocol_data_file <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FprotocolData%2Etxt%2Egz"))
+pheno_data_file <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FphenoData%2Etxt%2Egz"))
+rowdata_file <- bfcrpath(bfc, paste0(base, "GSE95601%5FoeHBCdiff%5FCufflinks%5FeSet%5FfeatureData%2Etxt%2Egz"))
+```
+
+Reading the counts in a matrix:
+
+```{r}
+counts <- read.table(fname)
+counts <- as.matrix(counts)
+dim(counts)
+```
+
+For some reason there are many `NA` values. 
+Author response here:
+
+> NA is equivalent to 0 in these matrices. I always produced matrices that had all the annotated genes in the reference transcriptome, and if no reads were detected than it was set to NA. Originally, I thought that distinguishing NAs and 0s for two slightly different cases (no reads in the current sample / no reads in any of the samples) could be useful, but this turned out not to be the case. So in the downstream analyses, I just overwrote the NA's with 0's right after reading the matrix.
+
+So we'll just replace them as well.
+
+```{r}
+lost <- is.na(counts)
+mean(lost)
+counts[lost] <- 0L
+```
+
+# Adding row/column annotations
+
+Reading in the column data in dataframes:
+
+```{r}
+protocol_data <- read.table(protocol_data_file, header = TRUE)
+pheno_data <- read.table(pheno_data_file, header = TRUE)
+
+m1 <- match(colnames(counts), pheno_data$sample_sequencing_id)
+m2 <- match(colnames(counts), protocol_data$sample_sequencing_id)
+stopifnot(all(!is.na(m1)))
+stopifnot(all(!is.na(m2)))
+
+library(S4Vectors)
+coldata <- cbind(pheno_data[m1,], protocol_data[m2,])
+rownames(coldata) <- colnames(counts)
+coldata <- DataFrame(coldata, check.names=FALSE)
+colnames(coldata)
+```
+
+Repeating the dose for the row data:
+
+```{r}
+rowdata <- read.table(rowdata_file, header = TRUE)
+rowdata <- DataFrame(rowdata, check.names=FALSE)
+stopifnot(
+    all(
+        rownames(counts) == rowdata$Gene_Symbol |
+        sub("\\.[0-9]$", "", rownames(counts)) == rowdata$Gene_Symbol
+    )
+)
+rowdata
+```
+
+# Adding clustering results
+
+Downloading the cluster results from the original analysis:
+
+```{r}
+repo <- "rufletch/p63-HBC-diff"
+hash <- "86dea4ea81826481e6754cc4759c180ea5f7f0c7"
+cluster_url <- sprintf("https://raw.githubusercontent.com/%s/%s/ref/oeHBCdiff_clusterLabels.txt", repo, hash)
+cluster_file <- bfcrpath(bfc, cluster_url)
+cluster_id <- read.table(cluster_file, col.names = c("sample_id", "cluster_id"))
+```
+
+We map them onto the cluster labels available [here](https://raw.githubusercontent.com/rufletch/p63-HBC-diff/master/ref/clusterKey.md):
+
+```{r}
+cluster_labels <- data.frame(cluster_id = c(1:5, 7:12, 14, 15),
+    cluster_label = c("HBC", 
+        "INP1", 
+        "GBC", 
+        "mSUS", 
+        "HBC2", 
+        "iSUS", 
+        "HBC1", 
+        "iOSN", 
+        "INP3", 
+        "MVC1", 
+        "mOSN", 
+        "INP2", 
+        "MVC2"),
+    cluster_description = c("Resting Horizontal Basal Cells", 
+        "Immediate Neuronal Precursor 1", 
+        "Globose Basal Cells", 
+        "Mature Sustentacular Cells", 
+        "Transitional HBC 2", 
+        "Immature Sustentacular Cells", 
+        "Transitional HBC 1", 
+        "Immature Olfactory Sensory Neurons", 
+        "Immediate Neuronal Precursor 3", 
+        "Microvillous Cells, type 1", 
+        "Mature Olfactory Sensory Neurons", 
+        "Immediate Neuronal Precursor 2", 
+        "Microvillous Cells, type 2"))
+
+m <- match(colnames(counts), cluster_id$sample_id)
+coldata$retained <- !is.na(m)
+coldata$cluster_id <- cluster_id$cluster_id[m]
+
+mc <- match(coldata$cluster_id, cluster_labels$cluster_id)
+stopifnot(all(!is.na(mc) | !coldata$retained))
+coldata <- cbind(coldata, cluster_labels[mc,-1])
+coldata
+```
+
+# Saving to file 
+
+We put this all together in a `SingleCellExperiment` object:
+
+```{r}
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=counts), colData = coldata, rowData = rowdata)
+colData(sce) <- colData(sce)[,setdiff(colnames(coldata), "sample_sequencing_id")] # redundant with column names.
+```
+
+We do some polishing to optimize for space.
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save everything to disk in preparation for upload:
+
+```{r}
+meta <- list(
+    title="Deconstructing Olfactory Stem Cell Trajectories at Single-Cell Resolution",
+    description="A detailed understanding of the paths that stem cells traverse to generate mature progeny is vital for elucidating the mechanisms governing cell fate decisions and tissue homeostasis. Adult stem cells maintain and regenerate multiple mature cell lineages in the olfactory epithelium. Here we integrate single-cell RNA sequencing and robust statistical analyses with in vivo lineage tracing to define a detailed map of the postnatal olfactory epithelium, revealing cell fate potentials and branchpoints in olfactory stem cell lineage trajectories. Olfactory stem cells produce support cells via direct fate conversion in the absence of cell division, and their multipotency at the population level reflects collective unipotent cell fate decisions by single stem cells. We further demonstrate that Wnt signaling regulates stem cell fate by promoting neuronal fate choices. This integrated approach reveals the mechanisms guiding olfactory lineage trajectories and provides a model for deconstructing similar hierarchies in other stem cell niches.
+
+Maintainer note: cluster labels were obtained from the corresponding code repository on GitHub. Only a subset of cells were used for clustering and thus have these labels; these are indicated as such via the `retained` column.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="GEO", id="GSE95601"),
+        list(provider="PubMed", id="28506465"),
+        list(provider="GitHub", id=repo, version=hash)
+    ),
+    maintainer_name="Davide Risso",
+    maintainer_email="risso.davide@gmail.com"
+)
+
+saveDataset(sce, "2023-12-21_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

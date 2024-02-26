@@ -1,0 +1,123 @@
+---
+title: Processing the Zhao immune liver dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the data
+
+We obtain a single-cell RNA sequencing dataset of liver-resident immune cells from multiple donors from [Zhao et al. (2020)](https://doi.org/10.1038/s41421-020-0157-z).
+Counts for endogenous genes are available from the Gene Expression Omnibus
+using the accession number [GSE125188](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125188).
+We download and cache them using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+
+mat.path <- bfcrpath(bfc, 
+    "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE125188&format=file&file=GSE125188%5FCD45%2B%5Fmatrix%2Emtx%2Egz")
+mat <- Matrix::readMM(mat.path)
+mat <- as(mat, "dgCMatrix")
+```
+
+Slapping together a `SingleCellExperiment` object.
+
+```{r}
+feat.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE125188&format=file&file=GSE125188%5FCD45%2B%5Fgenes%2Etsv%2Egz")
+feat.data <- read.table(feat.path, header=FALSE)
+colnames(feat.data) <- c("ID", "Symbol")
+rownames(feat.data) <- feat.data$ID
+feat.data$ID <- NULL
+
+barcode.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE125188&format=file&file=GSE125188%5FCD45%2B%5Fbarcodes%2Etsv%2Egz")
+colnames(mat) <- readLines(barcode.path)
+
+library(SingleCellExperiment)
+sce <- SingleCellExperiment(list(counts=mat), rowData=feat.data)
+sce
+```
+
+# Downloading the metadata
+
+Pulling down the metadata. 
+Note that not all cells are present in the metadata so some expansion is required.
+
+```{r}
+meta.path <- bfcrpath(bfc, "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE125188&format=file&file=GSE125188%5FCD45%2B%5Fcell%5Fidentities%2Etsv%2Egz")
+meta <- read.table(meta.path, header=TRUE)
+
+m <- match(colnames(sce), meta$Barcode)
+colData(sce) <- cbind(colData(sce), meta[m,])
+sce$Barcode <- NULL
+sce$retained <- !is.na(m)
+
+colData(sce)
+```
+
+We also need to collate the fine metadata for the other cell types.
+
+```{r}
+pattern1 <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE125188&format=file&file=GSE125188%5F" 
+pattern2 <- "%5Fcell%5Fidentities%2Etsv%2Egz"
+
+broad <- fine <- rep(NA_character_, ncol(sce))
+for (type in c("ASC", "B", "Mo", "NKT")) {
+    sub.path <- bfcrpath(bfc, paste0(pattern1, type, pattern2))
+    out <- read.delim(sub.path)
+    m <- match(out$Barcode, colnames(sce))
+    stopifnot(all(!is.na(m)))
+
+    stopifnot(all(is.na(broad[m]))) # check that there are no conflicts
+    broad[m] <- type
+    stopifnot(all(is.na(fine[m])))
+    fine[m] <- out$Group
+}
+
+table(broad, useNA="always")
+table(fine, useNA="always")
+
+sce$broad <- broad
+sce$fine <- fine
+```
+
+# Saving to file
+
+We polish up the SCE to optimize for disk usage:
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+We now save all of the relevant components to file for upload to `r Biocpkg("ExperimentHub")`.
+
+```{r}
+meta <- list(
+    title="Single-cell RNA sequencing reveals the heterogeneity of liver-resident immune cells in human",
+    description="The liver plays a critical role in both immune defense and tolerance in the body. The liver-resident immune cells (LrICs) determine the immune properties, but the unique composition and heterogeneity of these cells are incompletely understood. Here, we dissect the diversity of LrICs by a comprehensive transcriptomic profiling using the unbiased single-cell RNA-sequencing (scRNA-seq). A total of 70, 706 of CD45+ immune cells from the paired liver perfusion, spleen and peripheral blood as references were profiled. We identified more than 30 discrete cell populations comprising 13 of T and NK cell, 7 of B cell, 4 of plasma cell, and 8 of myeloid cell subsets in human liver and donor-paired spleen and blood, and characterized their tissue distribution, gene expression and functional modules. Especially, four of CXCR6+ T and NK cell subsets were found to be present preferentially in the liver, where they manifested heterogeneity, distinct function and prominent homeostatic proliferation. We propose a universal category system of T and NK cells based on distinct chemokine receptors, confirmed subsequently by phenotype, transcriptional factors and functionality. We also identified adaptive changes by the spleen and liver-derived monocyte and macrophage populations. Finally, we give a global glimpse on B cell and plasma cell subsets in human spleen and liver. We, therefore, reveal the heterogeneity and functional diversity of LrICs in human. This study presents comprehensively the landscape of LrICs and will enable further study on their roles in various human diseases.
+    
+Maintainer note: only a subset of cells were used in the authors' analysis. These cells can be identified from the `retained` field in the column annotations.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="GEO", id="GSE125188"),
+        list(provider="PubMed", id="32351704")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-22_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

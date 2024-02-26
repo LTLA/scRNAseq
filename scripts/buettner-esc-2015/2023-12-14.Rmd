@@ -1,0 +1,130 @@
+---
+title: Processing the Buettner ESC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of mouse ESCs from [Buettner et al. (2015)](https://doi.org/10.1038/nbt.3102),
+by downloading the files from ArrayExpress and caching the results with `r Biocpkg("BiocFileCache")`.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask=FALSE)
+s.path <- bfcrpath(bfc, 'https://www.ebi.ac.uk/biostudies/files/E-MTAB-2805/S_singlecells_counts.txt')
+g2m.path <- bfcrpath(bfc, 'https://www.ebi.ac.uk/biostudies/files/E-MTAB-2805/G2M_singlecells_counts.txt')
+g1.path <- bfcrpath(bfc, 'https://www.ebi.ac.uk/biostudies/files/E-MTAB-2805/G1_singlecells_counts.txt')
+```
+
+# Processing the read counts
+
+We read in the count matrix for cells in each cell cycle phase.
+
+```{r}
+g1 <- read.delim(g1.path, row.names=1)
+gene.g1 <- g1[,1:3]
+g1 <- as.matrix(g1[,-(1:3)])
+dim(g1)
+
+s <- read.delim(s.path, row.names=1)
+gene.s <- s[,1:3]
+s <- as.matrix(s[,-(1:3)])
+dim(s)
+
+g2m <- read.delim(g2m.path, row.names=1)
+gene.g2m <- g2m[,1:3]
+g2m <- as.matrix(g2m[,-(1:3)])
+dim(g2m)
+```
+
+Applying some sanity checks to ensure that the rows are the same across matrices.
+
+```{r}
+stopifnot(identical(gene.g1, gene.s))
+stopifnot(identical(gene.g1, gene.g2m))
+```
+
+# Combining and storing metadata
+
+```{r}
+combined <- cbind(g1, s, g2m)
+library(S4Vectors)
+coldata <- DataFrame(phase=rep(c("G1", "S", "G2M"), c(ncol(g1), ncol(s), ncol(g2m))))
+coldata
+rowdata <- DataFrame(gene.g1)
+rowdata
+```
+
+Assembling a `SingleCellExperiment` consisting of the genes:
+
+```{r}
+library(SingleCellExperiment)
+is.gene <- grepl("^ENSMUSG", rownames(combined))
+sce <- SingleCellExperiment(list(counts=combined[is.gene,]), colData=coldata, rowData=rowdata[is.gene,])
+mainExpName(sce) <- "gene"
+```
+
+Splitting out the spike-in counts:
+
+```{r}
+library(scRNAseq)
+is.ercc <- grepl("^ERCC-", rownames(combined))
+spikedata <- countErccMolecules(volume = 1, dilution = 1000)
+
+# We don't use 'rowdata' at all as this is non-informative for spike-ins.
+spikes <- SummarizedExperiment(list(counts=combined[is.ercc,]))
+rowData(spikes) <- spikedata[rownames(spikes),]
+altExp(sce, "ERCC") <- spikes
+spikes
+```
+
+Shifting the diagnostics into the column data.
+
+```{r}
+is.other <- !is.gene & !is.ercc
+diagnostics <- t(as.matrix(combined[is.other,]))
+rownames(diagnostics) <- NULL
+colData(sce)$metrics <- DataFrame(diagnostics)
+```
+
+Now polishing the object to save some space.
+
+```{r}
+library(scRNAseq)
+sce <- polishDataset(sce)
+sce
+```
+
+# Saving for upload 
+
+We save the `SingleCellExperiment` to disk in preparation for upload.
+
+```{r}
+meta <- list(
+    title="Computational analysis of cell-to-cell heterogeneity in single-cell RNA-sequencing data reveals hidden subpopulations of cells",
+    description="Recent technical developments have enabled the transcriptomes of hundreds of cells to be assayed in an unbiased manner, opening up the possibility that new subpopulations of cells can be found. However, the effects of potential confounding factors, such as the cell cycle, on the heterogeneity of gene expression and therefore on the ability to robustly identify subpopulations remain unclear. We present and validate a computational approach that uses latent variable models to account for such hidden factors. We show that our single-cell latent variable model (scLVM) allows the identification of otherwise undetectable subpopulations of cells that correspond to different stages during the differentiation of naive T cells into T helper 2 cells. Our approach can be used not only to identify cellular subpopulations but also to tease apart different sources of gene expression heterogeneity in single-cell transcriptomes.
+
+Maintainer note: alignment and quantification metrics are stored in a nested `metrics` data frame in the column data. Molecule counts for ERCC spike-ins are computed based on a volume of 1 nL per cell and a dilution of 1:1000.",
+    taxonomy_id="10090",
+    genome="GRCm38",
+    sources=list(
+        list(provider="ArrayExpress", id="E-MTAB-2805"),
+        list(provider="PubMed", id="25599176")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com"
+)
+
+saveDataset(sce, "2023-12-14_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

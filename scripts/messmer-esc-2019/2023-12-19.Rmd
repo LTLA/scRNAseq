@@ -1,0 +1,209 @@
+---
+title: Processing the Messmer human ESC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Downloading the count data
+
+We obtain a single-cell RNA sequencing dataset of human embryonic stem cells from [Messmer et al. (2019)](https://doi.org/10.1016/j.celrep.2018.12.099).
+Counts for endogenous genes and spike-in transcripts are available from ArrayExpress
+using the accession number [E-MTAB-6819](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6819/).
+We download and cache it using the `r Biocpkg("BiocFileCache")` package.
+
+```{r}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+base.url <- 'https://www.ebi.ac.uk/biostudies/files/E-MTAB-6819/'
+all.files <- list()
+for (sample in c("2383", "2384", "2677", "2678", "2739", "2740", "2780", "2781")) {
+    all.files[[sample]] <- bfcrpath(bfc, paste0(base.url, "genic_counts_", sample, ".tsv"))
+}
+```
+
+# Reading in the metadata
+
+We read in the metadata from the SDRF file:
+
+```{r}
+messmer.sdrf <- bfcrpath(bfc, paste0(base.url, "E-MTAB-6819.sdrf.txt"))
+coldata <- read.delim(messmer.sdrf, check.names=FALSE, stringsAsFactors=FALSE)
+
+library(S4Vectors)
+coldata <- as(coldata, "DataFrame")
+colnames(coldata)
+```
+
+We sort by the batch number.
+This is important for making sure that the `libnames` match up with the column names of the count matrix later.
+
+```{r}
+libnames <- coldata[["Assay Name"]]
+o <- order(coldata[["Comment[sequencing run]"]], libnames)
+coldata <- coldata[o,]
+libnames <- libnames[o]
+```
+
+We keep only the experimentally interesting metadata, discarding columns that are duplicated or only have one level.
+We also discard some ArrayExpress-specific columns.
+
+```{r}
+keep <- grep("(Characteristics|Factor|Parameter Value|Comment)", colnames(coldata))
+coldata <- coldata[,c(1, keep)]  # keeping the cell ID.
+
+new.colnames <- sub(".*\\[(.*)\\]", "\\1", colnames(coldata))
+u <- !duplicated(new.colnames)
+coldata <- coldata[,u]
+colnames(coldata) <- new.colnames[u]
+
+has.multi.levels <- vapply(coldata, FUN=function(x) length(unique(x))>1L, TRUE)
+coldata <- coldata[,has.multi.levels]
+coldata <- coldata[,setdiff(colnames(coldata), c("ENA_SAMPLE", 
+    "BioSD_SAMPLE", "technical replicate group", "ENA_EXPERIMENT", 
+    "SUBMITTED_FILE_NAME", "ENA_RUN", "FASTQ_URI",
+    "single cell identifier", "RUN"))]
+coldata
+```
+
+Many of these are actually technical replicates or multiple entries for paired data, 
+so we only need to keep the first one of each set.
+
+```{r}
+first <- !duplicated(coldata[,1])
+coldata <- coldata[first,]
+libnames <- libnames[first]
+dim(coldata)
+```
+
+# Processing the read counts
+
+```{r, datain}
+library(edgeR)
+all.counts <- list()
+cell.names <- list()
+gene.names <- NULL
+gene.length <- NULL
+
+for (sample in c("2383", "2384", "2677", "2678", "2739", "2740", "2780", "2781")) {
+    cur.file <- all.files[[sample]]
+    current_counts <- read.table(cur.file, sep="\t", header=TRUE, row.names=1)
+
+    # Checking gene names and length are the same as those in other files.
+    if (is.null(gene.names)){
+        gene.names <- rownames(current_counts)
+        gene.length <- current_counts$Length
+    } else {
+        stopifnot(identical(gene.names, rownames(current_counts)))
+        stopifnot(identical(gene.length, current_counts$Length))
+    }
+    current_counts$Length <- NULL
+
+    # Take the technical replicates and merge them, if they exist.
+    cellname <- colnames(current_counts)
+    cellname <- sub("^lane[0-9]_", "", cellname)
+    cellname <- sub("_L00[0-9]_", "_", cellname)
+    cellname <- sub("_[12]$", "", cellname)
+
+    if (any(duplicated(cellname))) {
+        oldnames <- colnames(current_counts)
+        current_counts <- sumTechReps(current_counts, ID=cellname)
+
+        m <- match(colnames(current_counts), cellname)
+        cellname <- colnames(current_counts)
+        colnames(current_counts) <- oldnames[m]
+        gc()
+    }
+
+    # Adding to the list.
+    all.counts[[sample]] <- as.matrix(current_counts)
+    cell.names[[sample]] <- cellname
+}
+sapply(all.counts, ncol)
+```
+
+We then merge technical replicates across batches (2677 + 2678, 2739 + 2740, 2780 + 2781).
+
+```{r mergetech}
+stopifnot(identical(cell.names[["2677"]], cell.names[["2678"]]))
+all.counts[["2677"]] <- all.counts[["2677"]] + all.counts[["2678"]]
+all.counts[["2678"]] <- NULL
+
+stopifnot(identical(cell.names[["2739"]], cell.names[["2740"]]))
+all.counts[["2739"]] <- all.counts[["2739"]] + all.counts[["2740"]]
+all.counts[["2740"]] <- NULL
+
+stopifnot(identical(cell.names[["2780"]], cell.names[["2781"]]))
+all.counts[["2780"]] <- all.counts[["2780"]] + all.counts[["2781"]]
+all.counts[["2781"]] <- NULL
+
+sapply(all.counts, ncol)
+```
+
+Finally, we `cbind`  everything together into one large matrix.
+
+```{r cbindmat}
+combined.counts <- do.call(cbind, all.counts)
+stopifnot(identical(colnames(combined.counts), libnames))
+```
+
+# Saving for upload 
+
+We assemble it all into a `SingleCellExperiment`:
+
+```{r}
+library(scRNAseq)
+sce <- SingleCellExperiment(list(counts=combined.counts), colData=coldata, 
+    rowData=DataFrame(Length=gene.length, row.names=gene.names))
+```
+
+We split off the spike-ins into an alternative experiment:
+
+```{r}
+spike.type <- ifelse(grepl("ERCC", rownames(sce)), "ERCC", "endogenous")
+sce <- splitAltExps(sce, spike.type, ref="endogenous")
+spike.exp <- altExp(sce, "ERCC")
+
+spikedata <- countErccMolecules(volume = 1, dilution = 25000000)
+spikedata <- spikedata[rownames(spike.exp), ]
+rowData(spike.exp) <- cbind(rowData(spike.exp), spikedata)
+altExp(sce, "ERCC") <- spike.exp
+spike.exp
+```
+
+And apply some polish to save disk space:
+
+```{r}
+sce <- polishDataset(sce)
+sce
+```
+
+We save these to file in preparation for upload:
+
+```{r}
+meta <- list(
+    title="Transcriptional Heterogeneity in Naive and Primed Human Pluripotent Stem Cells at Single-Cell Resolution",
+    description="Conventional human embryonic stem cells are considered to be primed pluripotent but can be induced to enter a naive state. However, the transcriptional features associated with naive and primed pluripotency are still not fully understood. Here we used single-cell RNA sequencing to characterize the differences between these conditions. We observed that both naive and primed populations were mostly homogeneous with no clear lineage-related structure and identified an intermediate subpopulation of naive cells with primed-like expression. We found that the naive-primed pluripotency axis is preserved across species, although the timing of the transition to a primed state is species specific. We also identified markers for distinguishing human naive and primed pluripotency as well as strong co-regulatory relationships between lineage markers and epigenetic regulators that were exclusive to naive cells. Our data provide valuable insights into the transcriptional landscape of human pluripotency at a cellular and genome-wide resolution.
+
+Maintainer note: technical replicates for the same cell have been summed together.",
+    taxonomy_id="9606",
+    genome="GRCh38",
+    sources=list(
+        list(provider="PubMed", id="30673604"),
+        list(provider="ArrayExpress", id="E-MTAB-6819")
+    ),
+    maintainer_name="Aaron Lun",
+    maintainer_email="infinite.monkeys.with.keyboards@gmail.com" 
+)
+
+saveDataset(sce, "2023-12-19_output", meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

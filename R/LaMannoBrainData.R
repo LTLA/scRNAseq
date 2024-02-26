@@ -5,6 +5,8 @@
 #' @param which A string specifying which dataset should be obtained.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #' 
 #' @details
 #' Column metadata is provided in the same form as supplied in the supplementary tables in GSE71585.
@@ -52,13 +54,17 @@
 #' sce.m.em <- LaMannoBrainData("mouse-embryo")
 #' 
 #' @export
-LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo"),
-    ensembl=FALSE, location=TRUE) 
-{
-    version <- "2.0.0"
-    sce <- .create_sce(file.path("lamanno-brain", version), has.rowdata=FALSE, suffix=match.arg(which))
-    colnames(sce) <- colData(sce)[[grep("Cell_ID", colnames(colData(sce)), ignore.case=TRUE)]]
+LaMannoBrainData <- function(which=c("human-es", "human-embryo", "human-ips", "mouse-adult", "mouse-embryo"), ensembl=FALSE, location=TRUE, legacy=FALSE) {
+    which <- match.arg(which)
 
+    if (!legacy) {
+        sce <- fetchDataset("lamanno-brain-2016", "2023-12-17", path=which, realize.assays=TRUE)
+    } else {
+        version <- "2.0.0"
+        sce <- .create_sce(file.path("lamanno-brain", version), has.rowdata=FALSE, suffix=which)
+    }
+
+    colnames(sce) <- colData(sce)[[grep("Cell_ID", colnames(colData(sce)), ignore.case=TRUE)]]
     .convert_to_ensembl(sce, 
         species=if (grepl("human", which)) "Hs" else "Mm",
         symbols=rownames(sce),

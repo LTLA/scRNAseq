@@ -5,6 +5,8 @@
 #' @param mode String indicating whether to return data for healthy and/or diseased donors.
 #' @param ensembl Logical scalar indicating whether the output row names should contain Ensembl identifiers.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
+#' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
+#' By default, we use data from the gypsum backend.
 #'
 #' @details
 #' Column metadata includes the single-cell technology and whether they came from a diseased or healthy individual.
@@ -36,22 +38,35 @@
 #' 
 #' @export
 #' @importFrom SummarizedExperiment rowData
-WuKidneyData <- function(mode=c("healthy", "disease"), ensembl=FALSE, location=TRUE) {
-    version <- "2.4.0"
+WuKidneyData <- function(mode=c("healthy", "disease"), ensembl=FALSE, location=TRUE, legacy=FALSE) {
     mode <- match.arg(mode, several.ok=TRUE)
-
     all.sce <- list()
-    for (m in mode) {
-        current <- .create_sce(file.path("wu-kidney", version), has.rowdata=FALSE, has.coldata=FALSE, suffix=m)
 
-        if (m=="healthy") {
-            current$Technology <- sub("_.*", "", colnames(current))
-        } else {
-            current$Technology <- "sNuc-10x"
+    if (!legacy) {
+        for (m in mode) {
+            current <- fetchDataset("wu-kidney-2019", "2023-12-20", m, realize.assays=TRUE)
+            current$Status <- m
+            if (m != "healthy") {
+                current$Technology <- "sNuc-10x"
+            }
+            all.sce[[m]] <- current
         }
-        current$Status <- m
 
-        all.sce[[m]] <- current
+    } else {
+        version <- "2.4.0"
+
+        for (m in mode) {
+            current <- .create_sce(file.path("wu-kidney", version), has.rowdata=FALSE, has.coldata=FALSE, suffix=m)
+
+            if (m=="healthy") {
+                current$Technology <- sub("_.*", "", colnames(current))
+            } else {
+                current$Technology <- "sNuc-10x"
+            }
+            current$Status <- m
+
+            all.sce[[m]] <- current
+        }
     }
 
     if (length(all.sce) > 1) {
