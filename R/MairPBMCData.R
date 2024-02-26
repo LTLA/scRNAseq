@@ -49,7 +49,7 @@ MairPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE, leg
     } else {
         version <- "2.4.0"
         tag <- "mair-pbmc"
-        hub <- .ExperimentHub()
+        hub <- ExperimentHub()
 
         collated <- list()
         for (x in mode) {

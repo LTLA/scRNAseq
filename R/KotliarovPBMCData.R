@@ -65,7 +65,7 @@ KotliarovPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE
     } else {
         version <- "2.4.0"
         tag <- "kotliarov-pbmc"
-        hub <- .ExperimentHub()
+        hub <- ExperimentHub()
         
         collated <- list()
         for (x in mode) {

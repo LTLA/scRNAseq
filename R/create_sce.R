@@ -1,6 +1,6 @@
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom SingleCellExperiment SingleCellExperiment
-.create_sce <- function(dataset, hub=.ExperimentHub(), assays="counts", has.rowdata=TRUE, has.coldata=TRUE, suffix=NULL) {
+.create_sce <- function(dataset, hub=ExperimentHub(), assays="counts", has.rowdata=TRUE, has.coldata=TRUE, suffix=NULL) {
     host <- file.path("scRNAseq", dataset)
     if (is.null(suffix)) {
         suffix <- ""
@@ -26,7 +26,7 @@
 
 #' @importFrom ExperimentHub ExperimentHub
 #' @importFrom SingleCellExperiment SingleCellExperiment
-.create_sce_legacy <- function(dataset, assays, hub=.ExperimentHub()) {
+.create_sce_legacy <- function(dataset, assays, hub=ExperimentHub()) {
     choices <- c("tophat_counts", "cufflinks_fpkm", "rsem_counts", "rsem_tpm")
     if (is.null(assays)) {
         assays <- choices
@@ -44,9 +44,4 @@
     coldata <- hub[hub$rdatapath==file.path(host, "coldata.rds")][[1]]
     metadata <- hub[hub$rdatapath==file.path(host, "metadata.rds")][[1]]
     SingleCellExperiment(all.assays, colData=coldata, metadata=metadata)
-}
-
-.ExperimentHub <- function() {
-    .move_cache("ExperimentHub", "EXPERIMENT_HUB_CACHE")
-    ExperimentHub()
 }

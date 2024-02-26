@@ -41,7 +41,7 @@ NowakowskiCortexData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
 
     } else {
         version <- "2.6.0"
-        hub <- .ExperimentHub()
+        hub <- ExperimentHub()
         sce <- .create_sce(file.path("nowakowski-cortex", version), hub=hub, has.rowdata=FALSE, assays="tpm")
         reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/nowakowski-cortex", version, "reddims.rds"))]]
     }

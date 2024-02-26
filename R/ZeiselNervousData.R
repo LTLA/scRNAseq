@@ -42,7 +42,7 @@ ZeiselNervousData <- function(location=TRUE, legacy=FALSE) {
     } else {
         version <- "2.6.0"
 
-        hub <- .ExperimentHub()
+        hub <- ExperimentHub()
         sce <- .create_sce(file.path("zeisel-nervous", version), hub=hub)
 
         reducedDims(sce) <- hub[[which(hub$rdatapath==file.path("scRNAseq/zeisel-nervous", version, "reddims.rds"))]]

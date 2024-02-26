@@ -48,7 +48,7 @@ BunisHSPCData <- function(filtered=TRUE, legacy=FALSE) {
         sce <- .create_sce(file.path("bunis-hspc", version), has.rowdata = TRUE, has.coldata = FALSE)
 
         # Manually grabbing the colData as it doesn't have the right shape.
-        hub <- .ExperimentHub()
+        hub <- ExperimentHub()
         colData.path <- file.path("scRNAseq", "bunis-hspc", version, "coldata.rds")
         colData <- hub[hub$rdatapath==colData.path][[1]]
 

@@ -34,7 +34,7 @@ ERCCSpikeInConcentrations <- function(volume = NULL, dilution = NULL, mix=c("1",
         table <- fetchDataset("ercc", "2023-12-20")
     } else {
         version <- "2.0.0"
-        hub <- .ExperimentHub()
+        hub <- ExperimentHub()
         host <- "scRNAseq/ercc-concentrations"
         file <- hub[hub$rdatapath==file.path(host, "2.2.0", "cms_095046.txt")][[1]]
 
