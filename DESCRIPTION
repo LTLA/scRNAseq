@@ -21,6 +21,7 @@ Depends:
 Imports:
     utils,
     methods,
+    Matrix,
     BiocGenerics,
     S4Vectors,
     SparseArray,
@@ -33,6 +34,7 @@ Imports:
     ensembldb,
     GenomicFeatures,
     alabaster.base,
+    alabaster.matrix,
     alabaster.sce,
     gypsum,
     jsonlite,

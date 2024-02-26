@@ -66,8 +66,8 @@
 #' }
 #'
 #' @export
-#' @importFrom gypsum restUrl accessToken startUpload abortUpload uploadFiles completeUpload
-uploadDirectory <- function(dir, name, version, package="scRNAseq", cache=NULL, probation=FALSE, url=restUrl(), token=accessToken(), concurrent=1, abort.failed=TRUE) {
+#' @importFrom gypsum cacheDirectory restUrl accessToken startUpload abortUpload uploadFiles completeUpload
+uploadDirectory <- function(dir, name, version, package="scRNAseq", cache=cacheDirectory(), probation=FALSE, url=restUrl(), token=accessToken(), concurrent=1, abort.failed=TRUE) {
     listing <- list_files(dir, cache=cache)
 
     blob <- startUpload(

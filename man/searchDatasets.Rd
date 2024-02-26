@@ -32,14 +32,14 @@ whether the dataset has any pre-computed reduced dimensions, and so on.
 More details can be found in the Bioconductor metadata schema at \url{https://github.com/ArtifactDB/bioconductor-metadata-index}.
 }
 \examples{
-searchDatasets("brain")
-searchDatasets(defineTextQuery("Neuro\%", partial=TRUE))
-searchDatasets(defineTextQuery("GRCm38", field="taxonomy_id"))
+searchDatasets("brain")[,c("name", "title")]
+searchDatasets(defineTextQuery("Neuro\%", partial=TRUE))[,c("name", "title")]
+searchDatasets(defineTextQuery("10090", field="taxonomy_id"))[,c("name", "title")]
 searchDatasets(
-   defineTextQuery("GRCm38", field="taxonomy_id") &
+   defineTextQuery("GRCm38", field="genome") &
    (defineTextQuery("neuro\%", partial=TRUE) | 
     defineTextQuery("pancrea\%", partial=TRUE))
-)
+)[,c("name", "title")]
 
 }
 \seealso{

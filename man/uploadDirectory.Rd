@@ -9,7 +9,7 @@ uploadDirectory(
   name,
   version,
   package = "scRNAseq",
-  cache = NULL,
+  cache = cacheDirectory(),
   probation = FALSE,
   url = restUrl(),
   token = accessToken(),

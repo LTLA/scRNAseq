@@ -2,6 +2,7 @@
 % Please edit documentation in R/fetchDataset.R
 \name{fetchDataset}
 \alias{fetchDataset}
+\alias{fetchMetadata}
 \title{Fetch a dataset from the gypsum backend}
 \usage{
 fetchDataset(
@@ -14,6 +15,15 @@ fetchDataset(
   realize.assays = FALSE,
   realize.reduced.dims = TRUE,
   ...
+)
+
+fetchMetadata(
+  name,
+  version,
+  path = NA,
+  package = "scRNAseq",
+  cache = cacheDirectory(),
+  overwrite = FALSE
 )
 }
 \arguments{

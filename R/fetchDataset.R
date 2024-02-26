@@ -45,6 +45,7 @@ fetchDataset <- function(name, version, path=NA, package="scRNAseq", cache=cache
 }
 
 #' @export
+#' @rdname fetchDataset
 #' @importFrom jsonlite fromJSON
 #' @importFrom gypsum cacheDirectory saveFile
 fetchMetadata <- function(name, version, path=NA, package="scRNAseq", cache=cacheDirectory(), overwrite=FALSE) {
@@ -91,9 +92,11 @@ scLoadObject <- function(path, metadata=NULL, scRNAseq.realize.assays=FALSE, scR
     ans
 }
 
+#' @importClassesFrom alabaster.matrix ReloadedArray
 #' @importFrom DelayedArray is_sparse type
+#' @importClassesFrom Matrix lgCMatrix dgCMatrix
 realize_array <- function(x) {
-    if (is(x, "DelayedArray")) {
+    if (is(x, "ReloadedArray")) {
         if (is_sparse(x)) {
             if (type(x) == "logical") {
                 x <- as(x, "lgCMatrix")
