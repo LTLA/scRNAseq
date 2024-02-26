@@ -155,7 +155,7 @@ We now save each organ's SCE in preparation for upload.
 output.dir <- "2023-12-21_output"
 unlink(output.dir, recursive=TRUE)
 dir.create(output.dir)
-for (tissue in names(all.counts)) {
+for (tissue in names(all.sce)) {
     pretty <- gsub("\\.", " ", tolower(tissue))
     copy <- meta
     copy$title <- sprintf(copy$title, pretty)
