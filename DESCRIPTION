@@ -44,10 +44,7 @@ Suggests:
     BiocStyle, 
     knitr, 
     rmarkdown,
-    BiocFileCache,
     testthat,
-    rappdirs,
-    tools,
     jsonvalidate,
     BiocManager
 VignetteBuilder: knitr
