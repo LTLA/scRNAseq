@@ -30,7 +30,7 @@
 \item Added the Zhong prefrontal cortex dataset.
 
 \item Added the Bunis HSPC dataset (Dan Bunis).
-})
+}}
 
 \section{Version 2.4.0}{\itemize{
 \item Added the Zilionis lung dataset (Jens Preussner).

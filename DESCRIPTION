@@ -1,7 +1,7 @@
 Package: scRNAseq
 Title: Collection of Public Single-Cell RNA-Seq Datasets
-Version: 2.7.2
-Date: 2021-07-27
+Version: 2.17.0
+Date: 2021-11-14
 Authors@R: c(
     person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cph")),
     person("Michael", "Cole", role="aut"),
@@ -28,8 +28,8 @@ Imports:
     DelayedArray,
     GenomicRanges,
     SummarizedExperiment,
-    ExperimentHub,
-    AnnotationHub,
+    ExperimentHub (>= 2.3.4),
+    AnnotationHub (>= 3.3.6),
     AnnotationDbi,
     ensembldb,
     GenomicFeatures,
