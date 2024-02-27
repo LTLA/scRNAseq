@@ -58,8 +58,12 @@ gypsum::saveVersion(
     cache=cache
 )
 
+# Check that the saved object is valid.
 alabaster.base::validateObject(cache)
-gypsum::validateMetadata(file.path(cache, "_bioconductor.json"))
+
+# Check that the metadata is valid.
+lines <- readLines(file.path(cache, "_bioconductor.json"))
+gypsum::validateMetadata(paste(lines, collapse="\n"))
 ```
 
 If everything looks okay, we can approve the probational dataset.
