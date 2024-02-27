@@ -145,7 +145,7 @@ Just follow these simple steps for instant fame and prestige.
     alabaster.base::readObject(file.path(staging, "foo"))
     ```
 
-4. Open a [pull request (PR)](https://github.com/LTLA/scRNAseq/pulls) to request a new dataset.
+4. Open a [pull request (PR)](https://github.com/LTLA/scRNAseq/pulls) for the addition of a new dataset.
    You will need to provide a few things here:
    - The name of your dataset.
      This typically follows the format of `{NAME}-{SYSTEM}-{YEAR}`, where `NAME` is the last name of the first author of the study,
@@ -154,33 +154,33 @@ Just follow these simple steps for instant fame and prestige.
    - The version of your dataset.
      This is usually just the current date... or whenever you started putting together the dataset for upload.
      The exact date doesn't really matter as long as we can establish a timeline for later versions.
-   - The code used to assemble the dataset as an Rmarkdown file.
+   - An Rmarkdown file containing the code used to assemble the dataset.
      This should be added to the [`scripts/`](https://github.com/LTLA/scRNAseq/tree/master/scripts) directory of this package,
      in order to provide some record of how the dataset was created.
 
 5. Wait for us to grant temporary upload permissions to your GitHub account.
-   Once this is done, you can upload your staging directory to [**gypsum** backend](https://github.com/ArtifactDB/gypsum-worker) with `gypsum::uploadDirectory()`.
-   The first time this function is called, it will automatically prompt you to log into GitHub so that the backend can authenticate you.
+6. Upload your staging directory to [**gypsum** backend](https://github.com/ArtifactDB/gypsum-worker) with `gypsum::uploadDirectory()`.
+   On the first call to this function, it will automatically prompt you to log into GitHub so that the backend can authenticate you.
    If you are on a system without browser access (e.g., most computing clusters), a [token](https://github.com/settings/tokens) can be manually supplied via `gypsum::setAccessToken()`.
 
     ```{r, eval=FALSE}
-    gypsum::uploadDirectory(staging, "scRNAseq", "my_dataset_name", "2020-02-20")
+    gypsum::uploadDirectory(staging, "scRNAseq", "my_dataset_name", "my_version")
     ```
 
    You can check that everything was successfully uploaded by calling `fetchDataset()` with the same name and version:
 
     ```{r, eval=FALSE}
-    fetchDataset("my_dataset_name", "2020-02-20")
+    fetchDataset("my_dataset_name", "my_version")
     ```
 
    If you realized you made a mistake, no worries.
    Use the following call to clear the erroneous dataset, and try again:
 
     ```{r, eval=FALSE}
-    gypsum::rejectProbation("scRNAseq", "my_dataset_name", "2020-02-20")
+    gypsum::rejectProbation("scRNAseq", "my_dataset_name", "my_version")
     ```
 
-6. Comment on the PR to notify us that the dataset has finished uploading and you're happy with it.
+7. Comment on the PR to notify us that the dataset has finished uploading and you're happy with it.
    We'll review it and make sure everything's in order.
    If some fixes are required, we'll just clear the dataset so that you can upload a new version with the necessary changes.
    Otherwise, we'll approve the dataset.

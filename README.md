@@ -29,4 +29,54 @@ fetchDataset("baron-pancreas-2016", "2023-12-14", path="human")
 ```
 
 And add your own datasets to enable re-use by the wider Bioconductor community.
-Check out the [user's guide](https://bioconductor.org/packages/release/data/experiment/vignettes/scRNAseq/inst/doc/scRNAseq.html) for more information.
+
+Check out the [user's guide](https://bioconductor.org/packages/release/data/experiment/vignettes/scRNAseq/inst/doc/scRNAseq.html) for more details.
+
+## Maintainer notes
+
+Prospective uploaders can be given temporary upload permissions for, e.g., a week, by calling:
+
+```r
+gypsum::setPermissions("scRNAseq", uploaders=list(
+    list(
+        id="GITHUB_LOGIN", 
+        asset="NAME_OF_THE_DATASET_THEY_WANT_TO_UPLOAD",
+        version="VERSION_THEY_WANT_TO_UPLOAD",
+        until=Sys.time() + 7 * 24 * 3600
+    )
+)
+```
+
+Once the upload is complete, it's worth pulling down and validating the contents.
+
+```r
+cache <- tempfile()
+gypsum::saveVersion(
+    "scRNAseq", 
+    asset="NAME_OF_THE_DATASET_THEY_WANT_TO_UPLOAD",
+    version="VERSION_THEY_WANT_TO_UPLOAD",
+    cache=cache
+)
+
+alabaster.base::validateObject(cache)
+gypsum::validateMetadata(file.path(cache, "_bioconductor.json"))
+```
+
+If everything looks okay, we can approve the probational dataset.
+Otherwise we reject it.
+
+```r
+# Okay.
+gypsum::approveProbation(
+    "scRNAseq", 
+    asset="NAME_OF_THE_DATASET_THEY_WANT_TO_UPLOAD",
+    version="VERSION_THEY_WANT_TO_UPLOAD"
+)
+
+# Not okay.
+gypsum::rejectProbation(
+    "scRNAseq", 
+    asset="NAME_OF_THE_DATASET_THEY_WANT_TO_UPLOAD",
+    version="VERSION_THEY_WANT_TO_UPLOAD"
+)
+```
