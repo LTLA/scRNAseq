@@ -20,7 +20,7 @@ test_that("file listing works as expected without any special elements", {
     tmp <- tempfile()
     saveDataset(sce, tmp, meta)
 
-    listing <- scRNAseq:::list_files(tmp)
+    listing <- gypsum::prepareDirectoryUpload(tmp, links="always")
     expect_identical(nrow(listing$links), 0L)
     expect_identical(sort(listing$files), sort(list.files(tmp, recursive=TRUE)))
 })
@@ -46,9 +46,9 @@ test_that("file listing works with ReloadedArrays", {
 
     tmp <- tempfile()
     saveDataset(sce2, tmp, meta)
-    expect_error(scRNAseq:::list_files(tmp), "failed to convert")
+    expect_error(gypsum::prepareDirectoryUpload(tmp, links="always"), "failed to convert")
 
-    listing <- scRNAseq:::list_files(tmp, cache=cache)
+    listing <- gypsum::prepareDirectoryUpload(tmp, links="always", cache=cache)
     expect_identical(sort(listing$links$to.path), sort(c("assays/0/array.h5", "assays/0/OBJECT")))
     expect_identical(sort(listing$links$from.path), sort(c("assays/1/array.h5", "assays/1/OBJECT")))
     expect_identical(sort(c(listing$files, listing$links$from.path)), sort(list.files(tmp, recursive=TRUE)))
@@ -72,7 +72,7 @@ test_that("the actual upload works correctly", {
     saveDataset(sce, tmp, meta)
 
     version <- as.character(Sys.Date())
-    uploadDirectory(tmp, "test", version, probation=TRUE)
+    gypsum::uploadDirectory(tmp, "scRNAseq", "test", version, probation=TRUE)
     on.exit(gypsum::rejectProbation("scRNAseq", "test", version))
 
     cache <- tempfile() # use a different cache to avoid pulling down the test.
