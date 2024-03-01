@@ -55,7 +55,7 @@ test_that("file listing works with ReloadedArrays", {
 })
 
 test_that("the actual upload works correctly", {
-    gh_token <- gypsum::accessToken(request=NULL)
+    gh_token <- gypsum::accessToken(request=FALSE)
     skip_if(is.null(gh_token))
 
     meta <- list(
