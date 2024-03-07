@@ -45,6 +45,7 @@
 SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
         sce <- fetchDataset("segerstolpe-pancreas-2016", "2023-12-19", realize.assays=TRUE)
+        rowData(sce)$symbol <- rownames(sce)
 
     } else {
         version <- "2.0.0"
