@@ -43,9 +43,10 @@ PaulHSCData <- function(ensembl=FALSE, discard.multiple=TRUE, location=TRUE, leg
     } else {
         version <- "2.2.0"
         sce <- .create_sce(file.path("paul-hsc", version), has.rowdata=FALSE)
-        if (discard.multiple) {
-            sce <- sce[!grepl(";", rownames(sce)),]
-        }
+    }
+
+    if (discard.multiple) {
+        sce <- sce[!grepl(";", rownames(sce)),]
     }
 
     .convert_to_ensembl(sce, 

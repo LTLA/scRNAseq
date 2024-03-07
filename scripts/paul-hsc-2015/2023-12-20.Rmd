@@ -1,5 +1,5 @@
 ---
-title: Processing the Nestorowa HSC dataset
+title: Processing the Paul HSC dataset
 author: Aaron Lun
 ---
 
