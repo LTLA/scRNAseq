@@ -78,9 +78,13 @@
 #' @export
 #' @rdname ReprocessedData
 #' @importFrom SingleCellExperiment splitAltExps
+#' @importFrom SummarizedExperiment assays assays<-
 ReprocessedAllenData <- function(assays=NULL, ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
         sce <- fetchDataset("legacy", "2023-12-18", "allen", realize.assays=TRUE)
+        if (!is.null(assays)) {
+            assays(sce, withDimnames=FALSE) <- assays(sce, withDimnames=FALSE)[assays]
+        }
     } else {
         version <- "1.10.0"
         sce <- .create_sce_legacy(file.path("legacy-allen", version), assays)
@@ -101,6 +105,9 @@ ReprocessedAllenData <- function(assays=NULL, ensembl=FALSE, location=TRUE, lega
 ReprocessedTh2Data <- function(assays=NULL, ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
         sce <- fetchDataset("legacy", "2023-12-18", "th2", realize.assays=TRUE)
+        if (!is.null(assays)) {
+            assays(sce, withDimnames=FALSE) <- assays(sce, withDimnames=FALSE)[assays]
+        }
     } else {
         version <- "1.10.0"
         sce <- .create_sce_legacy(file.path("legacy-th2", version), assays)
@@ -120,6 +127,9 @@ ReprocessedTh2Data <- function(assays=NULL, ensembl=FALSE, location=TRUE, legacy
 ReprocessedFluidigmData <- function(assays=NULL, ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
         sce <- fetchDataset("legacy", "2023-12-18", "fluidigm", realize.assays=TRUE)
+        if (!is.null(assays)) {
+            assays(sce, withDimnames=FALSE) <- assays(sce, withDimnames=FALSE)[assays]
+        }
     } else {
         version <- "1.10.0"
         sce <- .create_sce_legacy(file.path("legacy-fluidigm", version), assays)

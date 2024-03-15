@@ -1,7 +1,7 @@
 Package: scRNAseq
 Title: Collection of Public Single-Cell RNA-Seq Datasets
-Version: 2.17.5
-Date: 2024-03-07
+Version: 2.17.6
+Date: 2024-03-14
 Authors@R: c(
     person("Davide", "Risso", email = "risso.davide@gmail.com", role = c("aut", "cph")),
     person("Michael", "Cole", role="aut"),
