@@ -50,6 +50,7 @@ ZilionisLungData <- function(which=c("human", "mouse"), ensembl=FALSE, location=
 
     if (!legacy) {
         sce <- fetchDataset("zilionis-lung-2019", "2023-12-20", path=which, realize.assays=TRUE)
+        colnames(sce) <- sce$Barcode
 
     } else {
         version <- "2.4.0"
