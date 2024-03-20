@@ -46,6 +46,10 @@ SegerstolpePancreasData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) 
     if (!legacy) {
         sce <- fetchDataset("segerstolpe-pancreas-2016", "2023-12-19", realize.assays=TRUE)
         rowData(sce)$symbol <- rownames(sce)
+        cn <- colnames(colData(sce))
+        cn[cn == "inferred cell type"] <- "cell type"
+        cn[cn == "single cell quality"] <- "single cell well quality"
+        colnames(colData(sce)) <- cn
 
     } else {
         version <- "2.0.0"

@@ -17,7 +17,7 @@ We download it using `r Biocpkg("BiocFileCache")` to cache the results:
 ```{r}
 library(BiocFileCache)
 bfc <- BiocFileCache("raw_data", ask=FALSE)    
-base.url <- "https://www.ebi.ac.uk/biostudies/files/E-MTAB-5061/"
+base.url <- "ftp://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/061/E-MTAB-5061/Files/"
 count.file <- bfcrpath(bfc, paste0(base.url, "pancreas_refseq_rpkms_counts_3514sc.txt"))
 ```
 
@@ -78,12 +78,12 @@ stopifnot(identical(sort(rownames(emtab.sdrf)), sort(colnames(counts))))
 emtab.sdrf <- emtab.sdrf[match(colnames(counts), rownames(emtab.sdrf)),]
 ```
 
-We only keep the `Source Name` and `Characteristics` fields.
+We only keep the `Characteristics` fields.
 The other fields describe relationships to other files/identifiers within ArrayExpress and are not of (primary) interest.
 
 ```{r}
 keep <- grep("Characteristics", colnames(emtab.sdrf))
-emtab.sdrf <- emtab.sdrf[,c(1, keep)]
+emtab.sdrf <- emtab.sdrf[,keep]
 colnames(emtab.sdrf) <- sub(".*\\[(.*)\\]", "\\1", colnames(emtab.sdrf))
 ```
 
