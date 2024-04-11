@@ -60,4 +60,5 @@ searchDatasets <- function(query, cache=cacheDirectory(), overwrite=FALSE, lates
 }
 
 #' @export
+#' @importFrom gypsum defineTextQuery
 gypsum::defineTextQuery
