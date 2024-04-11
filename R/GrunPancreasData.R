@@ -45,6 +45,8 @@
 GrunPancreasData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
         sce <- fetchDataset("grun-pancreas-2016", "2023-12-14", realize.assays=TRUE)
+        cn <- colnames(colData(sce))
+        colnames(colData(sce))[cn == "treatment"] <- "sample" # some protective back-compatibility work.
 
     } else {
         version <- "2.0.0"
