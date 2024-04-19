@@ -1,0 +1,55 @@
+---
+title: Update to the assay names 
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Obtaining the old version
+
+For reasons I don't understand, the ETL from ExperimentHub to **gypsum** changed the assay name from `normcounts` to `normalized`,
+even though the [GEO entry](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE64016) clearly states that:
+
+> Normalized expected counts are provided in GSE64016\_H1andFUCCI\_normalized\_EC.csv.gz
+
+So, okay, we'll change it back.
+First we clone the old version.
+
+```{r}
+tmp <- "update_20240418"
+unlink(tmp, recursive=TRUE) # get rid of any previous directory.
+gypsum::cloneVersion("scRNAseq", "leng-esc-2015", "2023-12-18", destination=tmp)
+```
+
+Now we go in and edit the names.
+
+```{r}
+assay.name.path <- file.path(tmp, "assays", "names.json")
+assay.names <- jsonlite::fromJSON(assay.name.path, simplifyVector=FALSE)
+assay.names
+
+# Replacing the link with the new content; it's important to delete the link
+# before doing so, otherwise we would accidentally modify the cache!
+unlink(assay.name.path) 
+assay.names[[1]][1] <- "normcounts"
+write(jsonlite::toJSON(assay.names, auto_unbox=TRUE, pretty=4), file=assay.name.path)
+```
+
+We run some validation to ensure that our modified files are still valid.
+
+```{r}
+library(alabaster.base)
+validateObject(tmp)
+
+# Confirming that the assay names changed.
+readObject(tmp)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

@@ -31,7 +31,7 @@
 #' @export
 LengESCData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
-        sce <- fetchDataset("leng-esc-2015", "2023-12-18", realize.assays=TRUE)
+        sce <- fetchDataset("leng-esc-2015", "2024-04-18", realize.assays=TRUE)
     } else {
         version <- "2.0.0"
         sce <- .create_sce(file.path("leng-esc", version), assays="normcounts", has.rowdata=FALSE)
