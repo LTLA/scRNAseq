@@ -44,7 +44,7 @@
 #' @importFrom SingleCellExperiment splitAltExps reducedDim<-
 NestorowaHSCData <- function(remove.htseq=TRUE, location=TRUE, legacy=FALSE) {
     if (!legacy && remove.htseq) {
-        sce <- fetchDataset("nestorowa-hsc-2016", "2023-12-19", realize.assays=TRUE)
+        sce <- fetchDataset("nestorowa-hsc-2016", "2024-04-18", realize.assays=TRUE)
 
     } else {
         version <- "2.0.0"

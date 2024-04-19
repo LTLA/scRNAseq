@@ -60,7 +60,7 @@ KotliarovPBMCData <- function(mode=c("rna", "adt"), ensembl=FALSE, location=TRUE
     mode <- match.arg(mode, c("rna", "adt"), several.ok=TRUE)
 
     if (!legacy && identical(mode, c("rna", "adt"))) {
-        sce <- fetchDataset("kotliarov-pbmc-2020", "2023-12-20", realize.assays=TRUE)
+        sce <- fetchDataset("kotliarov-pbmc-2020", "2024-04-18", realize.assays=TRUE)
 
     } else {
         version <- "2.4.0"

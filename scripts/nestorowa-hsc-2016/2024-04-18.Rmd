@@ -1,0 +1,65 @@
+---
+title: Fixing the Nestorowa HSC dataset
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Promoting to `SingleCellExperiment`
+
+For some reason, I saved the FACS alternative experiment as a `SummarizedExperiment` instead of a `SingleCellExperiment`.
+I was probably hoping to eliminate the potential for unnecessary recursion of alternative experiments, but in doing so,
+got rid of useful features for `SingleCellExperiments` like reduced dimensions and size factors.
+
+So let's put that stuff back.
+First we clone the project:
+
+```{r}
+tmp <- "update_20240418"
+unlink(tmp, recursive=TRUE) # get rid of any previous directory.
+gypsum::cloneVersion("scRNAseq", "nestorowa-hsc-2016", "2023-12-19", destination=tmp)
+```
+
+Now we go in and promote the `OBJECT` file to a `SingleCellExperiment`, 
+following the specification [here](https://github.com/ArtifactDB/takane/blob/gh-pages/docs/specifications/single_cell_experiment/1.0.md).
+There's no need to do anything else as the new SCE just differs from the old SE by the class definition, not any of its contents.
+
+```{r}
+update <- function(obj.path) {
+    obj <- jsonlite::fromJSON(obj.path, simplifyVector=FALSE)
+    obj$type <- "single_cell_experiment"
+    obj$ranged_summarized_experiment <- list(version="1.0")
+    obj$single_cell_experiment <- list(version="1.0")
+
+    # Replacing the link with the new content; it's important to delete the link
+    # before doing so, otherwise we would accidentally modify the cache!
+    unlink(obj.path) 
+    write(jsonlite::toJSON(obj, auto_unbox=TRUE, pretty=4), file=obj.path)
+}
+```
+
+Running our update script on the second FACS alternative experiment (the first ERCC one is already an SCE, so no need to do anything there).
+
+```{r}
+update(file.path(tmp, "alternative_experiments/1", "OBJECT"))
+```
+
+We validate and load the entire object, just to check that it's all good.
+
+```{r}
+library(alabaster.base)
+validateObject(file.path(tmp))
+out <- readObject(tmp)
+ae <- SingleCellExperiment::altExp(out, "FACS")
+stopifnot(is(ae, "SingleCellExperiment"))
+ae
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

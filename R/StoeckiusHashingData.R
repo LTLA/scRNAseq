@@ -83,7 +83,7 @@ StoeckiusHashingData <- function(type=c("pbmc", "mixed"), mode=NULL, ensembl=FAL
         # human/mouse splits from the saved rowData. Better to omit it than to
         # give people a misleading impression of a confident split.
         for (m in mode) {
-            collated[[m]] <- fetchDataset("stoeckius-hashing-2018", "2023-12-20", path=paste0("mixture/", m), realize.assays=TRUE)
+            collated[[m]] <- fetchDataset("stoeckius-hashing-2018", "2024-04-18", path=paste0("mixture/", m), realize.assays=TRUE)
         }
 
     } else {

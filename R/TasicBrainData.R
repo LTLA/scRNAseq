@@ -41,7 +41,7 @@
 #' @importFrom SingleCellExperiment splitAltExps
 TasicBrainData <- function(ensembl=FALSE, location=TRUE, legacy=FALSE) {
     if (!legacy) {
-        sce <- fetchDataset("tasic-brain-2016", "2023-12-19", realize.assays=TRUE)
+        sce <- fetchDataset("tasic-brain-2016", "2024-04-18", realize.assays=TRUE)
 
     } else {
         version <- "2.0.0"
