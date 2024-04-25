@@ -1,0 +1,50 @@
+---
+title: Fix to the cell cycle phases
+author: Aaron Lun
+---
+
+```{r style, echo=FALSE, results='hide', message=FALSE}
+library(BiocStyle)
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Obtaining the old version
+
+Looks like we made a mistake in the phase assignments:the names should be `G2` not `G2M`.
+
+```{r}
+tmp <- "update_20240425"
+unlink(tmp, recursive=TRUE) # get rid of any previous directory.
+gypsum::cloneVersion("scRNAseq", "leng-esc-2015", "2024-04-18", destination=tmp)
+```
+
+Now we go in and edit the column annotations:
+
+```{r}
+colpath <- file.path(tmp, "column_data")
+df <- alabaster.base::readObject(colpath)
+
+phase <- sub("_Exp.*", "", rownames(df))
+phase[!phase %in% c("G1", "S", "G2")] <- NA
+df$Phase <- phase
+table(phase)
+
+unlink(colpath, recursive=TRUE)
+alabaster.base::saveObject(df, colpath)
+```
+
+We run some validation to ensure that our modified files are still valid.
+
+```{r}
+library(alabaster.base)
+validateObject(tmp)
+
+# Confirming that the assay names changed.
+readObject(tmp)$Phase
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

@@ -27,6 +27,8 @@ These changes will only take effect when \code{fetchDataset} is used directly;
 the per-dataset getter functions have appropriate back-compatibility patches to restore this information.
 
 \item All getters now have a \code{legacy=} option to pull RDS files from ExperimentHub instead of the new formats from gypsum.
+
+\item Fixed phase assignments in the Leng ESC dataset to correctly report G2 phase.
 }}
 
 \section{Version 2.6.0}{\itemize{
