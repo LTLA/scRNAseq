@@ -2,7 +2,7 @@
 #'
 #' Search for datasets of interest based on matching text in the associated metadata.
 #'
-#' @param query String or a \code{gypsum.search.object}, see Examples.
+#' @param query String or a \code{gypsum.search.clause}, see Examples.
 #' @inheritParams surveyDatasets
 #'
 #' @return 

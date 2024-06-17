@@ -12,7 +12,7 @@ searchDatasets(
 )
 }
 \arguments{
-\item{query}{String or a \code{gypsum.search.object}, see Examples.}
+\item{query}{String or a \code{gypsum.search.clause}, see Examples.}
 
 \item{cache, overwrite}{Arguments to pass to \code{\link{fetchMetadataDatabase}}.}
 
