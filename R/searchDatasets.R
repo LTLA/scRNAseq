@@ -2,7 +2,7 @@
 #'
 #' Search for datasets of interest based on matching text in the associated metadata.
 #'
-#' @param query String or a \code{gypsum.search.clause}, see Examples.
+#' @param query String containing a query in a human-readable syntax or a \link{gypsum.search.clause}, see Examples.
 #' @inheritParams surveyDatasets
 #'
 #' @return 
@@ -19,23 +19,24 @@
 #'
 #' @examples
 #' searchDatasets("brain")[,c("name", "title")]
-#' searchDatasets(defineTextQuery("Neuro%", partial=TRUE))[,c("name", "title")]
-#' searchDatasets(defineTextQuery("10090", field="taxonomy_id"))[,c("name", "title")]
-#' searchDatasets(
-#'    defineTextQuery("GRCm38", field="genome") &
-#'    (defineTextQuery("neuro%", partial=TRUE) | 
-#'     defineTextQuery("pancrea%", partial=TRUE))
-#' )[,c("name", "title")]
+#' searchDatasets("Neuro%")[,c("name", "title")]
+#' searchDatasets("taxonomy_id:10090")[,c("name", "title")]
+#' searchDatasets("(genome: GRCm38 AND neuro%) OR pancrea%")[,c("name", "title")]
 #' 
 #' @seealso
 #' \code{\link{surveyDatasets}}, to easily obtain a listing of all available datasets.
+#'
+#' \code{\link{translateTextQuery}}, for details on the human-readable query syntax.
 #' @export
 #' @importFrom S4Vectors DataFrame
-#' @importFrom gypsum cacheDirectory fetchMetadataDatabase searchMetadataTextFilter
+#' @importFrom gypsum cacheDirectory fetchMetadataDatabase searchMetadataFilter translateTextQuery
 #' @importFrom DBI dbConnect dbDisconnect dbGetQuery
 #' @importFrom RSQLite SQLite
 searchDatasets <- function(query, cache=cacheDirectory(), overwrite=FALSE, latest=TRUE) {
-    filter <- searchMetadataTextFilter(query)
+    if (is.character(query)) {
+        query <- translateTextQuery(query)
+    }
+    filter <- searchMetadataFilter(query)
 
     bpath <- fetchMetadataDatabase(cache=cache, overwrite=overwrite)
     con <- dbConnect(SQLite(), bpath)
@@ -62,3 +63,7 @@ searchDatasets <- function(query, cache=cacheDirectory(), overwrite=FALSE, lates
 #' @export
 #' @importFrom gypsum defineTextQuery
 gypsum::defineTextQuery
+
+#' @export
+#' @importFrom gypsum gsc
+gypsum::gsc

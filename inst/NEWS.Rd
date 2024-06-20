@@ -2,6 +2,10 @@
 \title{scRNAseq News}
 \encoding{UTF-8}
 
+\section{Version 2.20.0}{\itemize{
+\item Support complex queries in \code{searchDatasets()} via a human-friendly syntax.
+}}
+
 \section{Version 2.18.0}{\itemize{
 \item Switched to the ArtifactDB representations for the underlying files.
 This uses language-agnostic formats (e.g., HDF5, JSON) instead of RDS files to store the various parts of each SingleCellExperiment.

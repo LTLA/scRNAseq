@@ -4,6 +4,7 @@
 \name{reexports}
 \alias{reexports}
 \alias{defineTextQuery}
+\alias{gsc}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -11,6 +12,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{gypsum}{\code{\link[gypsum:searchMetadataText]{defineTextQuery}}}
+  \item{gypsum}{\code{\link[gypsum:searchMetadata]{defineTextQuery}}, \code{\link[gypsum:searchMetadata]{gsc}}}
 }}
 

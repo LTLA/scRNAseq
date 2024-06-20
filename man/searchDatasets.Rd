@@ -12,7 +12,7 @@ searchDatasets(
 )
 }
 \arguments{
-\item{query}{String or a \code{gypsum.search.clause}, see Examples.}
+\item{query}{String containing a query in a human-readable syntax or a \link{gypsum.search.clause}, see Examples.}
 
 \item{cache, overwrite}{Arguments to pass to \code{\link{fetchMetadataDatabase}}.}
 
@@ -33,17 +33,15 @@ More details can be found in the Bioconductor metadata schema at \url{https://gi
 }
 \examples{
 searchDatasets("brain")[,c("name", "title")]
-searchDatasets(defineTextQuery("Neuro\%", partial=TRUE))[,c("name", "title")]
-searchDatasets(defineTextQuery("10090", field="taxonomy_id"))[,c("name", "title")]
-searchDatasets(
-   defineTextQuery("GRCm38", field="genome") &
-   (defineTextQuery("neuro\%", partial=TRUE) | 
-    defineTextQuery("pancrea\%", partial=TRUE))
-)[,c("name", "title")]
+searchDatasets("Neuro\%")[,c("name", "title")]
+searchDatasets("taxonomy_id:10090")[,c("name", "title")]
+searchDatasets("(genome: GRCm38 AND neuro\%) OR pancrea\%")[,c("name", "title")]
 
 }
 \seealso{
 \code{\link{surveyDatasets}}, to easily obtain a listing of all available datasets.
+
+\code{\link{translateTextQuery}}, for details on the human-readable query syntax.
 }
 \author{
 Aaron Lun
