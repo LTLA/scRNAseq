@@ -26,6 +26,11 @@ test_that("fetchDataset realizes the reduced dimensions", {
     expect_type(reducedDim(sce, withDimnames=FALSE), "double")
 })
 
+test_that("fetchDataset fails if it needs a path", {
+    expect_error(fetchDataset("lamanno-brain-2016", "2023-12-17"), "listPaths")
+    expect_s4_class(fetchDataset("lamanno-brain-2016", "2023-12-17", path="human-es"), "SingleCellExperiment")
+})
+
 test_that("fetchMetadata works as expected", {
     meta <- fetchMetadata("zeisel-brain-2015", "2023-12-14")
     expect_match(meta$title, "Brain structure")

@@ -2,6 +2,11 @@
 \title{scRNAseq News}
 \encoding{UTF-8}
 
+\section{Version 2.22.0}{\itemize{
+\item Added the \code{listPaths()} function to list available paths to subdatasets.
+This is now referenced by an error message in \code{fetchDataset()} when a \code{path=} is required but not supplied.
+}}
+
 \section{Version 2.20.0}{\itemize{
 \item Support complex queries in \code{searchDatasets()} via a human-friendly syntax.
 }}

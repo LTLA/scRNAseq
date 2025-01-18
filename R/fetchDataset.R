@@ -37,6 +37,8 @@ fetchDataset <- function(name, version, path=NA, package="scRNAseq", cache=cache
     obj_path <- version_path
     if (!is.na(path)) {
         obj_path <- file.path(version_path, gsub("/*$", "", path))
+    } else if (!file.exists(file.path(obj_path, "OBJECT"))) {
+        stop("need to specify a subdataset via 'path=', see listPaths('", name, "', '", version, "') for options")
     }
 
     old <- altReadObjectFunction(scLoadObject)
