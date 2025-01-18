@@ -8,7 +8,7 @@
 #' @param mix String specifying whether to compute the number of molecules for mix 1 or 2.
 #' @param ... Further arguments to pass to \code{\link{fetchDataset}}.
 #'
-#' @return A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.
+#' @return A \link[S4Vectors]{DataFrame} object with one row per ERCC spike-in transcript.
 #' This contains the estimated concentration and molecule count for each transcript.
 #'
 #' @author Aaron Lun, based on code from Alan O'Callaghan

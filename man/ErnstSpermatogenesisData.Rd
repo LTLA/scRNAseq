@@ -19,7 +19,7 @@ ErnstSpermatogenesisData(
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the mouse spermatogenesis single-cell RNA-seq dataset from Ernst et al. (2019).
@@ -34,7 +34,7 @@ In particular, the sample label specifies the developmental stage of the mouse.
 Note that \code{method="Cellranger"} contains additional data for Tc1 mice.
 These mice have an additional human chromosome 21 inserted alongside the usual mouse chromosomes.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/ernst-spermatogenesis}.

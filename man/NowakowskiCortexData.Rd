@@ -15,8 +15,8 @@ NowakowskiCortexData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of TPMs.
-The \code{\link{reducedDims}} contains an assortment of dimensionality reduction results.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of TPMs.
+The \code{\link[SingleCellExperiment]{reducedDims}} contains an assortment of dimensionality reduction results.
 }
 \description{
 Obtain the human cortex single-cell RNA-seq dataset from Nowakowski et al. (2017).
@@ -28,7 +28,7 @@ A variety of dimensionality reduction results are also provided.
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 This is only performed when \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.

@@ -16,7 +16,7 @@ Only used if \code{strip=TRUE}.}
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with two matrices, containing spliced and unspliced counts, respectively.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with two matrices, containing spliced and unspliced counts, respectively.
 }
 \description{
 Obtain the mouse spermatogenesis single-cell RNA-seq data from Hermann et al. (2018).

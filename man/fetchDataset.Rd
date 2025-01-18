@@ -31,7 +31,7 @@ fetchMetadata(
 
 \item{version}{String containing the version of the dataset.}
 
-\item{path}{String containing the path to a subdataset, if \code{name} contains multiple datasets.
+\item{path}{String containing the path to a subdataset, if \code{name} consists of multiple subdatasets.
 Defaults to \code{NA} if no subdatasets are present.}
 
 \item{package}{String containing the name of the package.}
@@ -39,12 +39,12 @@ Defaults to \code{NA} if no subdatasets are present.}
 \item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.}
 
 \item{realize.assays, realize.reduced.dims}{Logical scalars indicating whether to realize assays and reduced dimensions into memory.
-Dense and sparse \linkS4class{ReloadedArray} objects are converted into ordinary arrays and \linkS4class{dgCMatrix} objects, respectively.}
+Dense and sparse \link[alabaster.matrix]{ReloadedArray} objects are converted into ordinary arrays and dgCMatrix objects, respectively.}
 
-\item{...}{Further arguments to pass to \code{\link{readObject}}.}
+\item{...}{Further arguments to pass to \code{\link[alabaster.base]{readObject}}.}
 }
 \value{
-\code{fetchDataset} returns the dataset as a \linkS4class{SummarizedExperiment} or one of its subclasses.
+\code{fetchDataset} returns the dataset as a \link[SummarizedExperiment]{SummarizedExperiment} or one of its subclasses.
 
 \code{fetchMetadata} returns a named list of metadata for the specified dataset.
 }
@@ -59,7 +59,7 @@ fetchMetadata("zeisel-brain-2015", "2023-12-14")
 \seealso{
 \url{https://github.com/ArtifactDB/bioconductor-metadata-index}, on the expected schema for the metadata.
 
-\code{\link{saveDataset}} and \code{\link{uploadDirectory}}, to save and upload a dataset.
+\code{\link{saveDataset}} and \code{\link[gypsum]{uploadDirectory}}, to save and upload a dataset.
 
 \code{\link{surveyDatasets}} and \code{\link{listVersions}}, to get possible values for \code{name} and \code{version}.
 }

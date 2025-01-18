@@ -15,7 +15,7 @@ LengESCData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of normalized expected read counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of normalized expected read counts.
 }
 \description{
 Obtain the human embryonic stem cell single-cell RNA-seq data from Leng et al. (2015).
@@ -24,7 +24,7 @@ Obtain the human embryonic stem cell single-cell RNA-seq data from Leng et al. (
 Column metadata contains the cell line, experiment number and experimentally determined cell cycle phase for each cell.
 
 If \code{ensembl=TRUE}, the gene symbols in the published annotation are converted to Ensembl.
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/leng-esc}.

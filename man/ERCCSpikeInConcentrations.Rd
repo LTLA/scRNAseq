@@ -25,7 +25,7 @@ Only used if both \code{dilution} and \code{volume} are specified.}
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.
+A \link[S4Vectors]{DataFrame} object with one row per ERCC spike-in transcript.
 This contains information such as the spike-in concentration in each mix.
 }
 \description{

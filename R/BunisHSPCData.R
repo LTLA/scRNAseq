@@ -17,12 +17,12 @@
 #' Within DevStageScoring element of the column metadata are the applied results ('<cell_type>_scores') of random forest regression trained on the fetal (score = 0) and adult (score = 1) cells of individual cell types indicated by ('<cell_type>_inTraining').
 #'
 #' If \code{filtered=TRUE}, only the cells used by the authors in their final analysis are returned.
-#' Otherwise, an additional \code{retained} field will be present in the \code{\link{colData}}, indicating whether the cell was retained by the authors.
+#' Otherwise, an additional \code{retained} field will be present in the \code{\link[SummarizedExperiment]{colData}}, indicating whether the cell was retained by the authors.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/bunis-hspc}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Daniel Bunis
 #'

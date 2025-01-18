@@ -13,7 +13,7 @@ ZeiselNervousData(location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the mouse nervous system single-cell RNA-seq dataset from Zeisel et al. (2018).
@@ -25,7 +25,7 @@ e.g., the squared coefficient of variance, mean, and whether it was selected for
 Column data contains a wide variety of fields including patient-level information, sample-level sequencing statistics and many flavors of cell type classification.
 Note that many numeric columns may have \code{NA} values if they could not be successfully parsed form the source file.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-nervous}.

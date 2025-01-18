@@ -9,7 +9,7 @@
 #' 
 #' @details
 #' If \code{filtered=TRUE}, only the cells used by the authors in their final analysis are returned.
-#' Otherwise, an additional \code{filtered} field will be present in the \code{\link{colData}}, indicating whether the cell was retained by the authors. 
+#' Otherwise, an additional \code{filtered} field will be present in the \code{\link[SummarizedExperiment]{colData}}, indicating whether the cell was retained by the authors. 
 #'
 #' The column data contains sample of origin, some QC metrics and various cluster assignments for each cell.
 #' Cluster assignments starting with \code{Sample_*} are derived from per-sample analyses and cannot be compared sensibly across samples.
@@ -19,12 +19,12 @@
 #' Coordinates for entries prefixed with \code{Sample_*} were generated from per-sample analyses and cannot be compared across samples.
 #' Coordinates for entries prefixed with \code{Forebrain_*} and \code{Pons_*} were generated from joint analyses from the corresponding tissue. 
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/jessa-brain}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'

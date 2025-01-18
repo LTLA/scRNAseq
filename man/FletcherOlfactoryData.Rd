@@ -22,7 +22,7 @@ FletcherOlfactoryData(
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
 Obtain the mouse olfactory epithelial HBC stem cell differentiation dataset from Fletcher et al. (2017).
@@ -34,12 +34,12 @@ The former includes information about the animals and the instruments, while the
 We also included the clustering results from the authors' analysis.
 
 If \code{filtered=TRUE}, only the cells used by the authors in their cluster analysis are returned. 
-Otherwise, the cells not used by the authors will have \code{NA} in the clustering columns of the \code{\link{colData}}.
+Otherwise, the cells not used by the authors will have \code{NA} in the clustering columns of the \code{\link[SummarizedExperiment]{colData}}.
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object. 
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/fletcher-olfactory}.

@@ -15,7 +15,7 @@ MarquesBrainData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the mouse brain single-cell RNA-seq data from Marques et al. (2016).
@@ -32,7 +32,7 @@ If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 All searching is performed after removing the \code{_loc[2-9]} suffix. 
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 Note that this is only performed if \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.

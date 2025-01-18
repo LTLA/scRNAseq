@@ -1,9 +1,9 @@
 #' Polish dataset for saving
 #'
-#' Prepare a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} to be saved with \code{\link{saveDataset}}.
+#' Prepare a \link[SummarizedExperiment]{SummarizedExperiment} or \link[SingleCellExperiment]{SingleCellExperiment} to be saved with \code{\link{saveDataset}}.
 #' This performs some minor changes to improve storage efficiency.
 #'
-#' @param x A \linkS4class{SummarizedExperiment} or one of its subclasses.
+#' @param x A \link[SummarizedExperiment]{SummarizedExperiment} or one of its subclasses.
 #' @param strip.inner.names Logical scalar indicating whether to strip redundant names from internal objects, 
 #' e.g., dimnames of the assays, row names of reduced dimensions, column names of alternative experiments.
 #' This saves some space in the on-disk representation.
@@ -13,7 +13,7 @@
 #' @param attempt.integer.conversion Logical scalar indicating whether to convert double-precision assays containing integer values to actually have the integer type.
 #' This can improve efficiency of downstream applications by avoiding the need to operate in double precision.
 #' @param forbid.nested.altexp Logical scalar indicating whether nested alternative experiments (i.e., alternative experiments of alternative experiments) should be forbidden.
-#' This defaults to \code{TRUE} as nested alternative experiments are usually the result of some mistake in \code{\link{altExp}} preparation.
+#' This defaults to \code{TRUE} as nested alternative experiments are usually the result of some mistake in \code{\link[SingleCellExperiment]{altExp}} preparation.
 #' @param remove.altexp.coldata Logical scalar indicating whether column data for alternative experiments should be removed.
 #' This defaults to \code{TRUE} as the alternative experiment column data is usually redundant with that of the main experiment.
 #'

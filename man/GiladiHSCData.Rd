@@ -25,7 +25,7 @@ GiladiHSCData(
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a matrix of UMI counts for the scRNA-seq or CRISPR-seq data.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a matrix of UMI counts for the scRNA-seq or CRISPR-seq data.
 Alternatively, an object with both count matrices, where the second modality is stored as an alternative Experiment.
 }
 \description{
@@ -36,13 +36,13 @@ Column metadata is scraped from GEO using the author-supplied TSV of per-cell an
 This contains information such as the batch of origin for each cell plus an array of FACS measurements per cell.
 
 If \code{filtered=TRUE}, only the cells used by the authors in their final analysis are returned.
-Otherwise, an additional \code{filtered} field will be present in the \code{\link{colData}}, indicating whether the cell was retained by the authors. 
+Otherwise, an additional \code{filtered} field will be present in the \code{\link[SummarizedExperiment]{colData}}, indicating whether the cell was retained by the authors. 
 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 For row names with multiple semi-colon-delimited symbols, the last symbol is used for matching against the Ensembl annotation.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 This is only relevant when \code{ensembl=TRUE}.
 
 If \code{mode} contains multiple modalities, the intersection of cells that are present in both modalities is returned.

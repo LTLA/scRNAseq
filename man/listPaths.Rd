@@ -22,20 +22,17 @@ listPaths(
 
 \item{cache, overwrite}{Arguments to pass to \code{\link[gypsum]{saveVersion}} or \code{\link[gypsum]{saveFile}}.}
 
-\item{paths.only}{Logical scalar indicating whether to only report the paths themselves.
-If \code{FALSE}, the metadata associated with each object is also reported.}
+\item{include.metadata}{Logical scalar indicating whether to report the metadata for each subdataset.}
 }
 \value{
-If \code{paths.only=TRUE}, a character vector containing the paths to subdatasets within each collection of datasets.
+If \code{include.metadata=FALSE}, a character vector containing the paths to subdatasets within the specified version of the dataset.
 If \code{name} does not contain any subdatasets, \code{NA} is returned.
 
-Otherwise, a \link[S4Vectors]{DFrame} is returned containing the metadata for each subdataset, e.g., the title and description, 
-the number of rows and columns, the organisms and genome builds involved,
-whether the dataset has any pre-computed reduced dimensions, and so on.
+Otherwise, a \link[S4Vectors]{DFrame} is returned containing the metadata for each subdataset, e.g., the title and description.
 More details can be found in the Bioconductor metadata schema at \url{https://github.com/ArtifactDB/bioconductor-metadata-index}.
 }
 \description{
-List the available paths to subdatasets for a collection of datasets.
+List the available paths to subdatasets within a version of a given dataset.
 }
 \examples{
 listPaths("he-organs-2020", "2023-12-21")

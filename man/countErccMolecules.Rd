@@ -16,7 +16,7 @@ countErccMolecules(volume, dilution, mix = c("1", "2"), ...)
 \item{...}{Further arguments to pass to \code{\link{fetchDataset}}.}
 }
 \value{
-A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.
+A \link[S4Vectors]{DataFrame} object with one row per ERCC spike-in transcript.
 This contains the estimated concentration and molecule count for each transcript.
 }
 \description{

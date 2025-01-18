@@ -18,7 +18,7 @@
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/ercc-concentrations}.
 #'
-#' @return A \linkS4class{DataFrame} object with one row per ERCC spike-in transcript.
+#' @return A \link[S4Vectors]{DataFrame} object with one row per ERCC spike-in transcript.
 #' This contains information such as the spike-in concentration in each mix.
 #'
 #' @author Alan O'Callaghan

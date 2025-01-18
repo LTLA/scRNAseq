@@ -15,7 +15,7 @@ LedergorMyelomaData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
 Obtain the human multiple myeloma single-cell RNA-seq data from Ledergor et al. (2018).
@@ -27,7 +27,7 @@ from which the tissue and subject of origin were extracted, as well as the condi
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 Note that this is only performed if \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.

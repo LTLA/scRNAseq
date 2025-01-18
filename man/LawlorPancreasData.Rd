@@ -11,7 +11,7 @@ LawlorPancreasData(legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
 Provides the human pancreas single-cell RNA-seq data from Lawlor et al. (2017).

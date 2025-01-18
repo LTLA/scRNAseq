@@ -15,7 +15,7 @@ ZhongPrefrontalData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the human prefrontal cortex single-cell RNA-seq dataset from Zhong et al. (2018).
@@ -26,7 +26,7 @@ Column metadata is scraped from GEO and includes week of gestation, gender and l
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 This is only performed when \code{ensembl=TRUE}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.

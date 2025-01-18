@@ -12,7 +12,7 @@
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/lawlor-pancreas}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun
 #'

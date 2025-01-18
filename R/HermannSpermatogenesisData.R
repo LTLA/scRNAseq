@@ -15,7 +15,7 @@
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/hermann-spermatogenesis}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with two matrices, containing spliced and unspliced counts, respectively.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with two matrices, containing spliced and unspliced counts, respectively.
 #'
 #' @author Charlotte Soneson
 #'

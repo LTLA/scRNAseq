@@ -11,7 +11,7 @@ AztekinTailData(legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the Xenopus tail single-cell RNA-seq data from Aztekin et al. (2019).
@@ -20,7 +20,7 @@ Obtain the Xenopus tail single-cell RNA-seq data from Aztekin et al. (2019).
 Column metadata is provided in the same form as supplied in E-MTAB-7761.
 This contains information such as the treatment condition, batch, putative cell type, putative cell cycle phase.
 
-The UMAP results are available as the \code{"UMAP"} entry in the \code{\link{reducedDims}}.
+The UMAP results are available as the \code{"UMAP"} entry in the \code{\link[SingleCellExperiment]{reducedDims}}.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/aztekin-tail}.

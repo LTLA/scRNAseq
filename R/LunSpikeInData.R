@@ -3,7 +3,7 @@
 #' Obtain the spike-in single-cell RNA-seq data from Lun et al. (2017).
 #'
 #' @param which String specifying whether the 416B or trophoblast data should be obtained.
-#' @param split.oncogene Logical scalar indicating whether the oncogene should be split to a separate \code{\link{altExp}}.
+#' @param split.oncogene Logical scalar indicating whether the oncogene should be split to a separate \code{\link[SingleCellExperiment]{altExp}}.
 #' @param location Logical scalar indicating whether genomic coordinates should be returned.
 #' @param legacy Logical scalar indicating whether to pull data from ExperimentHub.
 #' By default, we use data from the gypsum backend.
@@ -15,17 +15,17 @@
 #' This contains information such as the cell type, plate of origin, spike-in addition order and oncogene induction. 
 #'
 #' Two sets of spike-ins were added to each cell in each dataset.
-#' These are available as the \code{"SIRV"} and \code{"ERCC"} entries in the \code{\link{altExps}}.
+#' These are available as the \code{"SIRV"} and \code{"ERCC"} entries in the \code{\link[SingleCellExperiment]{altExps}}.
 #'
 #' If \code{split.oncogene=TRUE} and \code{which="416b"},
-#' the CBFB-MYH11-mcherry oncogene is moved to extra \code{"oncogene"} entry in the \code{\link{altExps}}.
+#' the CBFB-MYH11-mcherry oncogene is moved to extra \code{"oncogene"} entry in the \code{\link[SingleCellExperiment]{altExps}}.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/lun-spikein}.
 #' 
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun
 #'

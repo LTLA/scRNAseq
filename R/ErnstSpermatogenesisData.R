@@ -17,12 +17,12 @@
 #' Note that \code{method="Cellranger"} contains additional data for Tc1 mice.
 #' These mice have an additional human chromosome 21 inserted alongside the usual mouse chromosomes.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/ernst-spermatogenesis}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'

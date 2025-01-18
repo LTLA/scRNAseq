@@ -13,12 +13,12 @@
 #' Column data contains a wide variety of fields including patient-level information, sample-level sequencing statistics and many flavors of cell type classification.
 #' Note that many numeric columns may have \code{NA} values if they could not be successfully parsed form the source file.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/zeisel-nervous}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 #'
 #' @author Aaron Lun
 #'

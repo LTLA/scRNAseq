@@ -13,7 +13,7 @@
 #' By default, we use data from the gypsum backend.
 #' 
 #' @return
-#' A \linkS4class{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,
+#' A \link[SingleCellExperiment]{SingleCellExperiment} object containing one or more expression matrices of counts and/or TPMs,
 #' depending on \code{assays}.
 #' 
 #' @details
@@ -22,22 +22,22 @@
 #' 
 #' \code{ReprocessedTh2Data} returns a dataset of 96 mouse T helper cells from Mahata et al. (2014),
 #' obtained from ArrayExpress accession E-MTAB-2512.
-#' Spike-in counts are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
+#' Spike-in counts are stored in the \code{"ERCC"} entry of the \code{\link[SingleCellExperiment]{altExps}}.
 #'
 #' \code{ReprocessedAllenData} return a dataset of 379 mouse brain cells from Tasic et al. (2016).
 #' This is a re-processed subset of the data from \code{\link{TasicBrainData}},
-#' and contains spike-in information stored as in the \code{\link{altExps}}.
+#' and contains spike-in information stored as in the \code{\link[SingleCellExperiment]{altExps}}.
 #'
 #' In each dataset, the first columns of the \code{colData} are sample quality metrics from FastQC and Picard.
 #' The remaining fields were obtained from the original study in their GEO/SRA submission
 #' and/or as Supplementary files in the associated publication.
-#' These two categories of \code{colData} are distinguished by a \code{which_qc} element in the \code{\link{metadata}},
+#' These two categories of \code{colData} are distinguished by a \code{which_qc} element in the \code{\link[S4Vectors]{metadata}},
 #' which contains the names of the quality-related columns in each object.
 #' 
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.

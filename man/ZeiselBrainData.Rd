@@ -15,7 +15,7 @@ ZeiselBrainData(ensembl = FALSE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the mouse brain single-cell RNA-seq dataset from Zeisel et al. (2015).
@@ -23,7 +23,7 @@ Obtain the mouse brain single-cell RNA-seq dataset from Zeisel et al. (2015).
 \details{
 Row data contains a single \code{"featureType"} field describing the type of each feature
 (endogenous genes, mitochondrial genes, spike-in transcripts and repeats).
-Spike-ins and repeats are stored as separate entries in the \code{\link{altExps}}.
+Spike-ins and repeats are stored as separate entries in the \code{\link[SingleCellExperiment]{altExps}}.
 
 Column metadata is provided in the same form as supplied in \url{http://linnarssonlab.org/cortex/}.
 This contains information such as the cell diameter and the published cell type annotations.
@@ -31,7 +31,7 @@ This contains information such as the cell diameter and the published cell type 
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 Spike-in metadata is added using \code{\link{ERCCSpikeInConcentrations}},
 with molecule counts computed using a volume of 9 nL per cell at a dilution of 1:20000.

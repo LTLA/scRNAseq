@@ -25,7 +25,7 @@ ZilionisLungData(
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
 Obtain the human/mouse lung cancer single-cell RNA-seq data from Zilionis et al. (2019).
@@ -36,14 +36,14 @@ Column metadata is provided and contains information on the library, donor ID/an
 If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 Note that this is only performed if \code{ensembl=TRUE}.
 
 If \code{filter=TRUE}, only cells that have been used in the original analysis are returned.
-The cells used are specified in the \code{Used} column of the \code{\link{colData}}.
+The cells used are specified in the \code{Used} column of the \code{\link[SummarizedExperiment]{colData}}.
 
-The \code{\link{reducedDim}} contains coordinates of SPRING representations.
-This may be filled with \code{NA}s for SPRING coordinates computed on a subset of cells (specified in \code{\link{colData}}).
+The \code{\link[SingleCellExperiment]{reducedDim}} contains coordinates of SPRING representations.
+This may be filled with \code{NA}s for SPRING coordinates computed on a subset of cells (specified in \code{\link[SummarizedExperiment]{colData}}).
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/zilionis-lung}.

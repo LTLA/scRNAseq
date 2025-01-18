@@ -28,7 +28,7 @@ StoeckiusHashingData(
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a matrix of UMI counts corresponding to the first \code{mode},
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a matrix of UMI counts corresponding to the first \code{mode},
 plus any number of alternative Experiments containing the remaining \code{mode}s.
 If multiple \code{mode}s are specified, the output object only contains the intersection of their column names.
 }
@@ -57,7 +57,7 @@ If \code{mode=NULL}, the default is to use \code{"rna"} and \code{"hto"}.
 If \code{ensembl=TRUE}, gene symbols for the RNA counts are converted to Ensembl IDs in the row names of the output object.
 Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 Note that this is only performed if \code{ensembl=TRUE} and only for the RNA counts.
 
 For the HTO and ADT matrices, some rows correspond to quality control metrics.

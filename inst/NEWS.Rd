@@ -16,23 +16,23 @@ This is now referenced by an error message in \code{fetchDataset()} when a \code
 This uses language-agnostic formats (e.g., HDF5, JSON) instead of RDS files to store the various parts of each SingleCellExperiment.
 The user experience should be more or less the same as the datasets are indistinguishable once loaded into memory.
 
-\item Added the \code{fetchDataset}, to create SingleCellExperiment objects from the ArtifactDB file representations.
+\item Added the \code{fetchDataset()} function, to create SingleCellExperiment objects from the ArtifactDB file representations.
 This uses the \pkg{alabaster.base} package to do the loading, with some optional realization of the assays into memory.
 Advanced users can achieve faster loading times by keeping the assays as file-backed matrices.
 
-\item Introduced \code{saveDataset} and related functions to facilitate user uploads of their own datasets.
+\item Introduced \code{saveDataset()} and related functions to facilitate user uploads of their own datasets.
 This is accompanied by some step-by-step instructions in the vignette, plus some maintainer instructions in the README.
 
-\item Added \code{searchDatasets} to perform text searches on the metadata for each dataset,
+\item Added \code{searchDatasets()} to perform text searches on the metadata for each dataset,
 using the SQLite database compiled from the \pkg{gypsum} backend where the files are stored.
 
 \item Updated some datasets to reflect upstream changes (e.g., in ArrayExpress).
-Currently, this affects mostly \code{SegerstolpePancreasData}, where ArrayExpress decided to change the names and contents of various column annotations.
+Currently, this affects mostly \code{SegerstolpePancreasData()}, where ArrayExpress decided to change the names and contents of various column annotations.
 
 \item Soft-deprecation of some redundant pieces of information in each dataset.
 Some examples are the column names of the Zilionis data, which were not unique and had no meaning;
 or the symbols of the \code{rowData} in the Segerstolpe data, which were redundant with the row names.
-These changes will only take effect when \code{fetchDataset} is used directly;
+These changes will only take effect when \code{fetchDataset()} is used directly;
 the per-dataset getter functions have appropriate back-compatibility patches to restore this information.
 
 \item All getters now have a \code{legacy=} option to pull RDS files from ExperimentHub instead of the new formats from gypsum.

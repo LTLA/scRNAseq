@@ -13,14 +13,14 @@
 #' This contains information such as the cell phenotype (naive or primed) and the batch of origin.
 #' Note that counts for technical replicates have already been summed together.
 #'
-#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
+#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link[SingleCellExperiment]{altExps}}.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/messmer-esc}.
 #' 
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun 
 #'

@@ -14,7 +14,7 @@ polishDataset(
 )
 }
 \arguments{
-\item{x}{A \linkS4class{SummarizedExperiment} or one of its subclasses.}
+\item{x}{A \link[SummarizedExperiment]{SummarizedExperiment} or one of its subclasses.}
 
 \item{strip.inner.names}{Logical scalar indicating whether to strip redundant names from internal objects, 
 e.g., dimnames of the assays, row names of reduced dimensions, column names of alternative experiments.
@@ -31,13 +31,13 @@ This can improve efficiency of downstream applications by avoiding the need to o
 This defaults to \code{TRUE} as the alternative experiment column data is usually redundant with that of the main experiment.}
 
 \item{forbid.nested.altexp}{Logical scalar indicating whether nested alternative experiments (i.e., alternative experiments of alternative experiments) should be forbidden.
-This defaults to \code{TRUE} as nested alternative experiments are usually the result of some mistake in \code{\link{altExp}} preparation.}
+This defaults to \code{TRUE} as nested alternative experiments are usually the result of some mistake in \code{\link[SingleCellExperiment]{altExp}} preparation.}
 }
 \value{
 A modified copy of \code{x}.
 }
 \description{
-Prepare a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} to be saved with \code{\link{saveDataset}}.
+Prepare a \link[SummarizedExperiment]{SummarizedExperiment} or \link[SingleCellExperiment]{SingleCellExperiment} to be saved with \code{\link{saveDataset}}.
 This performs some minor changes to improve storage efficiency.
 }
 \examples{

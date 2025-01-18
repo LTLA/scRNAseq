@@ -8,7 +8,7 @@
 #' this may be different to the number of cells used by the authors in their analysis, e.g., due to filtering.
 #'
 #' @return 
-#' A \linkS4class{DataFrame} where each row corresponds to a dataset, containing the fields:
+#' A \link[S4Vectors]{DataFrame} where each row corresponds to a dataset, containing the fields:
 #' \itemize{
 #' \item \code{Reference}, a Markdown-formatted citation to \code{scripts/ref.bib} in the \pkg{scRNAseq} installation directory.
 #' \item \code{Taxonomy}, an identifier for the organism.

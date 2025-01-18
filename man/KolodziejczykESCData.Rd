@@ -15,7 +15,7 @@ KolodziejczykESCData(remove.htseq = TRUE, location = TRUE, legacy = FALSE)
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 }
 \description{
 Obtain the mouse embryonic stem cell single-cell RNA-seq data from Kolodziejczyk et al. (2015).
@@ -24,9 +24,9 @@ Obtain the mouse embryonic stem cell single-cell RNA-seq data from Kolodziejczyk
 Column metadata is generated from the column names,
 and contains the culture conditions and the plate of origin for each cell.
 
-Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link[SingleCellExperiment]{altExps}}.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/kolodziejczyk-esc}.

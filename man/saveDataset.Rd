@@ -7,13 +7,13 @@
 saveDataset(x, path, metadata)
 }
 \arguments{
-\item{x}{A \linkS4class{SummarizedExperiment} or one of its subclasses.}
+\item{x}{A \link[SummarizedExperiment]{SummarizedExperiment} or one of its subclasses.}
 
 \item{path}{String containing the path to a new directory in which to save \code{x}.
 Any existing directory is removed before saving \code{x}.}
 
 \item{metadata}{Named list containing metadata for this dataset,
-see the schema returned by \code{\link{fetchMetadataSchema}()}.
+see the schema returned by \code{\link[gypsum]{fetchMetadataSchema}()}.
 Note that the \code{applications.takane} property will be automatically added by this function and does not have to be supplied.}
 }
 \value{
@@ -49,7 +49,7 @@ alabaster.base::readObject(tmp)
 
 \code{\link{polishDataset}}, to polish \code{x} before saving it.
 
-\code{\link{uploadDirectory}}, to upload the saved contents.
+\code{\link[gypsum]{uploadDirectory}}, to upload the saved contents.
 }
 \author{
 Aaron Lun

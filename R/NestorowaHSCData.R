@@ -13,18 +13,18 @@
 #'
 #' Column metadata includes the cell type mapping, as described on the website (see References),
 #' and the FACS expression levels of selected markers.
-#' Note that these are stored as nested matrices within the \code{\link{colData}}.
+#' Note that these are stored as nested matrices within the \code{\link[SummarizedExperiment]{colData}}.
 #'
-#' Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link{reducedDims}}.
+#' Diffusion map components are provided as the \code{"diffusion"} entry in the \code{\link[SingleCellExperiment]{reducedDims}}.
 #'
-#' Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link{altExps}}.
+#' Counts for ERCC spike-ins are stored in the \code{"ERCC"} entry in the \code{\link[SingleCellExperiment]{altExps}}.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/nestorowa-hsc}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun
 #'

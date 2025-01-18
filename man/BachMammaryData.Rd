@@ -19,7 +19,7 @@ BachMammaryData(
 By default, we use data from the gypsum backend.}
 }
 \value{
-A \linkS4class{SingleCellExperiment} object with a single matrix of UMI counts.
+A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of UMI counts.
 }
 \description{
 Obtain the mouse mammary gland single-cell RNA-seq data from Bach et al. (2017).
@@ -31,7 +31,7 @@ and refers to the developmental stage of the mammary gland.
 If multiple samples are specified in \code{samples}, the count matrices will be \code{cbind}ed together.
 Cells originating from different samples are identifiable by the \code{"Sample"} field in the column metadata.
 
-If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 
 All data are downloaded from ExperimentHub and cached for local re-use.
 Specific resources can be retrieved by searching for \code{scRNAseq/bach-mammary}.

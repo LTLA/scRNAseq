@@ -11,7 +11,7 @@
 #' Column metadata is provided in the same form as supplied in GSE71585.
 #' This contains information such as the reporter gene expressed in each cell, the mouse line, dissection type and so on.
 #'
-#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link{altExps}}.
+#' Count data for ERCC spike-ins are stored in the \code{"ERCC"} entry of the \code{\link[SingleCellExperiment]{altExps}}.
 #' Note that some of the spike-in rows have \code{NA} observations for some (but not all) cells.
 #'
 #' The last 9 columns (containing \code{_CTX_} in their names) correspond to no-cell control libraries.
@@ -19,13 +19,13 @@
 #' If \code{ensembl=TRUE}, the gene symbols are converted to Ensembl IDs in the row names of the output object.
 #' Rows with missing Ensembl IDs are discarded, and only the first occurrence of duplicated IDs is retained.
 #'
-#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link{rowRanges}} of the output.
+#' If \code{location=TRUE}, the coordinates of the Ensembl gene models are stored in the \code{\link[SummarizedExperiment]{rowRanges}} of the output.
 #' Note that this is only performed if \code{ensembl=TRUE}.
 #'
 #' All data are downloaded from ExperimentHub and cached for local re-use.
 #' Specific resources can be retrieved by searching for \code{scRNAseq/tasic-brain}.
 #'
-#' @return A \linkS4class{SingleCellExperiment} object with a single matrix of read counts.
+#' @return A \link[SingleCellExperiment]{SingleCellExperiment} object with a single matrix of read counts.
 #'
 #' @author Aaron Lun
 #'
