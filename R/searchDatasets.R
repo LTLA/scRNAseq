@@ -22,6 +22,16 @@
 #' searchDatasets("Neuro%")[,c("name", "title")]
 #' searchDatasets("taxonomy_id:10090")[,c("name", "title")]
 #' searchDatasets("(genome: GRCm38 AND neuro%) OR pancrea%")[,c("name", "title")]
+#'
+#' # We can also use gypsum search clauses via the gsc() function:
+#' searchDatasets(gsc(asset="he-organs-2020"))[,c("path")]
+#' searchDatasets(
+#'     (gsc(asset="%brain%", partial=TRUE) |
+#'     gsc(asset="%neur%", partial=TRUE) |
+#'     gsc(text="%neur%", partial=TRUE) |
+#'     gsc(text="%brain%", partial=TRUE)) &
+#'     gsc(field="taxonomy_id", text="10090")
+#' )[,c("name", "title")]
 #' 
 #' @seealso
 #' \code{\link{surveyDatasets}}, to easily obtain a listing of all available datasets.
